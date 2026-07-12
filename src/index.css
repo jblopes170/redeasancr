@@ -1,0 +1,96 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+:root {
+  --background: 34 18% 96%;
+  --foreground: 15 12% 14%;
+  --card: 0 0% 100%;
+  --card-foreground: 15 12% 14%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 15 12% 14%;
+  --primary: 356 72% 41%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 32 18% 91%;
+  --secondary-foreground: 12 21% 24%;
+  --muted: 32 16% 93%;
+  --muted-foreground: 20 11% 42%;
+  --accent: 43 84% 90%;
+  --accent-foreground: 24 70% 30%;
+  --destructive: 356 72% 41%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 25 13% 80%;
+  --input: 25 13% 80%;
+  --ring: 356 72% 41%;
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Barlow", "Segoe UI", sans-serif;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+}
+
+body {
+  background-color: hsl(var(--background));
+  background-image:
+    linear-gradient(180deg, #ffffff 0, #f6f1ec 260px),
+    linear-gradient(90deg, rgba(178, 29, 41, 0.06), rgba(32, 32, 36, 0.04));
+  background-attachment: fixed;
+  color: hsl(var(--foreground));
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+code {
+  border-radius: 0.35rem;
+  background: hsl(var(--secondary) / 0.8);
+  padding-inline: 0.25rem;
+  padding-block: 0.15rem;
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.2);
+}
