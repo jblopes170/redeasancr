@@ -8,6 +8,8 @@ export type RegistrationRequestStatus = 'pending' | 'approved' | 'rejected' | 'c
 export type SuggestionStatus = 'new' | 'read' | 'answered' | 'archived'
 export type NewsPostStatus = 'draft' | 'published'
 export type NewsPostType = 'news' | 'event_update'
+export type FinancialDirection = 'income' | 'expense'
+export type FinancialStatus = 'pending' | 'settled' | 'cancelled'
 
 export interface EventRecord {
   id: string
@@ -172,6 +174,27 @@ export interface SuggestionRecord {
   updated_at: string
   event?: EventRecord | null
   user?: ProfileRecord
+}
+
+export interface FinancialTransactionRecord {
+  id: string
+  event_id: string
+  direction: FinancialDirection
+  category: string
+  description: string
+  counterparty: string | null
+  amount: number
+  status: FinancialStatus
+  competence_date: string
+  due_date: string | null
+  settled_on: string | null
+  payment_method: string | null
+  registration_request_id: string | null
+  entry_id: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface StageRankingRow {

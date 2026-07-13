@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SuggestionInput } from '@/components/ui/suggestion-input'
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { deleteHorse, getHorses, saveHorse } from '@/services/api'
@@ -88,6 +89,12 @@ export function HorseManager({ canEdit }: HorseManagerProps) {
   })
 
   const rows = useMemo(() => horsesQuery.data ?? [], [horsesQuery.data])
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(rows.map((item) => item.owner?.trim()).filter(Boolean) as string[]))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+      .map((value) => ({ value })),
+    [rows],
+  )
 
   const openEdit = (horse: HorseRecord) => {
     setForm({
@@ -172,7 +179,12 @@ export function HorseManager({ canEdit }: HorseManagerProps) {
                 </div>
                 <div className="grid gap-1">
                   <Label>Proprietário</Label>
-                  <Input value={form.owner} onChange={(e) => setForm((prev) => ({ ...prev, owner: e.target.value }))} />
+                  <SuggestionInput
+                    options={ownerOptions}
+                    value={form.owner}
+                    onChange={(e) => setForm((prev) => ({ ...prev, owner: e.target.value }))}
+                    placeholder="Digite ou escolha um proprietário"
+                  />
                 </div>
                 <div className="grid gap-1">
                   <Label>Observações</Label>

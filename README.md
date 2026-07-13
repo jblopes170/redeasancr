@@ -68,6 +68,7 @@ As migrations estão em:
 - `supabase/migrations/202607110004_public_event_lifecycle.sql`
 - `supabase/migrations/202607120001_official_ntmr_categories.sql`
 - `supabase/migrations/202607120002_registration_request_levels.sql`
+- `supabase/migrations/202607120003_financial_dre_cashflow.sql`
 - `supabase/migrations/202605220002_seed_ntmr_sample.sql`
 - Guia SQL em ordem (copiar/colar no SQL Editor): `supabase/manual/setup-step-by-step.sql`
 
@@ -91,9 +92,12 @@ Cole os SQLs no editor SQL do Supabase, **nesta ordem exata**:
 7. `202607110004_public_event_lifecycle.sql`
 8. `202607120001_official_ntmr_categories.sql`
 9. `202607120002_registration_request_levels.sql`
-10. `202605220002_seed_ntmr_sample.sql` (opcional, somente para dados de teste)
+10. `202607120003_financial_dre_cashflow.sql`
+11. `202605220002_seed_ntmr_sample.sql` (opcional, somente para dados de teste)
 
 Se o banco principal já está configurado, execute apenas os SQLs novos necessários. Para corrigir categorias em eventos existentes, rode `supabase/manual/fix-categorias-oficiais-ntmr.sql`. Para habilitar níveis separados nas solicitações públicas, rode `supabase/manual/fix-inscricoes-niveis-separados.sql`.
+
+Para habilitar a aba Financeiro, fluxo de caixa e DRE em um banco já configurado, execute `supabase/manual/setup-financeiro-dre.sql`.
 
 ## Criar primeiro usuário admin
 
@@ -137,6 +141,8 @@ No Supabase Dashboard:
 - Público vê ranking ao vivo e resultados de eventos ativos, finalizados e publicados
 - Usuário comum solicita inscrições, acompanha aprovações e envia sugestões em `/minha-area`
 - Administrador aprova inscrições, responde sugestões e publica notícias
+- Administrador controla entradas, saídas, pendências, fluxo de caixa e DRE por evento
+- Exclusão de evento exige confirmação pelo nome e remove os dados operacionais vinculados em cascata
 
 ## Reiniciar servidor local
 

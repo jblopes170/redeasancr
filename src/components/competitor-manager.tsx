@@ -16,7 +16,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SuggestionInput } from '@/components/ui/suggestion-input'
 import { Textarea } from '@/components/ui/textarea'
+import { BRAZILIAN_UF_OPTIONS } from '@/lib/constants'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { deleteCompetitor, getCompetitors, saveCompetitor } from '@/services/api'
 import type { CompetitorRecord } from '@/types/domain'
@@ -97,6 +99,12 @@ export function CompetitorManager({ canEdit }: CompetitorManagerProps) {
   })
 
   const rows = useMemo(() => competitorsQuery.data ?? [], [competitorsQuery.data])
+  const cityOptions = useMemo(
+    () => Array.from(new Set(rows.map((item) => item.city?.trim()).filter(Boolean) as string[]))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+      .map((value) => ({ value })),
+    [rows],
+  )
 
   const openEdit = (competitor: CompetitorRecord) => {
     setForm({
@@ -203,13 +211,25 @@ export function CompetitorManager({ canEdit }: CompetitorManagerProps) {
                   </div>
                   <div className="grid gap-1">
                     <Label>Cidade</Label>
-                    <Input value={form.city} onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))} />
+                    <SuggestionInput
+                      options={cityOptions}
+                      value={form.city}
+                      onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
+                      placeholder="Digite ou escolha uma cidade"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="grid gap-1">
                     <Label>UF</Label>
-                    <Input value={form.uf} onChange={(e) => setForm((prev) => ({ ...prev, uf: e.target.value }))} />
+                    <SuggestionInput
+                      options={BRAZILIAN_UF_OPTIONS.map((value) => ({ value }))}
+                      maxLength={2}
+                      className="uppercase"
+                      value={form.uf}
+                      onChange={(e) => setForm((prev) => ({ ...prev, uf: e.target.value.toUpperCase() }))}
+                      placeholder="Ex.: MG"
+                    />
                   </div>
                   <div className="grid gap-1">
                     <Label>Observações</Label>

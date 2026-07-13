@@ -23,10 +23,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SuggestionInput } from '@/components/ui/suggestion-input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import {
   LEVEL_OPTIONS,
+  BRAZILIAN_UF_OPTIONS,
   categoryOptionLabel,
   getUniqueCategoryOptions,
   isLeveledCategoryName,
@@ -121,6 +123,33 @@ export function MemberPortal() {
     queryFn: () => getMySuggestions(profile!.id),
     enabled: Boolean(profile?.id),
   })
+
+  const registrationHistory = useMemo(() => requestsQuery.data ?? [], [requestsQuery.data])
+  const competitorOptions = useMemo(() => {
+    const unique = new Map<string, { value: string; label?: string }>()
+    for (const item of registrationHistory) {
+      const value = item.competitor_name.trim()
+      if (!value) continue
+      const location = [item.competitor_city, item.competitor_uf].filter(Boolean).join('/')
+      unique.set(value.toLocaleLowerCase('pt-BR'), { value, label: location || undefined })
+    }
+    return Array.from(unique.values())
+  }, [registrationHistory])
+  const horseOptions = useMemo(() => {
+    const unique = new Map<string, { value: string; label?: string }>()
+    for (const item of registrationHistory) {
+      const value = item.horse_name.trim()
+      if (!value) continue
+      unique.set(value.toLocaleLowerCase('pt-BR'), { value, label: item.horse_registration || undefined })
+    }
+    return Array.from(unique.values())
+  }, [registrationHistory])
+  const cityOptions = useMemo(
+    () => Array.from(new Set(registrationHistory.map((item) => item.competitor_city?.trim()).filter(Boolean) as string[]))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+      .map((value) => ({ value })),
+    [registrationHistory],
+  )
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data])
   const registrationEvents = useMemo(
@@ -364,17 +393,58 @@ export function MemberPortal() {
                   <div>
                     <h3 className="mb-3 font-bold text-primary">Competidor</h3>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="grid gap-1.5 sm:col-span-2"><Label>Nome completo *</Label><Input value={registration.competitorName} onChange={(event) => setRegistration((current) => ({ ...current, competitorName: event.target.value }))} /></div>
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label>Nome completo *</Label>
+                        <SuggestionInput
+                          options={competitorOptions}
+                          value={registration.competitorName}
+                          placeholder="Digite um nome novo ou escolha uma sugestão"
+                          onChange={(event) => setRegistration((current) => ({ ...current, competitorName: event.target.value }))}
+                          onSuggestionSelect={(option) => {
+                            const found = registrationHistory.find(
+                              (item) => item.competitor_name.toLocaleLowerCase('pt-BR') === option.value.toLocaleLowerCase('pt-BR'),
+                            )
+                            if (!found) return
+                            setRegistration((current) => ({
+                              ...current,
+                              competitorName: found.competitor_name,
+                              competitorDocument: found.competitor_document ?? current.competitorDocument,
+                              competitorCity: found.competitor_city ?? current.competitorCity,
+                              competitorUf: found.competitor_uf ?? current.competitorUf,
+                            }))
+                          }}
+                        />
+                      </div>
                       <div className="grid gap-1.5"><Label>Documento</Label><Input value={registration.competitorDocument} onChange={(event) => setRegistration((current) => ({ ...current, competitorDocument: event.target.value }))} /></div>
-                      <div className="grid gap-1.5"><Label>Cidade</Label><Input value={registration.competitorCity} onChange={(event) => setRegistration((current) => ({ ...current, competitorCity: event.target.value }))} /></div>
-                      <div className="grid gap-1.5"><Label>UF</Label><Input maxLength={2} value={registration.competitorUf} onChange={(event) => setRegistration((current) => ({ ...current, competitorUf: event.target.value.toUpperCase() }))} /></div>
+                      <div className="grid gap-1.5"><Label>Cidade</Label><SuggestionInput options={cityOptions} value={registration.competitorCity} onChange={(event) => setRegistration((current) => ({ ...current, competitorCity: event.target.value }))} placeholder="Digite ou escolha" /></div>
+                      <div className="grid gap-1.5"><Label>UF</Label><SuggestionInput options={BRAZILIAN_UF_OPTIONS.map((value) => ({ value }))} maxLength={2} className="uppercase" value={registration.competitorUf} onChange={(event) => setRegistration((current) => ({ ...current, competitorUf: event.target.value.toUpperCase() }))} placeholder="Ex.: MG" /></div>
                     </div>
                   </div>
 
                   <div>
                     <h3 className="mb-3 font-bold text-primary">Animal</h3>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="grid gap-1.5 sm:col-span-2"><Label>Nome do animal *</Label><Input value={registration.horseName} onChange={(event) => setRegistration((current) => ({ ...current, horseName: event.target.value }))} /></div>
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label>Nome do animal *</Label>
+                        <SuggestionInput
+                          options={horseOptions}
+                          value={registration.horseName}
+                          placeholder="Digite um animal novo ou escolha uma sugestão"
+                          onChange={(event) => setRegistration((current) => ({ ...current, horseName: event.target.value }))}
+                          onSuggestionSelect={(option) => {
+                            const found = registrationHistory.find(
+                              (item) => item.horse_name.toLocaleLowerCase('pt-BR') === option.value.toLocaleLowerCase('pt-BR'),
+                            )
+                            if (!found) return
+                            setRegistration((current) => ({
+                              ...current,
+                              horseName: found.horse_name,
+                              horseRegistration: found.horse_registration ?? current.horseRegistration,
+                              horseOwner: found.horse_owner ?? current.horseOwner,
+                            }))
+                          }}
+                        />
+                      </div>
                       <div className="grid gap-1.5"><Label>Registro</Label><Input value={registration.horseRegistration} onChange={(event) => setRegistration((current) => ({ ...current, horseRegistration: event.target.value }))} /></div>
                       <div className="grid gap-1.5"><Label>Proprietário</Label><Input value={registration.horseOwner} onChange={(event) => setRegistration((current) => ({ ...current, horseOwner: event.target.value }))} /></div>
                     </div>

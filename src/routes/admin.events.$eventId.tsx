@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -6,6 +6,8 @@ import { AdminLayout } from '@/components/admin-layout'
 import { CategoryManager } from '@/components/category-manager'
 import { CompetitorManager } from '@/components/competitor-manager'
 import { EventFormDialog } from '@/components/event-form-dialog'
+import { DeleteEventDialog } from '@/components/delete-event-dialog'
+import { FinancialManager } from '@/components/financial-manager'
 import { ImportExportPanel } from '@/components/import-export-panel'
 import { HorseManager } from '@/components/horse-manager'
 import { ProtectedRoute } from '@/components/protected-route'
@@ -25,6 +27,7 @@ function AdminEventPage() {
   const { eventId } = Route.useParams()
   const { profile } = useAuth()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
 
   const isAdmin = profile?.role === 'admin'
@@ -87,11 +90,12 @@ function AdminEventPage() {
             </Card>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5">
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-6">
                 <TabsTrigger value="overview">Resumo</TabsTrigger>
                 <TabsTrigger value="categories">Categorias</TabsTrigger>
                 <TabsTrigger value="records">Bases</TabsTrigger>
                 <TabsTrigger value="entries">Inscrições + notas</TabsTrigger>
+                {isAdmin && <TabsTrigger value="finance">Financeiro</TabsTrigger>}
                 <TabsTrigger value="import-export">Importar</TabsTrigger>
               </TabsList>
 
@@ -111,8 +115,19 @@ function AdminEventPage() {
                       <Link to="/events/$eventId" params={{ eventId }}>Ver ranking</Link>
                     </Button>
                     <Button variant="outline" onClick={() => setActiveTab('import-export')}>Importar planilha</Button>
+                    {isAdmin && <Button variant="outline" onClick={() => setActiveTab('finance')}>Abrir financeiro</Button>}
                   </CardContent>
                 </Card>
+
+                {isAdmin && (
+                  <Card className="mt-3 border-red-200">
+                    <CardHeader><CardTitle className="text-red-700">Zona de perigo</CardTitle></CardHeader>
+                    <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="max-w-2xl text-sm text-muted-foreground">Exclui definitivamente este evento e os cadastros operacionais vinculados a ele.</p>
+                      <DeleteEventDialog event={eventQuery.data} onDeleted={() => void navigate({ to: '/admin' })} />
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               <TabsContent value="categories">
@@ -143,6 +158,8 @@ function AdminEventPage() {
                   showLiveRanking
                 />
               </TabsContent>
+
+              {isAdmin && <TabsContent value="finance"><FinancialManager eventId={eventId} /></TabsContent>}
 
               <TabsContent value="import-export">
                 {isAdmin ? (

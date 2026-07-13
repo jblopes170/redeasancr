@@ -1,4 +1,4 @@
-import { CalendarDays, Medal, Pencil, Plus, RefreshCw, Save, Search, Trash2, Trophy } from 'lucide-react'
+import { CalendarDays, Eraser, Medal, Pencil, Plus, RefreshCw, Save, Search, Trash2, Trophy } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import type { CategoryLevel, EntryRecord, EventRecord, Level, ScoreRecord, Stage } from '@/types/domain'
 import {
   LEVEL_OPTIONS,
+  BRAZILIAN_UF_OPTIONS,
   NO_LEVEL_VALUE,
   STAGE_OPTIONS,
   categoryOptionLabel,
@@ -15,6 +16,7 @@ import {
 } from '@/lib/constants'
 import {
   deleteEntry,
+  deleteScore,
   findOrCreateCompetitor,
   findOrCreateHorse,
   getCategories,
@@ -41,6 +43,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SuggestionInput } from '@/components/ui/suggestion-input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { LevelBadge } from '@/components/level-badge'
 import { StatusBadge } from '@/components/status-badge'
@@ -520,6 +523,26 @@ export function ScoreLaunchPanel({
     }
   }
 
+  const deleteScoreMutation = useMutation({
+    mutationFn: async ({ rowKey, entryIds }: { rowKey: string; entryIds: string[] }) => {
+      const scoresToDelete = entryIds.map((entryId) => scoreByEntry.get(entryId)).filter(Boolean) as ScoreRecord[]
+      for (const score of scoresToDelete) await deleteScore(score.id)
+      return rowKey
+    },
+    onSuccess: (rowKey) => {
+      toast.success('Nota excluída.')
+      setDrafts((current) => ({
+        ...current,
+        [rowKey]: { score: '', penalties: '0', notes: '', stage: current[rowKey]?.stage ?? filterStage },
+      }))
+      void queryClient.invalidateQueries({ queryKey: ['scores', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['ranking-stage', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['ranking-championship', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['ranking-stages-overview', eventId] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir nota.'),
+  })
+
   const readDraft = (draftKey: string, stage: Stage, entries: EntryRecord[] = []): DraftRow => {
     const local = drafts[draftKey]
     if (local) return local
@@ -778,6 +801,20 @@ export function ScoreLaunchPanel({
     (competitor) => competitor.id === entryForm.competitor_id,
   )
   const selectedHorse = (horsesQuery.data ?? []).find((horse) => horse.id === entryForm.horse_id)
+  const competitorOptions = (competitorsQuery.data ?? []).map((competitor) => ({
+    value: competitor.name,
+    label: competitor.city ? `${competitor.city}/${competitor.uf ?? '--'}` : competitor.document ?? undefined,
+  }))
+  const horseOptions = (horsesQuery.data ?? []).map((horse) => ({
+    value: horse.name,
+    label: horse.registration ?? horse.owner ?? undefined,
+  }))
+  const cityOptions = Array.from(
+    new Set((competitorsQuery.data ?? []).map((competitor) => competitor.city?.trim()).filter(Boolean) as string[]),
+  ).sort((a, b) => a.localeCompare(b, 'pt-BR')).map((value) => ({ value }))
+  const ownerOptions = Array.from(
+    new Set((horsesQuery.data ?? []).map((horse) => horse.owner?.trim()).filter(Boolean) as string[]),
+  ).sort((a, b) => a.localeCompare(b, 'pt-BR')).map((value) => ({ value }))
 
   return (
     <div className="space-y-4">
@@ -1026,10 +1063,25 @@ export function ScoreLaunchPanel({
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-6">
                     <div className="grid gap-1 sm:col-span-3">
                       <Label htmlFor="new-competitor-name">Nome do competidor *</Label>
-                      <Input
+                      <SuggestionInput
                         id="new-competitor-name"
+                        options={competitorOptions}
                         value={entryForm.new_competitor_name}
+                        placeholder="Digite um nome novo ou escolha uma sugestão"
                         onChange={(event) => setEntryForm((prev) => ({ ...prev, new_competitor_name: event.target.value }))}
+                        onSuggestionSelect={(option) => {
+                          const found = (competitorsQuery.data ?? []).find(
+                            (competitor) => normalizeSearch(competitor.name) === normalizeSearch(option.value),
+                          )
+                          if (!found) return
+                          setEntryForm((prev) => ({
+                            ...prev,
+                            new_competitor_name: found.name,
+                            new_competitor_document: found.document ?? prev.new_competitor_document,
+                            new_competitor_city: found.city ?? prev.new_competitor_city,
+                            new_competitor_uf: found.uf ?? prev.new_competitor_uf,
+                          }))
+                        }}
                       />
                     </div>
                     <div className="grid gap-1 sm:col-span-3">
@@ -1042,16 +1094,19 @@ export function ScoreLaunchPanel({
                     </div>
                     <div className="grid gap-1 sm:col-span-4">
                       <Label htmlFor="new-competitor-city">Cidade</Label>
-                      <Input
+                      <SuggestionInput
                         id="new-competitor-city"
+                        options={cityOptions}
                         value={entryForm.new_competitor_city}
                         onChange={(event) => setEntryForm((prev) => ({ ...prev, new_competitor_city: event.target.value }))}
+                        placeholder="Digite ou escolha"
                       />
                     </div>
                     <div className="grid gap-1 sm:col-span-2">
                       <Label htmlFor="new-competitor-uf">UF</Label>
-                      <Input
+                      <SuggestionInput
                         id="new-competitor-uf"
+                        options={BRAZILIAN_UF_OPTIONS.map((value) => ({ value }))}
                         maxLength={2}
                         className="uppercase"
                         value={entryForm.new_competitor_uf}
@@ -1116,10 +1171,24 @@ export function ScoreLaunchPanel({
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-6">
                     <div className="grid gap-1 sm:col-span-3">
                       <Label htmlFor="new-horse-name">Nome do animal *</Label>
-                      <Input
+                      <SuggestionInput
                         id="new-horse-name"
+                        options={horseOptions}
                         value={entryForm.new_horse_name}
+                        placeholder="Digite um animal novo ou escolha uma sugestão"
                         onChange={(event) => setEntryForm((prev) => ({ ...prev, new_horse_name: event.target.value }))}
+                        onSuggestionSelect={(option) => {
+                          const found = (horsesQuery.data ?? []).find(
+                            (horse) => normalizeSearch(horse.name) === normalizeSearch(option.value),
+                          )
+                          if (!found) return
+                          setEntryForm((prev) => ({
+                            ...prev,
+                            new_horse_name: found.name,
+                            new_horse_registration: found.registration ?? prev.new_horse_registration,
+                            new_horse_owner: found.owner ?? prev.new_horse_owner,
+                          }))
+                        }}
                       />
                     </div>
                     <div className="grid gap-1 sm:col-span-3">
@@ -1132,10 +1201,12 @@ export function ScoreLaunchPanel({
                     </div>
                     <div className="grid gap-1 sm:col-span-6">
                       <Label htmlFor="new-horse-owner">Proprietário</Label>
-                      <Input
+                      <SuggestionInput
                         id="new-horse-owner"
+                        options={ownerOptions}
                         value={entryForm.new_horse_owner}
                         onChange={(event) => setEntryForm((prev) => ({ ...prev, new_horse_owner: event.target.value }))}
+                        placeholder="Digite ou escolha"
                       />
                     </div>
                   </div>
@@ -1496,6 +1567,17 @@ export function ScoreLaunchPanel({
                         </Button>
                         {canManageEntries && (
                           <>
+                            {draft.scoreId && (
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                title="Excluir somente a nota"
+                                onClick={() => deleteScoreMutation.mutate({ rowKey: row.key, entryIds })}
+                                disabled={deleteScoreMutation.isPending}
+                              >
+                                <Eraser className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button size="icon" variant="outline" onClick={() => openEditEntry(entry)}>
                               <Pencil className="h-4 w-4" />
                             </Button>

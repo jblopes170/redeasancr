@@ -1,4 +1,4 @@
-import { MailPlus, Search, ShieldCheck, UsersRound } from 'lucide-react'
+import { MailPlus, Search, ShieldCheck, Trash2, UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getAccessInvites, getProfiles, saveAccessInvite, saveProfileAccess } from '@/services/api'
+import { deleteAccessInvite, getAccessInvites, getProfiles, saveAccessInvite, saveProfileAccess } from '@/services/api'
 import type { AccessInviteRecord, ProfileRecord, UserRole } from '@/types/domain'
 
 interface AccessManagerProps {
@@ -66,6 +66,15 @@ export function AccessManager({ canEdit }: AccessManagerProps) {
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Erro ao autorizar e-mail')
     },
+  })
+
+  const deleteInviteMutation = useMutation({
+    mutationFn: deleteAccessInvite,
+    onSuccess: () => {
+      toast.success('Autorização de e-mail excluída.')
+      void queryClient.invalidateQueries({ queryKey: ['access-invites'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir autorização.'),
   })
 
   const profiles = useMemo(() => profilesQuery.data ?? [], [profilesQuery.data])
@@ -256,6 +265,15 @@ export function AccessManager({ canEdit }: AccessManagerProps) {
                         disabled={!canEdit || inviteMutation.isPending}
                       >
                         {invite.active ? 'Desativar' : 'Ativar'}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        aria-label="Excluir autorização"
+                        onClick={() => deleteInviteMutation.mutate(invite.id)}
+                        disabled={!canEdit || deleteInviteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

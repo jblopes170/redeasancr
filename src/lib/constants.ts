@@ -8,6 +8,11 @@ export const STAGE_OPTIONS = [
 
 export const LEVEL_OPTIONS = ['N1', 'N2', 'N3', 'N4'] as const
 
+export const BRAZILIAN_UF_OPTIONS = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
+  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+] as const
+
 export const NO_LEVEL_VALUE = '__SEM_NIVEL__'
 
 export const EVENT_STATUS_LABEL: Record<string, string> = {

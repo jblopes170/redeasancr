@@ -1,4 +1,4 @@
-import { Check, MessageSquareReply, X } from 'lucide-react'
+import { Check, MessageSquareReply, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -14,6 +14,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { categoryOptionLabel } from '@/lib/constants'
 import {
   approveRegistrationRequest,
+  deleteRegistrationRequest,
+  deleteSuggestion,
   getAdminRegistrationRequests,
   getAdminSuggestions,
   respondSuggestion,
@@ -67,6 +69,25 @@ export function RequestManagement() {
       void queryClient.invalidateQueries({ queryKey: ['admin-suggestions'] })
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao responder sugestão'),
+  })
+
+  const deleteRequestMutation = useMutation({
+    mutationFn: deleteRegistrationRequest,
+    onSuccess: () => {
+      toast.success('Solicitação e inscrições vinculadas foram excluídas.')
+      void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
+      void queryClient.invalidateQueries({ queryKey: ['entries'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir solicitação.'),
+  })
+
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: deleteSuggestion,
+    onSuccess: () => {
+      toast.success('Sugestão excluída.')
+      void queryClient.invalidateQueries({ queryKey: ['admin-suggestions'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir sugestão.'),
   })
 
   const requests = [...(requestsQuery.data ?? [])].sort((a, b) => {
@@ -131,16 +152,19 @@ export function RequestManagement() {
                     <TableCell>{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
                     <TableCell><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
                     <TableCell>
-                      {request.status === 'pending' && (
-                        <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2">
+                        {request.status === 'pending' && (
+                          <>
                           <Button size="sm" className="gap-2" onClick={() => approveMutation.mutate(request.id)} disabled={approveMutation.isPending}>
                             <Check className="h-4 w-4" /> Aprovar
                           </Button>
                           <Button size="sm" variant="outline" className="gap-2" onClick={() => rejectMutation.mutate(request.id)} disabled={rejectMutation.isPending}>
                             <X className="h-4 w-4" /> Rejeitar
                           </Button>
-                        </div>
-                      )}
+                          </>
+                        )}
+                        <Button size="icon" variant="destructive" aria-label="Excluir solicitação" onClick={() => deleteRequestMutation.mutate(request.id)} disabled={deleteRequestMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -175,10 +199,11 @@ export function RequestManagement() {
                     <TableCell className="max-w-sm whitespace-normal">{suggestion.message}</TableCell>
                     <TableCell><Badge variant={suggestion.status === 'answered' ? 'default' : 'secondary'}>{suggestion.status === 'answered' ? 'Respondida' : 'Nova'}</Badge></TableCell>
                     <TableCell>
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" className="gap-2" onClick={() => { setSelectedSuggestion(suggestion); setResponse(suggestion.response ?? '') }}>
                           <MessageSquareReply className="h-4 w-4" /> Responder
                         </Button>
+                        <Button size="icon" variant="destructive" aria-label="Excluir sugestão" onClick={() => deleteSuggestionMutation.mutate(suggestion.id)} disabled={deleteSuggestionMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

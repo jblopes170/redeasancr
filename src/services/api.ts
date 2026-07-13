@@ -8,6 +8,9 @@ import type {
   CompetitorRecord,
   EntryRecord,
   EventRecord,
+  FinancialDirection,
+  FinancialStatus,
+  FinancialTransactionRecord,
   HorseRecord,
   Level,
   NewsPostRecord,
@@ -53,6 +56,10 @@ function mapSupabaseError(message: string): string {
     return 'Configuracao do portal pendente. No Supabase SQL Editor, execute o arquivo supabase/manual/fix-portal-pendente.sql.'
   }
 
+  if (normalized.includes('financial_transactions')) {
+    return 'O modulo financeiro ainda nao foi configurado. Execute supabase/manual/setup-financeiro-dre.sql no Supabase.'
+  }
+
   return message
 }
 
@@ -77,6 +84,11 @@ export async function getPublicEvents() {
 
 export async function getAdminEvents() {
   return unwrap<EventRecord[]>(supabase.from('events').select('*').order('created_at', { ascending: false }))
+}
+
+export async function deleteEvent(id: string) {
+  const { error } = await supabase.from('events').delete().eq('id', id)
+  if (error) throw new Error(mapSupabaseError(error.message))
 }
 
 export async function getEventById(eventId: string) {
@@ -565,6 +577,11 @@ export async function saveAccessInvite(payload: AccessInviteInput) {
   )
 }
 
+export async function deleteAccessInvite(id: string) {
+  const { error } = await supabase.from('access_invites').delete().eq('id', id)
+  if (error) throw new Error(mapSupabaseError(error.message))
+}
+
 export async function getPublicNews(eventId?: string, limit = 6) {
   let query = supabase
     .from('news_posts')
@@ -697,6 +714,20 @@ export async function updateRegistrationRequestStatus(
   )
 }
 
+export async function deleteRegistrationRequest(id: string) {
+  const request = await unwrap<Pick<RegistrationRequestRecord, 'entry_ids'>>(
+    supabase.from('registration_requests').select('entry_ids').eq('id', id).single(),
+  )
+
+  if (request.entry_ids?.length) {
+    const { error: entriesError } = await supabase.from('entries').delete().in('id', request.entry_ids)
+    if (entriesError) throw new Error(mapSupabaseError(entriesError.message))
+  }
+
+  const { error } = await supabase.from('registration_requests').delete().eq('id', id)
+  if (error) throw new Error(mapSupabaseError(error.message))
+}
+
 export interface SuggestionInput {
   event_id?: string
   subject: string
@@ -753,6 +784,81 @@ export async function respondSuggestion(id: string, response: string, status: Su
       .select('*')
       .single(),
   )
+}
+
+export async function deleteSuggestion(id: string) {
+  const { error } = await supabase.from('suggestions').delete().eq('id', id)
+  if (error) throw new Error(mapSupabaseError(error.message))
+}
+
+export async function getFinancialTransactions(eventId: string) {
+  return unwrap<FinancialTransactionRecord[]>(
+    supabase
+      .from('financial_transactions')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('competence_date', { ascending: false })
+      .order('created_at', { ascending: false }),
+  )
+}
+
+export interface FinancialTransactionInput {
+  id?: string
+  event_id: string
+  direction: FinancialDirection
+  category: string
+  description: string
+  counterparty?: string
+  amount: number
+  status: FinancialStatus
+  competence_date: string
+  due_date?: string
+  settled_on?: string
+  payment_method?: string
+  registration_request_id?: string
+  entry_id?: string
+  notes?: string
+}
+
+export async function saveFinancialTransaction(payload: FinancialTransactionInput) {
+  const { data: authData } = await supabase.auth.getUser()
+  const values = {
+    event_id: payload.event_id,
+    direction: payload.direction,
+    category: payload.category.trim(),
+    description: payload.description.trim(),
+    counterparty: payload.counterparty?.trim() || null,
+    amount: payload.amount,
+    status: payload.status,
+    competence_date: payload.competence_date,
+    due_date: payload.due_date || null,
+    settled_on: payload.status === 'settled'
+      ? payload.settled_on || new Date().toISOString().slice(0, 10)
+      : null,
+    payment_method: payload.payment_method?.trim() || null,
+    registration_request_id: payload.registration_request_id || null,
+    entry_id: payload.entry_id || null,
+    notes: payload.notes?.trim() || null,
+  }
+
+  if (payload.id) {
+    return unwrap<FinancialTransactionRecord>(
+      supabase.from('financial_transactions').update(values).eq('id', payload.id).select('*').single(),
+    )
+  }
+
+  return unwrap<FinancialTransactionRecord>(
+    supabase
+      .from('financial_transactions')
+      .insert({ ...values, created_by: authData.user?.id ?? null })
+      .select('*')
+      .single(),
+  )
+}
+
+export async function deleteFinancialTransaction(id: string) {
+  const { error } = await supabase.from('financial_transactions').delete().eq('id', id)
+  if (error) throw new Error(mapSupabaseError(error.message))
 }
 
 export async function getRankingByStage(
