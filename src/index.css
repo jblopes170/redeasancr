@@ -1,28 +1,28 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700;8..60,800&display=swap");
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
 :root {
-  --background: 34 18% 96%;
-  --foreground: 15 12% 14%;
+  --background: 0 0% 98%;
+  --foreground: 220 8% 18%;
   --card: 0 0% 100%;
-  --card-foreground: 15 12% 14%;
+  --card-foreground: 220 8% 18%;
   --popover: 0 0% 100%;
-  --popover-foreground: 15 12% 14%;
-  --primary: 356 72% 41%;
+  --popover-foreground: 220 8% 18%;
+  --primary: 0 70% 38%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 32 18% 91%;
-  --secondary-foreground: 12 21% 24%;
-  --muted: 32 16% 93%;
-  --muted-foreground: 20 11% 42%;
-  --accent: 43 84% 90%;
-  --accent-foreground: 24 70% 30%;
-  --destructive: 356 72% 41%;
+  --secondary: 210 9% 31%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 4% 95%;
+  --muted-foreground: 220 6% 34%;
+  --accent: 240 5% 96%;
+  --accent-foreground: 0 70% 38%;
+  --destructive: 0 70% 38%;
   --destructive-foreground: 0 0% 100%;
-  --border: 25 13% 80%;
-  --input: 25 13% 80%;
-  --ring: 356 72% 41%;
-  --radius: 0.5rem;
+  --border: 220 13% 90%;
+  --input: 220 13% 84%;
+  --ring: 0 70% 38%;
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -51,7 +51,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: "Barlow", "Segoe UI", sans-serif;
+  --font-sans: "Hanken Grotesk", "Inter", "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
 }
 
 * {
@@ -62,16 +63,17 @@ html,
 body,
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 body {
   background-color: hsl(var(--background));
   background-image:
-    linear-gradient(180deg, #ffffff 0, #f6f1ec 260px),
-    linear-gradient(90deg, rgba(178, 29, 41, 0.06), rgba(32, 32, 36, 0.04));
+    radial-gradient(circle at top left, rgba(163, 29, 29, 0.06), transparent 32rem),
+    linear-gradient(180deg, #ffffff 0, #f9f9f9 18rem);
   background-attachment: fixed;
   color: hsl(var(--foreground));
-  font-family: "Barlow", "Segoe UI", sans-serif;
+  font-family: "Hanken Grotesk", "Inter", "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -80,8 +82,30 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "Barlow", "Segoe UI", sans-serif;
-  letter-spacing: 0.01em;
+  font-family: "Source Serif 4", Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.font-headline-lg {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(2.5rem, 6vw, 4.75rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.font-headline-md {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.font-body-md {
+  font-family: "Hanken Grotesk", "Inter", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 code {
@@ -93,4 +117,17 @@ code {
 
 ::selection {
   background: hsl(var(--primary) / 0.2);
+}
+
+@keyframes horse-trail-run {
+  from {
+    transform: translateX(-12rem);
+  }
+  to {
+    transform: translateX(calc(100vw + 12rem));
+  }
+}
+
+.horse-trail__horse {
+  animation: horse-trail-run 18s linear infinite;
 }

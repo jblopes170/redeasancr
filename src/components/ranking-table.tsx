@@ -3,8 +3,17 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import type { CategoryLevel, ChampionshipRankingRow, Level, Stage, StageRankingRow } from '@/types/domain'
-import { LEVEL_OPTIONS, NO_LEVEL_VALUE, STAGE_OPTIONS, isLeveledCategoryName, pointsForPosition } from '@/lib/constants'
-import { downloadCsv } from '@/lib/csv'
+import {
+  LEVEL_OPTIONS,
+  NO_LEVEL_VALUE,
+  STAGE_OPTIONS,
+  categoryOptionLabel,
+  getUniqueCategoryOptions,
+  isLeveledCategoryName,
+  isOfficialCategoryName,
+  pointsForPosition,
+} from '@/lib/constants'
+import { downloadExcel } from '@/lib/spreadsheet'
 import { getCategories, getChampionshipRanking, getRankingByStage } from '@/services/api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -86,14 +95,14 @@ export function RankingTable({ eventId }: RankingTableProps) {
   const [prizePct3, setPrizePct3] = useState('20')
 
   const categoriesQuery = useQuery({ queryKey: ['categories', eventId], queryFn: () => getCategories(eventId) })
+  const categories = useMemo(
+    () => (categoriesQuery.data ?? []).filter((category) => category.active && isOfficialCategoryName(category.name)),
+    [categoriesQuery.data],
+  )
   const categoryOptions = useMemo(() => {
-    const options = new Map<string, string>()
-    for (const category of categoriesQuery.data ?? []) {
-      const key = isLeveledCategoryName(category.name) ? category.name : `${category.name}:${category.level ?? 'SEM_NIVEL'}`
-      if (!options.has(key)) options.set(key, category.name)
-    }
-    return Array.from(options.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  }, [categoriesQuery.data])
+    return getUniqueCategoryOptions(categories).map((category) => categoryOptionLabel(category.name))
+  }, [categories])
+  const selectedCategoryIsLeveled = categoryName ? isLeveledCategoryName(categoryName) : true
 
   const isCumulative = levelViewMode === 'cumulative'
   const cumulativeLevel: Level = level && level !== null ? (level as Level) : 'N1'
@@ -355,7 +364,17 @@ export function RankingTable({ eventId }: RankingTableProps) {
 
         <div>
           <Label>Categoria</Label>
-          <Select value={categoryName ?? 'all'} onValueChange={(value) => setCategoryName(value === 'all' ? undefined : value)}>
+          <Select
+            value={categoryName ?? 'all'}
+            onValueChange={(value) => {
+              const nextCategoryName = value === 'all' ? undefined : value
+              setCategoryName(nextCategoryName)
+              if (nextCategoryName && !isLeveledCategoryName(nextCategoryName)) {
+                setLevel(null)
+                setLevelViewMode('exact')
+              }
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
@@ -372,9 +391,10 @@ export function RankingTable({ eventId }: RankingTableProps) {
 
         <div>
           <Label>Tela de nível</Label>
-          <Select
-            value={levelViewMode}
-            onValueChange={(value) => {
+            <Select
+              value={levelViewMode}
+              disabled={Boolean(categoryName && !selectedCategoryIsLeveled)}
+              onValueChange={(value) => {
               const modeValue = value as LevelViewMode
               setLevelViewMode(modeValue)
               if (modeValue === 'cumulative' && (!level || level === null)) {
@@ -413,6 +433,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
           ) : (
             <Select
               value={level === undefined ? 'all' : level === null ? NO_LEVEL_VALUE : level}
+              disabled={Boolean(categoryName && !selectedCategoryIsLeveled)}
               onValueChange={(value) => {
                 if (value === 'all') {
                   setLevel(undefined)
@@ -476,10 +497,19 @@ export function RankingTable({ eventId }: RankingTableProps) {
         <Button
           variant="outline"
           className="gap-2"
-          onClick={() => downloadCsv(mode === 'stage' ? 'ranking-etapa.csv' : 'ranking-campeonato.csv', exportRows())}
+          onClick={() => downloadExcel(
+            mode === 'stage' ? 'ranking-etapa.xlsx' : 'ranking-campeonato.xlsx',
+            exportRows(),
+            {
+              sheetName: mode === 'stage' ? 'Ranking Etapa' : 'Ranking Campeonato',
+              headers: mode === 'stage'
+                ? ['posicao', 'competidor', 'cavalo', 'categoria', 'nivel', 'etapa', 'nota_etapa', 'pontos_etapa', 'status']
+                : ['posicao', 'competidor', 'cavalo', 'categoria', 'nivel', 'pontos_etapa_1', 'pontos_etapa_2', 'pontos_etapa_3', 'total_pontos', 'status'],
+            },
+          )}
         >
           <Download className="h-4 w-4" />
-          Exportar Ranking CSV
+          Exportar Ranking Excel
         </Button>
       </div>
 
@@ -510,19 +540,15 @@ export function RankingTable({ eventId }: RankingTableProps) {
         </div>
       )}
 
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-2xl border bg-card shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Posição</TableHead>
-              <TableHead>Competidor</TableHead>
-              <TableHead>Cavalo</TableHead>
+              <TableHead className="w-24">Posicao</TableHead>
+              <TableHead>Conjunto</TableHead>
               <TableHead>Categoria</TableHead>
-              <TableHead>Nível</TableHead>
-              <TableHead>Etapa ou Campeonato</TableHead>
-              <TableHead>Pontos etapa 1</TableHead>
-              <TableHead>Pontos etapa 2</TableHead>
-              <TableHead>Pontos etapa 3</TableHead>
+              <TableHead>Exibicao</TableHead>
+              <TableHead>Etapas / pontos</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -530,14 +556,14 @@ export function RankingTable({ eventId }: RankingTableProps) {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-muted-foreground">
+                <TableCell colSpan={7} className="text-muted-foreground">
                   Carregando ranking...
                 </TableCell>
               </TableRow>
             ) : mode === 'stage' ? (
               stageRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-muted-foreground">
+                  <TableCell colSpan={7} className="text-muted-foreground">
                     Nenhum resultado encontrado para os filtros.
                   </TableCell>
                 </TableRow>
@@ -546,29 +572,33 @@ export function RankingTable({ eventId }: RankingTableProps) {
                   <TableRow
                     key={`${row.event_id}-${row.category_id}-${row.level ?? 'SEM_NIVEL'}-${row.competitor_id}-${row.horse_id}-${row.stage}`}
                   >
-                    <TableCell>{row.position}</TableCell>
-                    <TableCell>{row.competitor_name}</TableCell>
-                    <TableCell>{row.horse_name}</TableCell>
-                    <TableCell>{row.category_name}</TableCell>
+                    <TableCell className="text-2xl font-extrabold text-primary">{row.position}o</TableCell>
                     <TableCell>
-                      <LevelBadge level={row.level} />
+                      <p className="font-bold text-foreground">{row.competitor_name}</p>
+                      <p className="text-sm text-muted-foreground">{row.horse_name}</p>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{row.stage}a etapa</Badge>
+                      <p className="font-semibold text-foreground">{row.category_name}</p>
+                      <div className="mt-1"><LevelBadge level={row.level} /></div>
                     </TableCell>
-                    <TableCell>{row.stage === 1 ? row.stage_points ?? 0 : '--'}</TableCell>
-                    <TableCell>{row.stage === 2 ? row.stage_points ?? 0 : '--'}</TableCell>
-                    <TableCell>{row.stage === 3 ? row.stage_points ?? 0 : '--'}</TableCell>
-                    <TableCell className="font-semibold">
-                      {row.total_score} <span className="text-xs text-muted-foreground">({row.stage_points ?? 0} pts)</span>
+                    <TableCell><Badge variant="outline">{row.stage}a etapa</Badge></TableCell>
+                    <TableCell>
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 1</span><strong>{row.stage === 1 ? row.stage_points ?? 0 : '--'}</strong></div>
+                        <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 2</span><strong>{row.stage === 2 ? row.stage_points ?? 0 : '--'}</strong></div>
+                        <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 3</span><strong>{row.stage === 3 ? row.stage_points ?? 0 : '--'}</strong></div>
+                      </div>
                     </TableCell>
-                    <TableCell>Válido</TableCell>
+                    <TableCell className="text-lg font-extrabold text-foreground">
+                      {row.total_score} <span className="text-xs font-semibold text-muted-foreground">({row.stage_points ?? 0} pts)</span>
+                    </TableCell>
+                    <TableCell>Valido</TableCell>
                   </TableRow>
                 ))
               )
             ) : championshipRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-muted-foreground">
+                <TableCell colSpan={7} className="text-muted-foreground">
                   Nenhum resultado encontrado para os filtros.
                 </TableCell>
               </TableRow>
@@ -577,21 +607,25 @@ export function RankingTable({ eventId }: RankingTableProps) {
                 <TableRow
                   key={`${row.event_id}-${row.category_id}-${row.level ?? 'SEM_NIVEL'}-${row.competitor_id}-${row.horse_id}`}
                 >
-                  <TableCell>{row.position}</TableCell>
-                  <TableCell>{row.competitor_name}</TableCell>
-                  <TableCell>{row.horse_name}</TableCell>
-                  <TableCell>{row.category_name}</TableCell>
+                  <TableCell className="text-2xl font-extrabold text-primary">{row.position}o</TableCell>
                   <TableCell>
-                    <LevelBadge level={row.level} />
+                    <p className="font-bold text-foreground">{row.competitor_name}</p>
+                    <p className="text-sm text-muted-foreground">{row.horse_name}</p>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">Campeonato</Badge>
+                    <p className="font-semibold text-foreground">{row.category_name}</p>
+                    <div className="mt-1"><LevelBadge level={row.level} /></div>
                   </TableCell>
-                  <TableCell>{row.stage_1_score}</TableCell>
-                  <TableCell>{row.stage_2_score}</TableCell>
-                  <TableCell>{row.stage_3_score}</TableCell>
-                  <TableCell className="font-semibold">{row.total_score}</TableCell>
-                  <TableCell>Válido</TableCell>
+                  <TableCell><Badge variant="secondary">Campeonato</Badge></TableCell>
+                  <TableCell>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 1</span><strong>{row.stage_1_score}</strong></div>
+                      <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 2</span><strong>{row.stage_2_score}</strong></div>
+                      <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 3</span><strong>{row.stage_3_score}</strong></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-lg font-extrabold text-foreground">{row.total_score}</TableCell>
+                  <TableCell>Valido</TableCell>
                 </TableRow>
               ))
             )}
@@ -601,3 +635,4 @@ export function RankingTable({ eventId }: RankingTableProps) {
     </div>
   )
 }
+

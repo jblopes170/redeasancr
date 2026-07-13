@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+﻿import { Link } from '@tanstack/react-router'
 import { LogOut, Shield, Trophy, UserCircle, UserPlus } from 'lucide-react'
 
 import ntmrLogo from '@/assets/ntmr-logo.jpg'
@@ -12,37 +12,37 @@ export function SiteHeader() {
   const { session, profile, signOut } = useAuth()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/95 shadow-sm backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:py-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <Link to="/" className="flex min-w-0 items-center gap-3">
-            <img src={ntmrLogo} alt="Logo NTMR" className="h-12 w-12 rounded-md border border-border object-cover" />
+            <img src={ntmrLogo} alt="Logo NTMR" className="h-14 w-14 rounded-xl border border-gray-200 object-cover" />
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Núcleo Triângulo Mineiro de Rédeas
+              <p className="truncate text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                Nucleo Triangulo Mineiro de Redeas
               </p>
-              <p className="truncate text-2xl font-bold tracking-tight text-foreground">Ranking NTMR</p>
+              <p className="truncate font-serif text-3xl font-bold leading-none tracking-tight text-foreground">Ranking NTMR</p>
             </div>
           </Link>
 
           <div className="flex flex-wrap items-center gap-2">
             {session && profile ? (
               <>
-                <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-muted/35 px-3 py-2">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
                   <Shield className="h-4 w-4 shrink-0 text-primary" />
                   <span className="max-w-[220px] truncate text-sm">{profile.name ?? profile.email}</span>
                   <RoleBadge role={profile.role} />
                 </div>
                 {(profile.role === 'admin' || profile.role === 'judge') && (
-                  <Button variant="secondary" asChild>
+                  <Button asChild>
                     <Link to="/admin">Painel</Link>
                   </Button>
                 )}
                 {profile.role === 'user' && (
-                  <Button variant="secondary" asChild>
+                  <Button asChild>
                     <Link to="/minha-area">
                       <UserCircle className="mr-2 h-4 w-4" />
-                      Minha área
+                      Minha area
                     </Link>
                   </Button>
                 )}
@@ -62,7 +62,7 @@ export function SiteHeader() {
                 <Button asChild>
                   <Link to="/login">
                     <UserPlus className="mr-2 h-4 w-4" />
-                    Entrar / Cadastrar
+                    Entrar
                   </Link>
                 </Button>
               </>
@@ -70,24 +70,27 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/80 pt-2">
-          <nav className="flex flex-wrap items-center gap-1 text-sm text-foreground">
-            <Link to="/" hash="inicio" className="rounded-md px-3 py-1.5 font-semibold hover:bg-muted/70">
-              Início
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-200 pt-3">
+          <nav className="flex flex-wrap items-center gap-2 text-sm text-secondary">
+            <Link to="/" hash="inicio" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
+              Inicio
             </Link>
-            <Link to="/" hash="calendario" className="rounded-md px-3 py-1.5 font-semibold hover:bg-muted/70">
+            <Link to="/" hash="calendario" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
               Eventos
             </Link>
-            <Link to="/" hash="noticias" className="rounded-md px-3 py-1.5 font-semibold hover:bg-muted/70">
-              Notícias
+            <Link to="/" hash="noticias" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
+              Noticias
             </Link>
-            <Link to="/ranking" className="rounded-md px-3 py-1.5 font-semibold hover:bg-muted/70">
+            <Link to="/ranking" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
               Ranking
+            </Link>
+            <Link to="/" hash="como-funciona" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
+              Como funciona
             </Link>
           </nav>
 
-          <div className="rounded-md border border-border bg-muted/35 px-3 py-1 text-xs font-semibold text-muted-foreground">
-            Vinculado à ANCR
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-muted-foreground shadow-sm">
+            Vinculado a ANCR
           </div>
         </div>
 

@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn('w-full min-w-max caption-bottom text-sm', className)} {...props} />
+    <div className="relative w-full overflow-x-auto">
+      <table ref={ref} className={cn('w-full table-auto caption-bottom text-sm', className)} {...props} />
     </div>
   ),
 )
@@ -52,7 +52,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
   ({ className, ...props }, ref) => (
     <th
       ref={ref}
-      className={cn('h-10 whitespace-nowrap px-3 text-left align-middle font-bold text-primary-foreground', className)}
+      className={cn('h-10 whitespace-normal px-3 text-left align-middle font-bold text-primary-foreground', className)}
       {...props}
     />
   ),
@@ -60,7 +60,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
 TableHead.displayName = 'TableHead'
 
 const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => <td ref={ref} className={cn('whitespace-nowrap p-3 align-middle', className)} {...props} />,
+  ({ className, ...props }, ref) => <td ref={ref} className={cn('whitespace-normal p-3 align-middle', className)} {...props} />,
 )
 TableCell.displayName = 'TableCell'
 

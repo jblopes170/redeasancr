@@ -136,6 +136,7 @@ export interface RegistrationRequestRecord {
   user_id: string
   event_id: string
   category_id: string
+  requested_levels: Level[] | null
   stages: Stage[]
   competitor_name: string
   competitor_document: string | null

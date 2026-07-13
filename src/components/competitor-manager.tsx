@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import { downloadCsv } from '@/lib/csv'
+import { downloadExcel } from '@/lib/spreadsheet'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -140,8 +140,8 @@ export function CompetitorManager({ canEdit }: CompetitorManagerProps) {
         <Button
           variant="outline"
           onClick={() =>
-            downloadCsv(
-              'competidores.csv',
+            downloadExcel(
+              'competidores.xlsx',
               rows.map((row) => ({
                 nome: row.name,
                 documento: row.document ?? '',
@@ -151,12 +151,16 @@ export function CompetitorManager({ canEdit }: CompetitorManagerProps) {
                 uf: row.uf ?? '',
                 observacoes: row.notes ?? '',
               })),
+              {
+                sheetName: 'Competidores',
+                headers: ['nome', 'documento', 'telefone', 'email', 'cidade', 'uf', 'observacoes'],
+              },
             )
           }
           className="gap-2"
         >
           <Download className="h-4 w-4" />
-          Exportar CSV
+          Exportar Excel
         </Button>
 
         {canEdit && (
@@ -281,3 +285,4 @@ export function CompetitorManager({ canEdit }: CompetitorManagerProps) {
     </div>
   )
 }
+

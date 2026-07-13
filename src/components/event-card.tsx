@@ -19,9 +19,9 @@ function formatDate(value: string | null) {
 
 export function EventCard({ event, admin = false }: EventCardProps) {
   return (
-    <Card className="h-full border-primary/20 bg-card/95 shadow-md transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10">
+    <Card className="h-full border-gray-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl text-primary">{event.name}</CardTitle>
+        <CardTitle className="font-headline-md text-primary">{event.name}</CardTitle>
         <CardDescription className="flex flex-wrap items-center gap-3 text-xs">
           <StatusBadge type="event" status={event.status} />
           <span className="inline-flex items-center gap-1">

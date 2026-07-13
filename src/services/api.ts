@@ -48,8 +48,9 @@ function mapSupabaseError(message: string): string {
     || normalized.includes('news_posts')
     || normalized.includes('suggestions')
     || normalized.includes('approve_registration_request')
+    || normalized.includes('requested_levels')
   ) {
-    return 'Configuração do portal pendente. Execute a migration 202607110003_member_content_workflow.sql no Supabase.'
+    return 'Configuracao do portal pendente. No Supabase SQL Editor, execute o arquivo supabase/manual/fix-portal-pendente.sql.'
   }
 
   return message
@@ -626,6 +627,7 @@ export async function deleteNewsPost(id: string) {
 export interface RegistrationRequestInput {
   event_id: string
   category_id: string
+  requested_levels?: Level[]
   stages: Stage[]
   competitor_name: string
   competitor_document?: string
@@ -643,6 +645,7 @@ export async function createRegistrationRequest(payload: RegistrationRequestInpu
       .from('registration_requests')
       .insert({
         ...payload,
+        requested_levels: payload.requested_levels && payload.requested_levels.length > 0 ? payload.requested_levels : null,
         competitor_document: payload.competitor_document?.trim() || null,
         competitor_city: payload.competitor_city?.trim() || null,
         competitor_uf: payload.competitor_uf?.trim().toUpperCase() || null,
@@ -1252,3 +1255,4 @@ export async function importUnifiedSheet(eventId: string, judgeId: string, rows:
 
   return { success, errors } satisfies ImportResult
 }
+

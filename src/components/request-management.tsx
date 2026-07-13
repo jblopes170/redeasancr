@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { categoryOptionLabel } from '@/lib/constants'
 import {
   approveRegistrationRequest,
   getAdminRegistrationRequests,
@@ -121,7 +122,12 @@ export function RequestManagement() {
                       <p className="font-semibold">{request.competitor_name}</p>
                       <p className="text-xs text-muted-foreground">{request.horse_name} · {request.horse_registration || 'sem registro'}</p>
                     </TableCell>
-                    <TableCell>{request.category?.name ?? '--'} {request.category?.level ?? ''}</TableCell>
+                    <TableCell>
+                      {request.category ? categoryOptionLabel(request.category.name) : '--'}
+                      {request.requested_levels?.length
+                        ? ` · Níveis ${request.requested_levels.join(', ')}`
+                        : request.category?.level ? ` · ${request.category.level}` : ''}
+                    </TableCell>
                     <TableCell>{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
                     <TableCell><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
                     <TableCell>

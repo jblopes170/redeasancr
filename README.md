@@ -67,6 +67,7 @@ As migrations estão em:
 - `supabase/migrations/202607110003_member_content_workflow.sql`
 - `supabase/migrations/202607110004_public_event_lifecycle.sql`
 - `supabase/migrations/202607120001_official_ntmr_categories.sql`
+- `supabase/migrations/202607120002_registration_request_levels.sql`
 - `supabase/migrations/202605220002_seed_ntmr_sample.sql`
 - Guia SQL em ordem (copiar/colar no SQL Editor): `supabase/manual/setup-step-by-step.sql`
 
@@ -89,9 +90,10 @@ Cole os SQLs no editor SQL do Supabase, **nesta ordem exata**:
 6. `202607110003_member_content_workflow.sql`
 7. `202607110004_public_event_lifecycle.sql`
 8. `202607120001_official_ntmr_categories.sql`
-9. `202605220002_seed_ntmr_sample.sql` (opcional, somente para dados de teste)
+9. `202607120002_registration_request_levels.sql`
+10. `202605220002_seed_ntmr_sample.sql` (opcional, somente para dados de teste)
 
-Se o banco principal já está configurado, execute apenas os SQLs novos necessários. Para corrigir categorias em eventos existentes, rode `supabase/manual/fix-categorias-oficiais-ntmr.sql`.
+Se o banco principal já está configurado, execute apenas os SQLs novos necessários. Para corrigir categorias em eventos existentes, rode `supabase/manual/fix-categorias-oficiais-ntmr.sql`. Para habilitar níveis separados nas solicitações públicas, rode `supabase/manual/fix-inscricoes-niveis-separados.sql`.
 
 ## Criar primeiro usuário admin
 
@@ -147,15 +149,18 @@ Quando alterar `.env`, sempre reinicie o servidor:
 pnpm dev
 ```
 
-## Importação/Exportação CSV
+## Importação/Exportação Excel
 
 A aba **Importar/Exportar** oferece:
 
-- Download de modelo CSV por tipo
-- Upload com pré-visualização
+- Download de modelo Excel `.xlsx` por tipo
+- Upload de Excel `.xlsx`/`.xls` com pré-visualização
 - Validação de colunas obrigatórias
 - Erros por linha no processamento
 - Importação para: competidores, cavalos, categorias, inscrições e notas
+- Compatibilidade com CSV antigo, caso alguma base já esteja nesse formato
+
+As exportações das telas de competidores, cavalos, inscrições, notas e ranking são geradas em Excel `.xlsx` com cabeçalhos/colunas.
 
 ## Base de testes da planilha oficial
 

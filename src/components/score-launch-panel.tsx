@@ -1,10 +1,18 @@
-﻿import { CalendarDays, Medal, Pencil, Plus, RefreshCw, Save, Search, Trash2, Trophy, WalletCards } from 'lucide-react'
+import { CalendarDays, Medal, Pencil, Plus, RefreshCw, Save, Search, Trash2, Trophy } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import type { CategoryLevel, EntryRecord, EventRecord, Level, ScoreRecord, Stage } from '@/types/domain'
-import { LEVEL_OPTIONS, NO_LEVEL_VALUE, STAGE_OPTIONS, categoryLabel, isLeveledCategoryName } from '@/lib/constants'
+import {
+  LEVEL_OPTIONS,
+  NO_LEVEL_VALUE,
+  STAGE_OPTIONS,
+  categoryOptionLabel,
+  getUniqueCategoryOptions,
+  isLeveledCategoryName,
+  isOfficialCategoryName,
+} from '@/lib/constants'
 import {
   deleteEntry,
   findOrCreateCompetitor,
@@ -80,6 +88,11 @@ interface EntryRunRow {
   levels: CategoryLevel[]
 }
 
+interface OverviewLevelInfo {
+  level: CategoryLevel
+  position: number
+}
+
 const defaultEntryForm: EntryFormState = {
   competitor_mode: 'existing',
   competitor_id: '',
@@ -119,7 +132,7 @@ function parseDecimalField(raw: string, fieldLabel: string): number {
   const value = Number(normalized)
 
   if (!Number.isFinite(value)) {
-    throw new Error(`${fieldLabel} invÃ¡lido. Use nÃºmero com ponto ou vÃ­rgula.`)
+    throw new Error(`${fieldLabel} inválido. Use número com ponto ou vírgula.`)
   }
 
   return value
@@ -140,14 +153,9 @@ function formatScore(value: number | null) {
 
 function formatEventPeriod(startsOn: string | null, endsOn: string | null) {
   const formatDate = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR')
-  if (!startsOn && !endsOn) return 'Data nÃ£o informada'
+  if (!startsOn && !endsOn) return 'Data não informada'
   if (startsOn && endsOn && startsOn !== endsOn) return `${formatDate(startsOn)} a ${formatDate(endsOn)}`
   return formatDate(startsOn ?? endsOn ?? '')
-}
-
-function parsePercent(value: string) {
-  const parsed = Number(value.replace(',', '.'))
-  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0
 }
 
 function entryRunKey(entry: EntryRecord) {
@@ -181,6 +189,23 @@ function uniqueLevels(entries: EntryRecord[]) {
   return levels
 }
 
+function levelSortValue(level: CategoryLevel) {
+  if (level === 'N1') return 1
+  if (level === 'N2') return 2
+  if (level === 'N3') return 3
+  if (level === 'N4') return 4
+  return 0
+}
+
+function uniqueSortedLevels(levels: CategoryLevel[]) {
+  return Array.from(new Set(levels)).sort((a, b) => levelSortValue(a) - levelSortValue(b))
+}
+
+function overviewPositionLabel(levels: OverviewLevelInfo[]) {
+  const positions = Array.from(new Set(levels.map((item) => item.position))).sort((a, b) => a - b)
+  return positions[0] ? `${positions[0]}º` : '--'
+}
+
 export function ScoreLaunchPanel({
   event,
   currentUserId,
@@ -192,14 +217,10 @@ export function ScoreLaunchPanel({
   const eventStatus = event.status
   const queryClient = useQueryClient()
   const [filterStage, setFilterStage] = useState<Stage>(1)
-  const [filterCategoryId, setFilterCategoryId] = useState<string | undefined>()
+  const [filterCategoryName, setFilterCategoryName] = useState<string | undefined>()
   const [filterLevel, setFilterLevel] = useState<CategoryLevel | undefined>()
   const [search, setSearch] = useState('')
   const [rankingMode, setRankingMode] = useState<'stage' | 'championship'>('stage')
-  const [prizePoolPercent, setPrizePoolPercent] = useState('30')
-  const [prizeFirstPercent, setPrizeFirstPercent] = useState('50')
-  const [prizeSecondPercent, setPrizeSecondPercent] = useState('30')
-  const [prizeThirdPercent, setPrizeThirdPercent] = useState('20')
   const [drafts, setDrafts] = useState<Record<string, DraftRow>>({})
   const [entryDialogOpen, setEntryDialogOpen] = useState(false)
   const [entryForm, setEntryForm] = useState<EntryFormState>(defaultEntryForm)
@@ -243,26 +264,26 @@ export function ScoreLaunchPanel({
   })
 
   const stageRankingQuery = useQuery({
-    queryKey: ['ranking-stage', eventId, 'live', filterStage, filterCategoryId, filterLevel],
-    queryFn: () => getRankingByStage(eventId, filterStage, filterCategoryId, filterLevel),
+    queryKey: ['ranking-stage', eventId, 'live', filterStage, filterCategoryName, filterLevel],
+    queryFn: () => getRankingByStage(eventId, filterStage, undefined, filterLevel),
     enabled: showLiveRanking && rankingMode === 'stage',
     refetchInterval: 2000,
   })
 
   const championshipRankingQuery = useQuery({
-    queryKey: ['ranking-championship', eventId, 'live', filterCategoryId, filterLevel],
-    queryFn: () => getChampionshipRanking(eventId, filterCategoryId, filterLevel),
+    queryKey: ['ranking-championship', eventId, 'live', filterCategoryName, filterLevel],
+    queryFn: () => getChampionshipRanking(eventId, undefined, filterLevel),
     enabled: showLiveRanking && rankingMode === 'championship',
     refetchInterval: 2000,
   })
 
   const allStagesRankingQuery = useQuery({
-    queryKey: ['ranking-stages-overview', eventId, filterCategoryId, filterLevel],
+    queryKey: ['ranking-stages-overview', eventId, filterCategoryName, filterLevel],
     queryFn: async () => {
       const [stage1, stage2, stage3] = await Promise.all([
-        getRankingByStage(eventId, 1, filterCategoryId, filterLevel),
-        getRankingByStage(eventId, 2, filterCategoryId, filterLevel),
-        getRankingByStage(eventId, 3, filterCategoryId, filterLevel),
+        getRankingByStage(eventId, 1, undefined, filterLevel),
+        getRankingByStage(eventId, 2, undefined, filterLevel),
+        getRankingByStage(eventId, 3, undefined, filterLevel),
       ])
       return { stage1, stage2, stage3 }
     },
@@ -270,17 +291,11 @@ export function ScoreLaunchPanel({
     refetchInterval: 2000,
   })
 
-  const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data])
-  const entryCategoryOptions = useMemo(() => {
-    const options = new Map<string, (typeof categories)[number]>()
-
-    for (const category of categories) {
-      const key = isLeveledCategoryName(category.name) ? `leveled:${category.name}` : `single:${category.id}`
-      if (!options.has(key)) options.set(key, category)
-    }
-
-    return Array.from(options.values())
-  }, [categories])
+  const categories = useMemo(
+    () => (categoriesQuery.data ?? []).filter((category) => category.active && isOfficialCategoryName(category.name)),
+    [categoriesQuery.data],
+  )
+  const entryCategoryOptions = useMemo(() => getUniqueCategoryOptions(categories), [categories])
   const selectedEntryCategory = categories.find((item) => item.id === entryForm.category_id)
   const selectedEntryCategoryIsLeveled = selectedEntryCategory ? isLeveledCategoryName(selectedEntryCategory.name) : false
   const selectedLevelCategories = selectedEntryCategory
@@ -479,7 +494,7 @@ export function ScoreLaunchPanel({
       return entryIds.length
     },
     onSuccess: () => {
-      toast.success('InscriÃ§Ã£o removida.')
+      toast.success('Inscrição removida.')
       void queryClient.invalidateQueries({ queryKey: ['entries', eventId] })
       void queryClient.invalidateQueries({ queryKey: ['scores', eventId] })
       void queryClient.invalidateQueries({ queryKey: ['ranking-stage', eventId] })
@@ -487,7 +502,7 @@ export function ScoreLaunchPanel({
       void queryClient.invalidateQueries({ queryKey: ['ranking-stages-overview', eventId] })
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erro ao remover inscriÃ§Ã£o')
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover inscrição')
     },
   })
 
@@ -544,7 +559,7 @@ export function ScoreLaunchPanel({
     const normalized = normalizeSearch(search)
     const filtered = all.filter((entry) => {
       if (entry.stage !== filterStage) return false
-      if (filterCategoryId && entry.category_id !== filterCategoryId) return false
+      if (filterCategoryName && entry.category?.name !== filterCategoryName) return false
       if (filterLevel !== undefined && entry.level !== filterLevel) return false
 
       if (!normalized) return true
@@ -559,7 +574,7 @@ export function ScoreLaunchPanel({
       if (aOrder !== bOrder) return aOrder - bOrder
       return (a.competitor?.name ?? '').localeCompare(b.competitor?.name ?? '', 'pt-BR')
     })
-  }, [entriesQuery.data, search, filterStage, filterCategoryId, filterLevel])
+  }, [entriesQuery.data, search, filterStage, filterCategoryName, filterLevel])
 
   const rows = useMemo<EntryRunRow[]>(() => {
     const all = entriesQuery.data ?? []
@@ -586,21 +601,16 @@ export function ScoreLaunchPanel({
     })
   }, [entriesQuery.data, filteredEntries])
 
-  const selectedCategory = (categoriesQuery.data ?? []).find((category) => category.id === filterCategoryId)
+  const selectedCategory = categories.find((category) => category.name === filterCategoryName)
   const prizePoolValue = Number(event.prize_pool || 0)
-  const calculatedPrizePool = (prizePoolValue * parsePercent(prizePoolPercent)) / 100
-  const prizeDistribution = useMemo(
-    () => [
-      parsePercent(prizeFirstPercent),
-      parsePercent(prizeSecondPercent),
-      parsePercent(prizeThirdPercent),
-    ],
-    [prizeFirstPercent, prizeSecondPercent, prizeThirdPercent],
-  )
-  const prizeDistributionTotal = prizeDistribution.reduce((total, value) => total + value, 0)
+  const overviewEntries = entriesQuery.data
+  const overviewScores = scoresQuery.data
+  const overviewStageRanking = stageRankingQuery.data
+  const overviewChampionshipRanking = championshipRankingQuery.data
+  const overviewAllStagesRanking = allStagesRankingQuery.data
 
   const overviewRows = useMemo(() => {
-    const entries = entriesQuery.data ?? []
+    const entries = overviewEntries ?? []
     const entriesById = new Map(entries.map((entry) => [entry.id, entry]))
     const entryByRanking = new Map<string, EntryRecord>()
     const scoreTotals = new Map<string, Record<Stage, number | null>>()
@@ -611,7 +621,7 @@ export function ScoreLaunchPanel({
       if (!entryByRanking.has(key)) entryByRanking.set(key, entry)
     }
 
-    for (const score of scoresQuery.data ?? []) {
+    for (const score of overviewScores ?? []) {
       const entry = score.entry ?? entriesById.get(score.entry_id)
       if (!entry) continue
 
@@ -621,11 +631,11 @@ export function ScoreLaunchPanel({
       scoreTotals.set(key, totals)
     }
 
-    const stageGroups = allStagesRankingQuery.data
+    const stageGroups = overviewAllStagesRanking
       ? ([
-          [1, allStagesRankingQuery.data.stage1],
-          [2, allStagesRankingQuery.data.stage2],
-          [3, allStagesRankingQuery.data.stage3],
+          [1, overviewAllStagesRanking.stage1],
+          [2, overviewAllStagesRanking.stage2],
+          [3, overviewAllStagesRanking.stage3],
         ] as const)
       : []
 
@@ -639,51 +649,86 @@ export function ScoreLaunchPanel({
     }
 
     const rankingRows = rankingMode === 'stage'
-      ? stageRankingQuery.data ?? []
-      : championshipRankingQuery.data ?? []
+      ? overviewStageRanking ?? []
+      : overviewChampionshipRanking ?? []
     const normalizedSearch = normalizeSearch(search)
 
-    return rankingRows
-      .map((row) => {
-        const key = rankingKey(row.category_id, row.level, row.competitor_id, row.horse_id)
-        const entry = entryByRanking.get(key)
-        const notes = scoreTotals.get(key) ?? { 1: null, 2: null, 3: null }
-        const points = pointsTotals.get(key) ?? { 1: null, 2: null, 3: null }
-        const totalPoints = (points[1] ?? 0) + (points[2] ?? 0) + (points[3] ?? 0)
-        const positionPrizePercent = prizeDistribution[row.position - 1] ?? 0
+    const grouped = new Map<string, {
+      key: string
+      positionSort: number
+      positionLabel: string
+      levels: CategoryLevel[]
+      levelInfo: OverviewLevelInfo[]
+      competitorName: string
+      horseName: string
+      categoryName: string
+      registration: string
+      owner: string
+      city: string
+      uf: string
+      notes: Record<Stage, number | null>
+      points: Record<Stage, number | null>
+      totalPoints: number
+    }>()
 
-        return {
-          key,
-          position: row.position,
-          competitorName: row.competitor_name,
-          horseName: row.horse_name,
-          categoryName: row.category_name,
-          level: row.level,
-          registration: entry?.horse?.registration ?? '--',
-          owner: entry?.horse?.owner ?? '--',
-          city: entry?.competitor?.city ?? '--',
-          uf: entry?.competitor?.uf ?? '--',
-          notes,
-          points,
-          totalPoints,
-          prize: filterCategoryId ? (calculatedPrizePool * positionPrizePercent) / 100 : 0,
+    for (const row of rankingRows) {
+      if (filterCategoryName && row.category_name !== filterCategoryName) continue
+      if (normalizedSearch && !normalizeSearch(`${row.competitor_name} ${row.horse_name}`).includes(normalizedSearch)) continue
+
+      const key = rankingKey(row.category_id, row.level, row.competitor_id, row.horse_id)
+      const groupedKey = `${row.event_id}:${row.category_name}:${row.competitor_id}:${row.horse_id}`
+      const entry = entryByRanking.get(key)
+      const notes = scoreTotals.get(key) ?? { 1: null, 2: null, 3: null }
+      const points = pointsTotals.get(key) ?? { 1: null, 2: null, 3: null }
+      const current = grouped.get(groupedKey) ?? {
+        key: groupedKey,
+        positionSort: row.position,
+        positionLabel: `${row.position}º`,
+        levels: [],
+        levelInfo: [],
+        competitorName: row.competitor_name,
+        horseName: row.horse_name,
+        categoryName: row.category_name,
+        registration: entry?.horse?.registration ?? '--',
+        owner: entry?.horse?.owner ?? '--',
+        city: entry?.competitor?.city ?? '--',
+        uf: entry?.competitor?.uf ?? '--',
+        notes: { 1: null, 2: null, 3: null },
+        points: { 1: null, 2: null, 3: null },
+        totalPoints: 0,
+      }
+
+      current.positionSort = Math.min(current.positionSort, row.position)
+      current.levels = uniqueSortedLevels([...current.levels, row.level])
+      current.levelInfo = [...current.levelInfo, { level: row.level, position: row.position }]
+
+      ;([1, 2, 3] as Stage[]).forEach((stage) => {
+        if (current.notes[stage] === null && notes[stage] !== null) {
+          current.notes[stage] = notes[stage]
+        }
+        if (points[stage] !== null) {
+          current.points[stage] = Math.max(current.points[stage] ?? 0, points[stage] ?? 0)
         }
       })
-      .filter((row) => {
-        if (!normalizedSearch) return true
-        return normalizeSearch(`${row.competitorName} ${row.horseName}`).includes(normalizedSearch)
-      })
+
+      current.positionLabel = overviewPositionLabel(current.levelInfo)
+      current.totalPoints = (current.points[1] ?? 0) + (current.points[2] ?? 0) + (current.points[3] ?? 0)
+      grouped.set(groupedKey, current)
+    }
+
+    return Array.from(grouped.values()).sort((a, b) => {
+      if (a.positionSort !== b.positionSort) return a.positionSort - b.positionSort
+      return a.competitorName.localeCompare(b.competitorName, 'pt-BR')
+    })
   }, [
-    allStagesRankingQuery.data,
-    calculatedPrizePool,
-    championshipRankingQuery.data,
-    entriesQuery.data,
-    filterCategoryId,
-    prizeDistribution,
+    filterCategoryName,
+    overviewAllStagesRanking,
+    overviewChampionshipRanking,
+    overviewEntries,
+    overviewScores,
+    overviewStageRanking,
     rankingMode,
-    scoresQuery.data,
     search,
-    stageRankingQuery.data,
   ])
 
   const filteredEntryIds = useMemo(() => new Set(rows.flatMap((row) => row.entries.map((entry) => entry.id))), [rows])
@@ -738,9 +783,9 @@ export function ScoreLaunchPanel({
     <div className="space-y-4">
       {!canJudgeWrite && isJudge && (
         <Alert variant="destructive">
-          <AlertTitle>Evento nÃ£o estÃ¡ ativo</AlertTitle>
+          <AlertTitle>Evento não está ativo</AlertTitle>
           <AlertDescription>
-            JuÃ­zes sÃ³ podem lanÃ§ar e editar as prÃ³prias notas quando o evento estiver em status "Ao vivo".
+            Juízes só podem lançar e editar as próprias notas quando o evento estiver em status "Ao vivo".
           </AlertDescription>
         </Alert>
       )}
@@ -795,15 +840,22 @@ export function ScoreLaunchPanel({
 
         <div>
           <Label>Categoria</Label>
-          <Select value={filterCategoryId ?? 'all'} onValueChange={(value) => setFilterCategoryId(value === 'all' ? undefined : value)}>
+          <Select
+            value={filterCategoryName ?? 'all'}
+            onValueChange={(value) => {
+              const nextCategoryName = value === 'all' ? undefined : value
+              setFilterCategoryName(nextCategoryName)
+              if (nextCategoryName && !isLeveledCategoryName(nextCategoryName)) setFilterLevel(null)
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
-              {(categoriesQuery.data ?? []).map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {categoryLabel(category.name, category.level)}
+              {entryCategoryOptions.map((category) => (
+                <SelectItem key={category.id} value={category.name}>
+                  {categoryOptionLabel(category.name)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -811,9 +863,10 @@ export function ScoreLaunchPanel({
         </div>
 
         <div>
-          <Label>NÃ­vel</Label>
+          <Label>Nível</Label>
           <Select
             value={filterLevel === undefined ? 'all' : filterLevel === null ? NO_LEVEL_VALUE : filterLevel}
+            disabled={Boolean(filterCategoryName && !isLeveledCategoryName(filterCategoryName))}
             onValueChange={(value) => {
               if (value === 'all') {
                 setFilterLevel(undefined)
@@ -831,7 +884,7 @@ export function ScoreLaunchPanel({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value={NO_LEVEL_VALUE}>Sem nÃ­vel</SelectItem>
+              <SelectItem value={NO_LEVEL_VALUE}>Sem nível</SelectItem>
               {LEVEL_OPTIONS.map((level) => (
                 <SelectItem key={level} value={level}>
                   {level}
@@ -872,18 +925,18 @@ export function ScoreLaunchPanel({
               }}
             >
               <Plus className="h-4 w-4" />
-              Nova inscriÃ§Ã£o
+              Nova inscrição
             </Button>
           </DialogTrigger>
 
           <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
             <DialogHeader>
-              <DialogTitle>{entryForm.id ? 'Editar inscriÃ§Ã£o' : 'Nova inscriÃ§Ã£o'}</DialogTitle>
+              <DialogTitle>{entryForm.id ? 'Editar inscrição' : 'Nova inscrição'}</DialogTitle>
             </DialogHeader>
 
             {!entryForm.id && (
               <div className="space-y-2 rounded-md border border-border/70 bg-muted/20 p-3">
-                <Label className="text-sm font-semibold text-foreground">InscriÃ§Ã£o de campeonato</Label>
+                <Label className="text-sm font-semibold text-foreground">Inscrição de campeonato</Label>
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
@@ -891,7 +944,7 @@ export function ScoreLaunchPanel({
                     onChange={(e) => setRegisterAllStages(e.target.checked)}
                     className="h-4 w-4"
                   />
-                  Cadastrar em mÃºltiplas etapas.
+                  Cadastrar em múltiplas etapas.
                 </label>
                 {registerAllStages && (
                   <div className="flex flex-wrap gap-3">
@@ -955,7 +1008,7 @@ export function ScoreLaunchPanel({
                       <SelectContent>
                         {(competitorsQuery.data ?? []).map((competitor) => (
                           <SelectItem key={competitor.id} value={competitor.id}>
-                            {competitor.name} {competitor.city ? `Â· ${competitor.city}/${competitor.uf ?? '--'}` : ''}
+                            {competitor.name} {competitor.city ? `· ${competitor.city}/${competitor.uf ?? '--'}` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1047,7 +1100,7 @@ export function ScoreLaunchPanel({
                       <SelectContent>
                         {(horsesQuery.data ?? []).map((horse) => (
                           <SelectItem key={horse.id} value={horse.id}>
-                            {horse.name} {horse.registration ? `Â· ${horse.registration}` : ''}
+                            {horse.name} {horse.registration ? `· ${horse.registration}` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1055,7 +1108,7 @@ export function ScoreLaunchPanel({
                     {selectedHorse && (
                       <div className="grid grid-cols-1 gap-2 rounded-md bg-muted/45 p-2 text-sm sm:grid-cols-2">
                         <span><strong>Registro:</strong> {selectedHorse.registration || '--'}</span>
-                        <span><strong>ProprietÃ¡rio:</strong> {selectedHorse.owner || '--'}</span>
+                        <span><strong>Proprietário:</strong> {selectedHorse.owner || '--'}</span>
                       </div>
                     )}
                   </div>
@@ -1078,7 +1131,7 @@ export function ScoreLaunchPanel({
                       />
                     </div>
                     <div className="grid gap-1 sm:col-span-6">
-                      <Label htmlFor="new-horse-owner">ProprietÃ¡rio</Label>
+                      <Label htmlFor="new-horse-owner">Proprietário</Label>
                       <Input
                         id="new-horse-owner"
                         value={entryForm.new_horse_owner}
@@ -1161,7 +1214,7 @@ export function ScoreLaunchPanel({
                   </Select>
                 </div>
                 <div className="grid gap-1">
-                  <Label>NÃºmero de entrada</Label>
+                  <Label>Número de entrada</Label>
                   <Input
                     value={entryForm.entry_number}
                     onChange={(e) => setEntryForm((prev) => ({ ...prev, entry_number: e.target.value }))}
@@ -1182,7 +1235,7 @@ export function ScoreLaunchPanel({
                 Cancelar
               </Button>
               <Button onClick={() => saveEntryMutation.mutate()} disabled={saveEntryMutation.isPending}>
-                {saveEntryMutation.isPending ? 'Salvando...' : 'Salvar inscriÃ§Ã£o'}
+                {saveEntryMutation.isPending ? 'Salvando...' : 'Salvar inscrição'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1190,214 +1243,158 @@ export function ScoreLaunchPanel({
       )}
 
       {showLiveRanking && (
-        <section className="overflow-hidden rounded-lg border border-primary/20 bg-card shadow-sm">
-          <div className="flex flex-col gap-3 bg-primary px-4 py-3 text-primary-foreground lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <Trophy className="h-6 w-6" />
-              <div>
-                <h3 className="text-lg font-bold">Overview e ranking ao vivo</h3>
-                <p className="text-xs text-primary-foreground/80">Notas, pontos e premiaÃ§Ã£o da prova</p>
+        <section className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm">
+          <div className="bg-primary px-4 py-4 text-primary-foreground sm:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
+                  <Trophy className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold">Ranking ao vivo da prova</h3>
+                  <p className="text-sm text-primary-foreground/80">Notas, pontos e premiacao em leitura rapida.</p>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className={rankingMode === 'stage'
-                  ? 'border-white bg-white text-primary hover:bg-white/90'
-                  : 'border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white'}
-                onClick={() => setRankingMode('stage')}
-              >
-                {filterStage}Âª etapa
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className={rankingMode === 'championship'
-                  ? 'border-white bg-white text-primary hover:bg-white/90'
-                  : 'border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white'}
-                onClick={() => setRankingMode('championship')}
-              >
-                Campeonato
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                onClick={refreshOverview}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${overviewRefreshing ? 'animate-spin' : ''}`} />
-                Atualizar
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={rankingMode === 'stage'
+                    ? 'border-white bg-white text-primary hover:bg-white/90'
+                    : 'border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white'}
+                  onClick={() => setRankingMode('stage')}
+                >
+                  {filterStage}a etapa
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={rankingMode === 'championship'
+                    ? 'border-white bg-white text-primary hover:bg-white/90'
+                    : 'border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white'}
+                  onClick={() => setRankingMode('championship')}
+                >
+                  Campeonato
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  onClick={refreshOverview}
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${overviewRefreshing ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 border-b bg-secondary/35 lg:grid-cols-4">
-            <div className="border-b px-4 py-3 lg:border-b-0 lg:border-r">
-              <p className="text-[11px] font-bold uppercase text-muted-foreground">Evento</p>
-              <p className="font-semibold">{event.name}</p>
+          <div className="grid gap-3 border-b bg-muted/30 p-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border bg-white p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Evento</p>
+              <p className="mt-1 font-bold text-foreground">{event.name}</p>
             </div>
-            <div className="border-b px-4 py-3 lg:border-b-0 lg:border-r">
-              <p className="text-[11px] font-bold uppercase text-muted-foreground">Data e local</p>
-              <p className="flex items-center gap-2 font-semibold">
-                <CalendarDays className="h-4 w-4 text-primary" />
-                {formatEventPeriod(event.starts_on, event.ends_on)}
-              </p>
-              <p className="text-xs text-muted-foreground">{event.location || 'Local nÃ£o informado'}</p>
+            <div className="rounded-xl border bg-white p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Data e local</p>
+              <p className="mt-1 flex items-center gap-2 font-bold text-foreground"><CalendarDays className="h-4 w-4 text-primary" />{formatEventPeriod(event.starts_on, event.ends_on)}</p>
+              <p className="text-xs text-muted-foreground">{event.location || 'Local nao informado'}</p>
             </div>
-            <div className="border-b px-4 py-3 lg:border-b-0 lg:border-r">
-              <p className="text-[11px] font-bold uppercase text-muted-foreground">Categoria</p>
-              <p className="font-semibold">
-                {selectedCategory ? categoryLabel(selectedCategory.name, selectedCategory.level) : 'Todas as categorias'}
-              </p>
+            <div className="rounded-xl border bg-white p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Categoria</p>
+              <p className="mt-1 font-bold text-foreground">{selectedCategory ? categoryOptionLabel(selectedCategory.name) : 'Todas as categorias'}</p>
             </div>
-            <div className="px-4 py-3">
-              <p className="text-[11px] font-bold uppercase text-muted-foreground">ExibiÃ§Ã£o</p>
-              <p className="font-semibold">{rankingMode === 'stage' ? `${filterStage}Âª etapa` : 'Resultado do campeonato'}</p>
+            <div className="rounded-xl border bg-white p-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Exibicao</p>
+              <p className="mt-1 font-bold text-foreground">{rankingMode === 'stage' ? `${filterStage}a etapa` : 'Resultado do campeonato'}</p>
             </div>
           </div>
 
-          <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_270px]">
-            <div className="min-w-0 overflow-hidden xl:border-r">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-center">Class.</TableHead>
-                    <TableHead>Competidor</TableHead>
-                    <TableHead>Animal</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>NÃ­vel</TableHead>
-                    <TableHead>Registro</TableHead>
-                    <TableHead>ProprietÃ¡rio</TableHead>
-                    <TableHead>Cidade/UF</TableHead>
-                    <TableHead className="text-center">Nota 1Âª</TableHead>
-                    <TableHead className="text-center">Nota 2Âª</TableHead>
-                    <TableHead className="text-center">Nota 3Âª</TableHead>
-                    <TableHead className="bg-zinc-600 text-center">Pts 1Âª</TableHead>
-                    <TableHead className="bg-zinc-600 text-center">Pts 2Âª</TableHead>
-                    <TableHead className="bg-zinc-600 text-center">Pts 3Âª</TableHead>
-                    <TableHead className="bg-zinc-700 text-center">Total</TableHead>
-                    <TableHead className="bg-emerald-600 text-right">PremiaÃ§Ã£o</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {overviewLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={16} className="text-muted-foreground">Atualizando ranking...</TableCell>
-                    </TableRow>
-                  ) : overviewRows.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={16} className="text-muted-foreground">
-                        Nenhuma nota encontrada para os filtros selecionados.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    overviewRows.map((row) => (
-                      <TableRow key={row.key}>
-                        <TableCell className="text-center text-lg font-bold text-primary">{row.position}Âº</TableCell>
-                        <TableCell className="font-semibold">{row.competitorName}</TableCell>
-                        <TableCell>{row.horseName}</TableCell>
-                        <TableCell>{row.categoryName}</TableCell>
-                        <TableCell><LevelBadge level={row.level} /></TableCell>
-                        <TableCell>{row.registration}</TableCell>
-                        <TableCell>{row.owner}</TableCell>
-                        <TableCell>{row.city} / {row.uf}</TableCell>
-                        <TableCell className="text-center font-semibold">{formatScore(row.notes[1])}</TableCell>
-                        <TableCell className="text-center font-semibold">{formatScore(row.notes[2])}</TableCell>
-                        <TableCell className="text-center font-semibold">{formatScore(row.notes[3])}</TableCell>
-                        <TableCell className="bg-zinc-100 text-center font-semibold">{row.points[1] ?? '--'}</TableCell>
-                        <TableCell className="bg-zinc-100 text-center font-semibold">{row.points[2] ?? '--'}</TableCell>
-                        <TableCell className="bg-zinc-100 text-center font-semibold">{row.points[3] ?? '--'}</TableCell>
-                        <TableCell className="bg-zinc-200 text-center text-base font-bold">{row.totalPoints}</TableCell>
-                        <TableCell className="bg-emerald-50 text-right font-bold text-emerald-800">
-                          {row.prize > 0 ? formatCurrency(row.prize) : '--'}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+          <div className="space-y-4 p-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border bg-white p-4 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Inscricoes</p>
+                <p className="mt-1 text-3xl font-extrabold text-foreground">{rows.length}</p>
+              </div>
+              <div className="rounded-2xl border bg-white p-4 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Notas lancadas</p>
+                <p className="mt-1 text-3xl font-extrabold text-foreground">{filteredScoresCount}</p>
+              </div>
+              <div className="rounded-2xl border bg-white p-4 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Bolsa do evento</p>
+                <p className="mt-1 text-2xl font-extrabold text-primary">{formatCurrency(prizePoolValue)}</p>
+              </div>
             </div>
 
-            <aside className="divide-y bg-muted/20">
-              <div className="space-y-3 p-4">
-                <div className="flex items-center gap-2 text-primary">
-                  <Medal className="h-5 w-5" />
-                  <h4 className="font-bold">Resumo da prova</h4>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md border bg-card p-3">
-                    <p className="text-xs text-muted-foreground">InscriÃ§Ãµes</p>
-                    <p className="text-2xl font-bold">{rows.length}</p>
+            <div className="grid gap-3 md:grid-cols-3">
+              {overviewRows.slice(0, 3).map((row, index) => (
+                <article key={`podium-${row.key}`} className="rounded-2xl border bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{index + 1}o lugar</p>
+                      <p className="mt-1 text-lg font-extrabold text-primary">{row.positionLabel}</p>
+                    </div>
+                    <Medal className="h-6 w-6 text-primary" />
                   </div>
-                  <div className="rounded-md border bg-card p-3">
-                    <p className="text-xs text-muted-foreground">Notas</p>
-                    <p className="text-2xl font-bold">{filteredScoresCount}</p>
+                  <p className="mt-3 line-clamp-1 font-bold text-foreground">{row.competitorName}</p>
+                  <p className="line-clamp-1 text-sm text-muted-foreground">{row.horseName}</p>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {row.levels.map((level) => <LevelBadge key={level ?? 'sem-nivel'} level={level} />)}
                   </div>
+                  <div className="mt-3 flex items-end justify-between border-t pt-3">
+                    <span className="text-xs text-muted-foreground">Total</span>
+                    <strong className="text-xl text-foreground">{row.totalPoints || formatScore(row.notes[filterStage])}</strong>
+                  </div>
+                </article>
+              ))}
+              {!overviewLoading && overviewRows.length === 0 && (
+                <div className="rounded-2xl border bg-white p-4 text-sm text-muted-foreground md:col-span-3">
+                  Nenhuma nota encontrada para os filtros selecionados.
                 </div>
-                <div className="rounded-md border bg-card p-3">
-                  <p className="text-xs text-muted-foreground">Bolsa total do evento</p>
-                  <p className="text-xl font-bold text-primary">{formatCurrency(prizePoolValue)}</p>
-                </div>
-              </div>
+              )}
+            </div>
 
-              <div className="space-y-3 p-4">
-                <div className="flex items-center gap-2">
-                  <WalletCards className="h-5 w-5 text-emerald-700" />
-                  <h4 className="font-bold">PremiaÃ§Ã£o calculada</h4>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="prize-pool-percent">% da bolsa para premiaÃ§Ã£o</Label>
-                  <Input
-                    id="prize-pool-percent"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={prizePoolPercent}
-                    onChange={(event) => setPrizePoolPercent(event.target.value)}
-                  />
-                </div>
-                <div className="rounded-md bg-emerald-600 p-3 text-white">
-                  <p className="text-xs font-semibold uppercase">Valor distribuÃ­do</p>
-                  <p className="text-xl font-bold">{formatCurrency(calculatedPrizePool)}</p>
-                </div>
-                {!filterCategoryId && (
-                  <p className="text-xs font-semibold text-amber-700">
-                    Selecione uma categoria para calcular a premiaÃ§Ã£o por colocaÃ§Ã£o.
-                  </p>
-                )}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="grid gap-1">
-                    <Label htmlFor="prize-first">1Âº</Label>
-                    <Input id="prize-first" type="number" value={prizeFirstPercent} onChange={(event) => setPrizeFirstPercent(event.target.value)} />
-                  </div>
-                  <div className="grid gap-1">
-                    <Label htmlFor="prize-second">2Âº</Label>
-                    <Input id="prize-second" type="number" value={prizeSecondPercent} onChange={(event) => setPrizeSecondPercent(event.target.value)} />
-                  </div>
-                  <div className="grid gap-1">
-                    <Label htmlFor="prize-third">3Âº</Label>
-                    <Input id="prize-third" type="number" value={prizeThirdPercent} onChange={(event) => setPrizeThirdPercent(event.target.value)} />
-                  </div>
-                </div>
-                <p className={`text-xs font-semibold ${prizeDistributionTotal === 100 ? 'text-emerald-700' : 'text-destructive'}`}>
-                  DistribuiÃ§Ã£o: {prizeDistributionTotal}% {prizeDistributionTotal === 100 ? '' : '(ajuste para 100%)'}
-                </p>
+            <div className="rounded-2xl border bg-white">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+                <h4 className="font-bold text-foreground">Classificacao completa</h4>
+                {overviewLoading && <span className="text-sm text-muted-foreground">Atualizando...</span>}
               </div>
-            </aside>
+              <div className="divide-y">
+                {overviewRows.map((row) => (
+                  <article key={row.key} className="grid gap-3 p-4 lg:grid-cols-[72px_minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(230px,0.9fr)] lg:items-center">
+                    <div className="text-2xl font-extrabold text-primary">{row.positionLabel}</div>
+                    <div className="min-w-0">
+                      <p className="truncate font-bold text-foreground">{row.competitorName}</p>
+                      <p className="truncate text-sm text-muted-foreground">{row.horseName} {row.registration !== '--' ? `- ${row.registration}` : ''}</p>
+                      <p className="truncate text-xs text-muted-foreground">{row.owner} {row.city !== '--' ? `- ${row.city}/${row.uf}` : ''}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{row.categoryName}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {row.levels.map((level) => <LevelBadge key={level ?? 'sem-nivel'} level={level} />)}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                      <div className="rounded-lg border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 1</span><strong>{formatScore(row.notes[1])}</strong></div>
+                      <div className="rounded-lg border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 2</span><strong>{formatScore(row.notes[2])}</strong></div>
+                      <div className="rounded-lg border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 3</span><strong>{formatScore(row.notes[3])}</strong></div>
+                      <div className="rounded-lg border bg-primary/10 p-2"><span className="block text-muted-foreground">Pts</span><strong>{row.totalPoints}</strong></div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}
-
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-2xl border bg-card shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-secondary/35 px-4 py-3">
           <div>
-            <h3 className="font-bold">LanÃ§amento rÃ¡pido de notas</h3>
-            <p className="text-xs text-muted-foreground">{rows.length} inscriÃ§Ã£o(Ãµes) encontrada(s) nos filtros.</p>
+            <h3 className="font-bold">Lancamento rapido de notas</h3>
+            <p className="text-xs text-muted-foreground">{rows.length} inscricao(oes) encontrada(s) nos filtros.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{filterStage}Âª etapa</Badge>
-            {selectedCategory && <Badge variant="secondary">{categoryLabel(selectedCategory.name, selectedCategory.level)}</Badge>}
+            <Badge variant="outline">{filterStage}a etapa</Badge>
+            {selectedCategory && <Badge variant="secondary">{categoryOptionLabel(selectedCategory.name)}</Badge>}
           </div>
         </div>
         <Table>
@@ -1406,25 +1403,20 @@ export function ScoreLaunchPanel({
               <TableHead>Ordem</TableHead>
               <TableHead>Etapa</TableHead>
               <TableHead>Categoria</TableHead>
-              <TableHead>Competidor</TableHead>
-              <TableHead>Cavalo</TableHead>
-              <TableHead>Registro</TableHead>
-              <TableHead>ProprietÃ¡rio</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead>UF</TableHead>
-              <TableHead>NÃ­vel</TableHead>
+              <TableHead>Conjunto</TableHead>
+              <TableHead>Niveis</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Nota</TableHead>
-              <TableHead>Penalidades</TableHead>
-              <TableHead>ObservaÃ§Ãµes</TableHead>
-              <TableHead className="text-right">AÃ§Ãµes</TableHead>
+              <TableHead>Pen.</TableHead>
+              <TableHead>Obs.</TableHead>
+              <TableHead className="text-right">Acoes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={15} className="text-muted-foreground">
-                  Nenhuma inscriÃ§Ã£o encontrada para os filtros.
+                <TableCell colSpan={10} className="text-muted-foreground">
+                  Nenhuma inscricao encontrada para os filtros.
                 </TableCell>
               </TableRow>
             ) : (
@@ -1436,24 +1428,29 @@ export function ScoreLaunchPanel({
 
                 return (
                   <TableRow key={row.key}>
-                    <TableCell>{entry.draw_order ?? '--'}</TableCell>
-                    <TableCell>{entry.stage}a</TableCell>
-                    <TableCell>{entry.category?.name ?? '--'}</TableCell>
-                    <TableCell>{entry.competitor?.name ?? '--'}</TableCell>
-                    <TableCell>{entry.horse?.name ?? '--'}</TableCell>
-                    <TableCell>{entry.horse?.registration ?? '--'}</TableCell>
-                    <TableCell>{entry.horse?.owner ?? '--'}</TableCell>
-                    <TableCell>{entry.competitor?.city ?? '--'}</TableCell>
-                    <TableCell>{entry.competitor?.uf ?? '--'}</TableCell>
+                    <TableCell className="w-16 text-center font-bold text-primary">{entry.draw_order ?? '--'}</TableCell>
+                    <TableCell className="w-20">{entry.stage}a</TableCell>
+                    <TableCell className="w-40 font-semibold">{entry.category?.name ?? '--'}</TableCell>
                     <TableCell>
+                      <div className="min-w-0">
+                        <p className="font-bold text-foreground">{entry.competitor?.name ?? '--'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.horse?.name ?? '--'} {entry.horse?.registration ? `- ${entry.horse.registration}` : ''}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {entry.horse?.owner ?? '--'} {entry.competitor?.city ? `- ${entry.competitor.city}/${entry.competitor.uf ?? '--'}` : ''}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-36">
                       <div className="flex flex-wrap gap-1">
                         {row.levels.map((level) => <LevelBadge key={level ?? 'sem-nivel'} level={level} />)}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-28">
                       <StatusBadge type="entry" status={cancelled ? 'cancelled' : entry.status} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-28">
                       <Input
                         type="text"
                         inputMode="decimal"
@@ -1465,20 +1462,20 @@ export function ScoreLaunchPanel({
                           }
                         }}
                         disabled={!canJudgeWrite}
-                        className="w-28 border-primary/40 bg-white text-center text-base font-bold"
+                        className="border-primary/40 bg-white text-center text-base font-bold"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-24">
                       <Input
                         type="text"
                         inputMode="decimal"
                         value={draft.penalties}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { penalties: e.target.value })}
                         disabled={!canJudgeWrite}
-                        className="w-28 bg-white text-center font-semibold"
+                        className="bg-white text-center font-semibold"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-44">
                       <Input
                         value={draft.notes}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { notes: e.target.value })}
@@ -1486,7 +1483,7 @@ export function ScoreLaunchPanel({
                         placeholder="Opcional"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-40">
                       <div className="flex justify-end gap-2">
                         <Button
                           size="sm"
@@ -1524,6 +1521,7 @@ export function ScoreLaunchPanel({
     </div>
   )
 }
+
 
 
 

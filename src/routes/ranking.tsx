@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+﻿import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 
+import heroImage from '@/assets/hero-reining.webp'
+import { HorseTrail } from '@/components/horse-trail'
 import { RankingTable } from '@/components/ranking-table'
 import { SiteHeader } from '@/components/site-header'
 import { Button } from '@/components/ui/button'
@@ -38,18 +40,21 @@ function PublicRankingPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto w-full max-w-7xl space-y-5 px-4 py-8 sm:px-6">
-        <Card className="border-primary/20">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl text-primary">Ranking Público</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Consulte resultados por etapa ou campeonato, com filtros por categoria e nível.
+        <Card className="relative overflow-hidden border-primary/20 bg-primary text-primary-foreground">
+          <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/55" />
+          <HorseTrail className="opacity-25" />
+          <CardHeader className="relative z-10 space-y-2">
+            <CardTitle className="text-3xl text-primary-foreground">Ranking Publico</CardTitle>
+            <p className="max-w-2xl text-sm text-primary-foreground/85">
+              Consulte resultados por etapa ou campeonato, com filtros por categoria e nivel.
             </p>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
+          <CardContent className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
             <div className="space-y-1">
               <Label>Evento</Label>
               <Select value={eventId} onValueChange={setEventId} disabled={eventsQuery.isLoading || events.length === 0}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white text-foreground">
                   <SelectValue placeholder={eventsQuery.isLoading ? 'Carregando eventos...' : 'Selecione um evento'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -63,13 +68,12 @@ function PublicRankingPage() {
             </div>
 
             <div className="flex items-end">
-              <Button variant="outline" asChild>
-                <Link to="/">Voltar para início</Link>
+              <Button variant="secondary" asChild>
+                <Link to="/">Voltar para inicio</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
-
         {!eventId ? (
           <Card>
             <CardContent className="space-y-3 p-6">
@@ -94,3 +98,4 @@ function PublicRankingPage() {
     </div>
   )
 }
+

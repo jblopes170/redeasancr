@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import type { CategoryLevel, EntryRecord, Stage } from '@/types/domain'
 import { LEVEL_OPTIONS, NO_LEVEL_VALUE, categoryLabel } from '@/lib/constants'
-import { downloadCsv } from '@/lib/csv'
+import { downloadExcel } from '@/lib/spreadsheet'
 import { deleteEntry, getCategories, getCompetitors, getEntries, getHorses, saveEntry } from '@/services/api'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -291,8 +291,8 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
           variant="outline"
           className="gap-2"
           onClick={() =>
-            downloadCsv(
-              'inscricoes.csv',
+            downloadExcel(
+              'inscricoes.xlsx',
               rows.map((row) => ({
                 competidor_nome: row.competitor?.name ?? '',
                 cavalo_nome: row.horse?.name ?? '',
@@ -303,11 +303,24 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
                 ordem_apresentacao: row.draw_order ?? '',
                 status: row.status,
               })),
+              {
+                sheetName: 'Inscricoes',
+                headers: [
+                  'competidor_nome',
+                  'cavalo_nome',
+                  'categoria_nome',
+                  'nivel',
+                  'etapa',
+                  'numero_entrada',
+                  'ordem_apresentacao',
+                  'status',
+                ],
+              },
             )
           }
         >
           <Download className="h-4 w-4" />
-          Exportar CSV
+          Exportar Excel
         </Button>
 
         {canEdit && (
@@ -560,3 +573,4 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
     </div>
   )
 }
+

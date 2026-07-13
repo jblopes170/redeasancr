@@ -3,8 +3,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { IMPORT_TEMPLATES } from '@/lib/constants'
-import { CSVTemplateButton } from '@/components/csv-template-button'
-import { CSVUploader } from '@/components/csv-uploader'
+import { SpreadsheetTemplateButton } from '@/components/spreadsheet-template-button'
+import { SpreadsheetUploader } from '@/components/spreadsheet-uploader'
 import { Separator } from '@/components/ui/separator'
 import {
   importCategories,
@@ -123,19 +123,20 @@ export function ImportExportPanel({ eventId, currentUserId }: ImportExportPanelP
       <section className="rounded-lg border bg-card p-4">
         <h3 className="text-lg font-semibold">{selectedType[0].toUpperCase() + selectedType.slice(1)}</h3>
         <p className="text-sm text-muted-foreground">
-          Baixe o modelo CSV, preencha os dados e faça upload para importar com validação.
+          Baixe o modelo Excel, preencha as colunas e faça upload para importar com validação.
+          Arquivos CSV antigos continuam aceitos.
         </p>
 
         <div className="my-4 flex flex-wrap gap-2">
-          <CSVTemplateButton
-            filename={`modelo-${selectedType}.csv`}
+          <SpreadsheetTemplateButton
+            filename={`modelo-${selectedType}.xlsx`}
             headerLine={IMPORT_TEMPLATES[selectedType]}
           />
         </div>
 
         <Separator className="my-4" />
 
-        <CSVUploader requiredColumns={REQUIRED_COLUMNS[selectedType]} onConfirm={onImport} />
+        <SpreadsheetUploader requiredColumns={REQUIRED_COLUMNS[selectedType]} onConfirm={onImport} />
 
         {lastErrors.length > 0 && (
           <div className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 p-3">

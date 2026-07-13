@@ -17,4 +17,9 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  server: {
+    watch: {
+      ignored: ['**/github-upload-source-*/**'],
+    },
+  },
 })

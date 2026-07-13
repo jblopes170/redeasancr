@@ -1,4 +1,4 @@
-﻿import type { Level } from '@/types/domain'
+﻿import type { CategoryLevel, Level } from '@/types/domain'
 
 export const STAGE_OPTIONS = [
   { label: '1a etapa', value: 1 },
@@ -89,8 +89,47 @@ export function isLeveledCategoryName(rawName: string): boolean {
   return NTMR_CATEGORY_PRESETS.some((item) => item.name === canonical && item.leveled)
 }
 
+export function isOfficialCategoryName(rawName: string): boolean {
+  const canonical = normalizeCategoryName(rawName)
+  return NTMR_CATEGORY_PRESETS.some((item) => item.name === canonical)
+}
+
 export function categoryLabel(name: string, level: Level | null): string {
   return level ? `${name} (${level})` : name
+}
+interface CategoryLike {
+  id: string
+  name: string
+  level: CategoryLevel
+  display_order?: number | null
+}
+
+export function categoryOptionLabel(name: string): string {
+  return normalizeCategoryName(name)
+}
+
+export function getCategoryOptionKey(category: CategoryLike): string {
+  const name = normalizeCategoryName(category.name)
+  return isLeveledCategoryName(name) ? `leveled:${name}` : `single:${name}`
+}
+
+export function getUniqueCategoryOptions<T extends CategoryLike>(categories: T[]): T[] {
+  const options = new Map<string, T>()
+
+  for (const category of categories) {
+    const key = getCategoryOptionKey(category)
+    const existing = options.get(key)
+
+    if (!existing || (category.display_order ?? 9999) < (existing.display_order ?? 9999)) {
+      options.set(key, category)
+    }
+  }
+
+  return Array.from(options.values()).sort((a, b) => {
+    const orderDiff = (a.display_order ?? 9999) - (b.display_order ?? 9999)
+    if (orderDiff !== 0) return orderDiff
+    return categoryOptionLabel(a.name).localeCompare(categoryOptionLabel(b.name), 'pt-BR')
+  })
 }
 
 export const IMPORT_TEMPLATES = {
@@ -104,4 +143,6 @@ export const IMPORT_TEMPLATES = {
   cadastro_unico:
     'etapa,categoria,competidor,animal,registro,proprietario,cidade,uf,nivel,nota_ancr,penalidades,inscricao,ordem_apresentacao,numero_entrada,observacoes',
 } as const
+
+
 

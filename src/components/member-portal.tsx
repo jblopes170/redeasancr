@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+﻿import { Link } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import heroImage from '@/assets/hero-reining.webp'
+import { HorseTrail } from '@/components/horse-trail'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,7 +25,13 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import { categoryLabel } from '@/lib/constants'
+import {
+  LEVEL_OPTIONS,
+  categoryOptionLabel,
+  getUniqueCategoryOptions,
+  isLeveledCategoryName,
+  isOfficialCategoryName,
+} from '@/lib/constants'
 import { useAuth } from '@/providers/auth-provider'
 import {
   createRegistrationRequest,
@@ -34,7 +42,7 @@ import {
   getPublicEvents,
   updateRegistrationRequestStatus,
 } from '@/services/api'
-import type { RegistrationRequestStatus, Stage, SuggestionStatus } from '@/types/domain'
+import type { Level, RegistrationRequestStatus, Stage, SuggestionStatus } from '@/types/domain'
 
 const REQUEST_STATUS: Record<RegistrationRequestStatus, { label: string; className: string }> = {
   pending: { label: 'Aguardando análise', className: 'border-amber-300 bg-amber-50 text-amber-800' },
@@ -76,6 +84,13 @@ const emptyRegistration: RegistrationForm = {
   notes: '',
 }
 
+const emptySelectedLevels: Record<Level, boolean> = {
+  N1: false,
+  N2: false,
+  N3: false,
+  N4: false,
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('pt-BR')
 }
@@ -84,6 +99,7 @@ export function MemberPortal() {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
   const [registration, setRegistration] = useState<RegistrationForm>(emptyRegistration)
+  const [selectedLevels, setSelectedLevels] = useState<Record<Level, boolean>>(emptySelectedLevels)
   const [stages, setStages] = useState<Stage[]>([1])
   const [suggestionEventId, setSuggestionEventId] = useState('none')
   const [suggestionSubject, setSuggestionSubject] = useState('')
@@ -112,9 +128,18 @@ export function MemberPortal() {
     [events],
   )
   const categories = useMemo(
-    () => (categoriesQuery.data ?? []).filter((category) => category.active),
+    () => (categoriesQuery.data ?? []).filter((category) => category.active && isOfficialCategoryName(category.name)),
     [categoriesQuery.data],
   )
+  const categoryOptions = useMemo(() => getUniqueCategoryOptions(categories), [categories])
+  const selectedCategory = categories.find((category) => category.id === registration.categoryId)
+  const selectedCategoryIsLeveled = selectedCategory ? isLeveledCategoryName(selectedCategory.name) : false
+  const selectedLevelValues = LEVEL_OPTIONS.filter((level) => selectedLevels[level])
+  const selectedLevelCategories = selectedCategory
+    ? LEVEL_OPTIONS
+      .map((level) => categories.find((category) => category.name === selectedCategory.name && category.level === level))
+      .filter(Boolean)
+    : []
 
   useEffect(() => {
     if (!registration.eventId && registrationEvents.length > 0) {
@@ -133,10 +158,14 @@ export function MemberPortal() {
       if (stages.length === 0) {
         throw new Error('Selecione pelo menos uma etapa.')
       }
+      if (selectedCategoryIsLeveled && selectedLevelValues.length === 0) {
+        throw new Error('Selecione pelo menos um nível para esta categoria.')
+      }
 
       return createRegistrationRequest({
         event_id: registration.eventId,
         category_id: registration.categoryId,
+        requested_levels: selectedCategoryIsLeveled ? selectedLevelValues : undefined,
         stages,
         competitor_name: registration.competitorName.trim(),
         competitor_document: registration.competitorDocument,
@@ -154,6 +183,7 @@ export function MemberPortal() {
         ...emptyRegistration,
         eventId: current.eventId,
       }))
+      setSelectedLevels(emptySelectedLevels)
       setStages([1])
       void queryClient.invalidateQueries({ queryKey: ['my-registration-requests'] })
     },
@@ -202,13 +232,16 @@ export function MemberPortal() {
 
   return (
     <div className="space-y-5">
-      <Card className="overflow-hidden border-primary/20 bg-gradient-to-r from-primary to-red-800 text-primary-foreground">
-        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="relative overflow-hidden border-primary/20 bg-primary text-primary-foreground">
+        <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/55" />
+        <HorseTrail className="opacity-25" />
+        <CardContent className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/75">Área do participante</p>
-            <h1 className="mt-1 text-3xl font-extrabold">Olá, {profile?.name ?? profile?.email ?? 'competidor'}</h1>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/75">Area do participante</p>
+            <h1 className="mt-1 text-3xl font-extrabold">Ola, {profile?.name ?? profile?.email ?? 'competidor'}</h1>
             <p className="mt-1 max-w-2xl text-sm text-primary-foreground/85">
-              Faça sua inscrição, acompanhe a aprovação e consulte os resultados em um só lugar.
+              Faca sua inscricao, acompanhe a aprovacao e consulte os resultados em um so lugar.
             </p>
           </div>
           <Button variant="secondary" asChild>
@@ -216,7 +249,6 @@ export function MemberPortal() {
           </Button>
         </CardContent>
       </Card>
-
       {portalError && (
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
@@ -255,7 +287,10 @@ export function MemberPortal() {
                       <Label>Evento *</Label>
                       <Select
                         value={registration.eventId}
-                        onValueChange={(value) => setRegistration((current) => ({ ...current, eventId: value, categoryId: '' }))}
+                        onValueChange={(value) => {
+                          setRegistration((current) => ({ ...current, eventId: value, categoryId: '' }))
+                          setSelectedLevels(emptySelectedLevels)
+                        }}
                       >
                         <SelectTrigger><SelectValue placeholder="Selecione o evento" /></SelectTrigger>
                         <SelectContent>
@@ -267,18 +302,52 @@ export function MemberPortal() {
                       <Label>Categoria *</Label>
                       <Select
                         value={registration.categoryId}
-                        onValueChange={(value) => setRegistration((current) => ({ ...current, categoryId: value }))}
+                        onValueChange={(value) => {
+                          setRegistration((current) => ({ ...current, categoryId: value }))
+                          setSelectedLevels(emptySelectedLevels)
+                        }}
                         disabled={!registration.eventId || categoriesQuery.isLoading}
                       >
                         <SelectTrigger><SelectValue placeholder={categoriesQuery.isLoading ? 'Carregando...' : 'Selecione a categoria'} /></SelectTrigger>
                         <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>{categoryLabel(category.name, category.level)}</SelectItem>
+                          {categoryOptions.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>{categoryOptionLabel(category.name)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
+
+                  {selectedCategoryIsLeveled && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                      <Label className="mb-2 block">Níveis elegíveis *</Label>
+                      <p className="mb-3 text-xs text-muted-foreground">
+                        A inscrição gera uma única passada. A nota lançada depois valerá para todos os níveis marcados aqui.
+                      </p>
+                      <div className="flex flex-wrap gap-4">
+                        {LEVEL_OPTIONS.map((level) => {
+                          const categoryExists = selectedLevelCategories.some((category) => category?.level === level)
+
+                          return (
+                            <label key={level} className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+                              <input
+                                type="checkbox"
+                                checked={selectedLevels[level]}
+                                disabled={!categoryExists}
+                                onChange={(event) => {
+                                  setSelectedLevels((current) => ({
+                                    ...current,
+                                    [level]: event.target.checked,
+                                  }))
+                                }}
+                              />
+                              {level}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="rounded-lg border border-border bg-muted/35 p-4">
                     <Label className="mb-3 block">Etapas desejadas *</Label>
@@ -346,7 +415,11 @@ export function MemberPortal() {
                       </div>
                       <p className="text-sm"><strong>{request.competitor_name}</strong> com <strong>{request.horse_name}</strong></p>
                       <p className="text-sm text-muted-foreground">
-                        {request.category ? categoryLabel(request.category.name, request.category.level) : 'Categoria'} · Etapas {request.stages.join(', ')}
+                        {request.category ? categoryOptionLabel(request.category.name) : 'Categoria'}
+                        {request.requested_levels?.length
+                          ? ` · Níveis ${request.requested_levels.join(', ')}`
+                          : request.category?.level ? ` · ${request.category.level}` : ''}
+                        {' '}· Etapas {request.stages.join(', ')}
                       </p>
                       <p className="text-xs text-muted-foreground">Enviada em {formatDate(request.created_at)}</p>
                       {request.admin_notes && <p className="text-sm text-destructive">Observação: {request.admin_notes}</p>}
@@ -435,3 +508,5 @@ export function MemberPortal() {
     </div>
   )
 }
+
+

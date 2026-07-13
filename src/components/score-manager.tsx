@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import type { CategoryLevel, EntryRecord, EventStatus, ScoreRecord, Stage } from '@/types/domain'
 import { LEVEL_OPTIONS, NO_LEVEL_VALUE, STAGE_OPTIONS, categoryLabel } from '@/lib/constants'
-import { downloadCsv } from '@/lib/csv'
+import { downloadExcel } from '@/lib/spreadsheet'
 import { deleteScore, getCategories, getEntries, getScores, saveScore } from '@/services/api'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -291,8 +291,8 @@ export function ScoreManager({ eventId, eventStatus, currentUserId, isAdmin, isJ
           variant="outline"
           className="gap-2"
           onClick={() =>
-            downloadCsv(
-              'notas.csv',
+            downloadExcel(
+              'notas.xlsx',
               rows.map((row) => ({
                 competidor: row.entry?.competitor?.name ?? '',
                 cavalo: row.entry?.horse?.name ?? '',
@@ -305,11 +305,26 @@ export function ScoreManager({ eventId, eventStatus, currentUserId, isAdmin, isJ
                 juiz: row.judge?.name ?? row.judge?.email ?? '',
                 status: row.entry?.status ?? '',
               })),
+              {
+                sheetName: 'Notas',
+                headers: [
+                  'competidor',
+                  'cavalo',
+                  'categoria',
+                  'nivel',
+                  'etapa',
+                  'nota',
+                  'penalidades',
+                  'final',
+                  'juiz',
+                  'status',
+                ],
+              },
             )
           }
         >
           <Download className="h-4 w-4" />
-          Exportar CSV
+          Exportar Excel
         </Button>
 
         <Dialog
@@ -463,3 +478,4 @@ export function ScoreManager({ eventId, eventStatus, currentUserId, isAdmin, isJ
     </div>
   )
 }
+
