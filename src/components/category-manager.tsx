@@ -3,9 +3,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import type { CategoryLevel, CategoryRecord, Level } from '@/types/domain'
-import { LEVEL_OPTIONS, NTMR_CATEGORY_PRESETS } from '@/lib/constants'
-import { deleteCategory, getCategories, saveCategory } from '@/services/api'
+import { LevelBadge } from '@/components/level-badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +11,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { LevelBadge } from '@/components/level-badge'
+import { LEVEL_OPTIONS, NTMR_CATEGORY_PRESETS } from '@/lib/constants'
+import { deleteCategory, getCategories, saveCategory } from '@/services/api'
+import type { CategoryLevel, CategoryRecord, Level } from '@/types/domain'
 
 interface CategoryManagerProps {
   eventId: string
@@ -49,6 +49,10 @@ function formatCurrency(value: number) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+function formatMoneyInput(value: number) {
+  return Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<CategoryFormState>(defaultForm)
@@ -61,7 +65,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!form.name.trim()) {
-        throw new Error('Nome da categoria e obrigatorio.')
+        throw new Error('Nome da categoria é obrigatório.')
       }
 
       const levelToSave: CategoryLevel = form.levelMode === 'with_level' ? form.level : null
@@ -69,7 +73,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
       return saveCategory({
         id: form.id,
         event_id: eventId,
-        name: form.name,
+        name: form.name.trim(),
         level: levelToSave,
         active: form.active,
         display_order: Number(form.display_order || 0),
@@ -77,7 +81,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
       })
     },
     onSuccess: () => {
-      toast.success('Categoria salva com sucesso.')
+      toast.success('Categoria e valor salvos com sucesso.')
       setForm(defaultForm)
       void queryClient.invalidateQueries({ queryKey: ['categories', eventId] })
     },
@@ -129,7 +133,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
       }
     },
     onSuccess: () => {
-      toast.success('Categorias oficiais carregadas com sucesso.')
+      toast.success('Categorias oficiais carregadas. Agora preencha o valor da inscrição em cada uma.')
       void queryClient.invalidateQueries({ queryKey: ['categories', eventId] })
     },
     onError: (error) => {
@@ -160,6 +164,11 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
     }
   }, [categoriesQuery.data])
 
+  const totalConfiguredValue = useMemo(
+    () => (categoriesQuery.data ?? []).reduce((total, category) => total + Number(category.entry_fee || 0), 0),
+    [categoriesQuery.data],
+  )
+
   const openEdit = (category: CategoryRecord) => {
     setForm({
       id: category.id,
@@ -168,7 +177,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
       level: category.level ?? 'N1',
       active: category.active,
       display_order: String(category.display_order),
-      entry_fee: String(category.entry_fee ?? 0).replace('.', ','),
+      entry_fee: formatMoneyInput(category.entry_fee ?? 0),
     })
   }
 
@@ -177,28 +186,39 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
       {!canEdit && (
         <Alert>
           <AlertTitle>Modo somente leitura</AlertTitle>
-          <AlertDescription>Apenas administradores podem criar ou editar categorias.</AlertDescription>
+          <AlertDescription>Apenas administradores podem criar ou editar categorias e valores.</AlertDescription>
         </Alert>
       )}
 
       {canEdit && (
-        <div className="rounded-lg border bg-card p-4">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold">Cadastrar categoria</h3>
+              <h3 className="text-xl font-bold text-primary">{form.id ? 'Editar categoria e valor' : 'Cadastrar categoria e valor'}</h3>
               <p className="text-sm text-muted-foreground">
-                Apenas Aberto, Amador e Futurity usam níveis N1, N2, N3 e N4.
+                Defina aqui o valor da inscrição. Quando o admin confirmar o pagamento em Atendimento, esse valor entra automaticamente no DRE.
               </p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline">1. Valor na categoria</Badge>
+                <Badge variant="outline">2. Aprovar inscrição</Badge>
+                <Badge variant="outline">3. Confirmar pagamento</Badge>
+                <Badge variant="outline">4. Receita no DRE</Badge>
+              </div>
             </div>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => seedMutation.mutate()}
-              disabled={seedMutation.isPending}
-            >
-              <Sparkles className="h-4 w-4" />
-              Carregar categorias oficiais NTMR
-            </Button>
+            <div className="flex flex-col items-end gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => seedMutation.mutate()}
+                disabled={seedMutation.isPending}
+              >
+                <Sparkles className="h-4 w-4" />
+                Carregar categorias oficiais NTMR
+              </Button>
+              <span className="text-xs font-semibold text-muted-foreground">
+                Soma dos valores cadastrados: {formatCurrency(totalConfiguredValue)}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
@@ -236,12 +256,12 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
               />
             </div>
             <div>
-              <Label>Valor inscricao (R$)</Label>
+              <Label>Valor da inscrição (R$)</Label>
               <Input
                 inputMode="decimal"
                 value={form.entry_fee}
                 onChange={(e) => setForm((prev) => ({ ...prev, entry_fee: e.target.value }))}
-                placeholder="0,00"
+                placeholder="Ex.: 450,00"
               />
             </div>
           </div>
@@ -267,7 +287,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
               <Plus className="mr-2 h-4 w-4" />
-              {form.id ? 'Salvar edição' : 'Adicionar categoria'}
+              {form.id ? 'Salvar edição e valor' : 'Adicionar categoria'}
             </Button>
             {form.id && (
               <Button variant="outline" onClick={() => setForm(defaultForm)}>
@@ -328,7 +348,7 @@ function CategoryTableSection({ title, rows, canEdit, onEdit, onDelete }: Catego
             <TableHead>Nível</TableHead>
             <TableHead>Ativa</TableHead>
             <TableHead>Ordem</TableHead>
-            <TableHead>Valor</TableHead>
+            <TableHead>Valor da inscrição</TableHead>
             {canEdit && <TableHead className="text-right">Ações</TableHead>}
           </TableRow>
         </TableHeader>
@@ -342,18 +362,19 @@ function CategoryTableSection({ title, rows, canEdit, onEdit, onDelete }: Catego
           ) : (
             rows.map((category) => (
               <TableRow key={category.id}>
-                <TableCell>{category.name}</TableCell>
+                <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>
                   <LevelBadge level={category.level} />
                 </TableCell>
                 <TableCell>{category.active ? 'Sim' : 'Não'}</TableCell>
                 <TableCell>{category.display_order}</TableCell>
-                <TableCell className="font-semibold">{formatCurrency(category.entry_fee ?? 0)}</TableCell>
+                <TableCell className="font-semibold text-primary">{formatCurrency(category.entry_fee ?? 0)}</TableCell>
                 {canEdit && (
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon" onClick={() => onEdit(category)}>
-                        <Pencil className="h-4 w-4" />
+                      <Button variant="outline" size="sm" onClick={() => onEdit(category)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar valor
                       </Button>
                       <Button variant="destructive" size="icon" onClick={() => onDelete(category.id)}>
                         <Trash2 className="h-4 w-4" />

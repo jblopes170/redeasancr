@@ -1,0 +1,1 @@
+import{A as e,p as t}from"./index-CSRQUFcw.js";var n=t();function r(){return(0,n.jsx)(e,{})}export{r as component};

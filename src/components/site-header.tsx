@@ -1,10 +1,11 @@
 ﻿import { Link } from '@tanstack/react-router'
 import { LogOut, Shield, Trophy, UserCircle, UserPlus } from 'lucide-react'
 
-import ntmrLogo from '@/assets/ntmr-logo.jpg'
+import { AppQuickNav } from '@/components/app-quick-nav'
 import { RoleBadge } from '@/components/role-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ntmrLogoPath } from '@/lib/brand-assets'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/providers/auth-provider'
 
@@ -16,10 +17,14 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:py-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <Link to="/" className="flex min-w-0 items-center gap-3">
-            <img src={ntmrLogo} alt="Logo NTMR" className="h-14 w-14 rounded-xl border border-gray-200 object-cover" />
+            <img
+              src={ntmrLogoPath}
+              alt="Logo NTMR"
+              className="h-14 w-14 rounded-xl border border-gray-200 bg-white object-cover shadow-sm"
+            />
             <div className="min-w-0">
               <p className="truncate text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                Nucleo Triangulo Mineiro de Redeas
+                Núcleo Triângulo Mineiro de Rédeas
               </p>
               <p className="truncate font-serif text-3xl font-bold leading-none tracking-tight text-foreground">Ranking NTMR</p>
             </div>
@@ -42,7 +47,7 @@ export function SiteHeader() {
                   <Button asChild>
                     <Link to="/minha-area">
                       <UserCircle className="mr-2 h-4 w-4" />
-                      Minha area
+                      Minha área
                     </Link>
                   </Button>
                 )}
@@ -73,13 +78,13 @@ export function SiteHeader() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-200 pt-3">
           <nav className="flex flex-wrap items-center gap-2 text-sm text-secondary">
             <Link to="/" hash="inicio" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
-              Inicio
+              Início
             </Link>
             <Link to="/" hash="calendario" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
               Eventos
             </Link>
             <Link to="/" hash="noticias" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
-              Noticias
+              Notícias
             </Link>
             <Link to="/ranking" className="rounded-lg px-3 py-2 font-semibold transition-colors hover:text-primary">
               Ranking
@@ -90,9 +95,11 @@ export function SiteHeader() {
           </nav>
 
           <div className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-muted-foreground shadow-sm">
-            Vinculado a ANCR
+            Vinculado à ANCR
           </div>
         </div>
+
+        <AppQuickNav />
 
         {!isSupabaseConfigured && (
           <Badge variant="destructive" className="w-fit bg-destructive text-destructive-foreground">

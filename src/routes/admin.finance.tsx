@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+﻿import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { BanknoteArrowDown, BanknoteArrowUp, Landmark, WalletCards } from 'lucide-react'
@@ -60,7 +60,7 @@ function AdminFinancePage() {
           {financeError && (
             <Alert variant="destructive">
               <AlertTitle>Financeiro ainda nao configurado</AlertTitle>
-              <AlertDescription>{financeError instanceof Error ? financeError.message : 'Nao foi possivel carregar o DRE.'}</AlertDescription>
+              <AlertDescription>{financeError instanceof Error ? financeError.message : 'Não foi possível carregar o DRE.'}</AlertDescription>
             </Alert>
           )}
 
@@ -87,7 +87,7 @@ function AdminFinancePage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between"><p className="text-sm font-semibold">Caixa realizado</p><WalletCards className="h-5 w-5" /></div>
                 <p className="mt-2 text-2xl font-extrabold">{formatCurrency(summary.cashBalance)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Inscricoes pagas: {formatCurrency(summary.automaticRegistrations)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Inscrições pagas: {formatCurrency(summary.automaticRegistrations)}</p>
               </CardContent>
             </Card>
           </section>
@@ -95,7 +95,7 @@ function AdminFinancePage() {
           <Card>
             <CardContent className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.4fr)] md:items-center">
               <div>
-                <h2 className="text-xl font-extrabold text-primary">Lancamentos por evento</h2>
+                <h2 className="text-xl font-extrabold text-primary">Lançamentos por evento</h2>
                 <p className="text-sm text-muted-foreground">Escolha uma etapa para registrar saidas, patrocinios e conferir o DRE do evento.</p>
               </div>
               <Select value={selectedEventId} onValueChange={setSelectedEventId}>
@@ -119,3 +119,4 @@ function AdminFinancePage() {
     </ProtectedRoute>
   )
 }
+

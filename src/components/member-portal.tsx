@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import heroImage from '@/assets/hero-reining.webp'
+import { heroReiningPath } from '@/lib/brand-assets'
 import { HorseTrail } from '@/components/horse-trail'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -303,7 +303,7 @@ export function MemberPortal() {
   return (
     <div className="space-y-5">
       <Card className="relative overflow-hidden border-primary/20 bg-primary text-primary-foreground">
-        <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
+        <img src={heroReiningPath} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/55" />
         <HorseTrail className="opacity-25" />
         <CardContent className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -670,5 +670,6 @@ export function MemberPortal() {
     </div>
   )
 }
+
 
 

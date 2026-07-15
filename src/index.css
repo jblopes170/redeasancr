@@ -128,6 +128,11 @@ code {
   }
 }
 
-.horse-trail__horse {
+.horse-trail__ribbon,
+.horse-trail__dots {
   animation: horse-trail-run 18s linear infinite;
+}
+
+.horse-trail__dots {
+  animation-delay: -4s;
 }

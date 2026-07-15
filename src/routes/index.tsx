@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, CircleDollarSign, Newspaper, Trophy } from 'lucide-react'
 
-import heroImage from '@/assets/hero-reining.webp'
+import { heroReiningPath } from '@/lib/brand-assets'
 import { EventCard } from '@/components/event-card'
 import { HorseTrail } from '@/components/horse-trail'
 import { SiteHeader } from '@/components/site-header'
@@ -40,14 +40,14 @@ function HomePage() {
           <div className="relative z-10 flex flex-col justify-center space-y-6 p-6 md:p-10 lg:p-12">
             <Badge className="w-fit bg-primary text-primary-foreground hover:bg-primary">Sistema oficial NTMR</Badge>
             <div className="space-y-4">
-              <h1 className="font-headline-lg max-w-3xl text-primary">Ranking de Redeas simples, rapido e ao vivo.</h1>
+              <h1 className="font-headline-lg max-w-3xl text-primary">Ranking de Rédeas simples, rápido e ao vivo.</h1>
               <p className="font-body-md max-w-2xl text-lg text-muted-foreground">
-                Inscricoes, notas, pontos e resultados do Nucleo Triangulo Mineiro de Redeas em uma experiencia organizada para secretaria, juizes e publico.
+                Inscrições, notas, pontos e resultados do Núcleo Triângulo Mineiro de Rédeas em uma experiencia organizada para secretaria, juízes e público.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button size="lg" asChild>
-                <Link to={session ? '/minha-area' : '/login'}>{session ? 'Abrir minha area' : 'Fazer inscricao'}</Link>
+                <Link to={session ? '/minha-area' : '/login'}>{session ? 'Abrir minha área' : 'Fazer inscricao'}</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
                 <Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Ranking ao vivo</Link>
@@ -56,7 +56,7 @@ function HomePage() {
           </div>
 
           <div className="relative min-h-[420px] overflow-hidden bg-muted">
-            <img src={heroImage} alt="Competidor em prova de redeas" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={heroReiningPath} alt="Competidor em prova de rédeas" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-black/10" />
             <div className="absolute inset-x-4 bottom-4 grid grid-cols-2 gap-3 sm:left-auto sm:w-[420px]">
               <div className="rounded-2xl border border-white/45 bg-white/90 p-4 shadow-sm backdrop-blur">
@@ -76,7 +76,7 @@ function HomePage() {
         <section id="calendario" className="scroll-mt-44 space-y-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Calendario oficial</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Calendário oficial</p>
               <h2 className="font-headline-md text-foreground">Eventos e resultados</h2>
             </div>
             <Button variant="outline" asChild><Link to="/ranking">Consultar todos os rankings</Link></Button>
@@ -85,7 +85,7 @@ function HomePage() {
           {eventsQuery.isLoading ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando eventos publicados...</CardContent></Card>
           ) : eventsQuery.error ? (
-            <Alert variant="destructive"><AlertTitle>Nao foi possivel carregar os eventos</AlertTitle><AlertDescription>{eventsQuery.error.message}</AlertDescription></Alert>
+            <Alert variant="destructive"><AlertTitle>Não foi possível carregar os eventos</AlertTitle><AlertDescription>{eventsQuery.error.message}</AlertDescription></Alert>
           ) : events.length === 0 ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhum evento publicado no momento.</CardContent></Card>
           ) : (
@@ -109,13 +109,13 @@ function HomePage() {
               </div>
               <div className="rounded-2xl border bg-muted/35 p-4">
                 <p className="text-xl font-extrabold text-primary">2</p>
-                <p className="font-bold text-foreground">Lanca nota</p>
+                <p className="font-bold text-foreground">Lança nota</p>
                 <p className="text-sm text-muted-foreground">Admin registra a nota na hora da passada.</p>
               </div>
               <div className="rounded-2xl border bg-muted/35 p-4">
                 <p className="text-xl font-extrabold text-primary">3</p>
                 <p className="font-bold text-foreground">Acompanha</p>
-                <p className="text-sm text-muted-foreground">Ranking atualiza para publico e organizacao.</p>
+                <p className="text-sm text-muted-foreground">Ranking atualiza para público e organização.</p>
               </div>
             </div>
           </div>
@@ -151,9 +151,9 @@ function HomePage() {
           </div>
 
           {newsQuery.isLoading ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando publicacoes...</CardContent></Card>
+            <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando publicações...</CardContent></Card>
           ) : newsQuery.error ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground">As publicacoes ficarao disponiveis apos a configuracao do portal.</CardContent></Card>
+            <Card><CardContent className="p-6 text-sm text-muted-foreground">As publicações ficarao disponiveis apos a configuração do portal.</CardContent></Card>
           ) : news.length === 0 ? (
             <Card><CardContent className="flex items-center gap-3 p-6 text-sm text-muted-foreground"><Newspaper className="h-5 w-5" />Nenhuma noticia publicada ainda.</CardContent></Card>
           ) : (
@@ -181,10 +181,10 @@ function HomePage() {
         <section className="grid gap-4 rounded-3xl border border-gray-200 bg-white p-8 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <h2 className="font-headline-md text-primary">Tudo pronto para acompanhar a temporada</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Crie sua conta para solicitar inscricoes e enviar sugestoes. O ranking permanece aberto para todos.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Crie sua conta para solicitar inscrições e enviar sugestões. O ranking permanece aberto para todos.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button asChild><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha area' : 'Criar conta'}</Link></Button>
+            <Button asChild><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área' : 'Criar conta'}</Link></Button>
             <Button variant="outline" asChild><Link to="/ranking">Ver resultados</Link></Button>
           </div>
         </section>
@@ -193,7 +193,7 @@ function HomePage() {
       <footer className="mt-10 border-t border-gray-200 bg-muted/60 px-4 py-10 sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 text-center md:flex-row md:text-left">
           <span className="font-serif text-2xl font-bold text-primary">NTMR</span>
-          <p className="text-sm text-muted-foreground">Nucleo Triangulo Mineiro de Redeas. Todos os direitos reservados.</p>
+          <p className="text-sm text-muted-foreground">Núcleo Triângulo Mineiro de Rédeas. Todos os direitos reservados.</p>
           <div className="flex flex-wrap justify-center gap-5 text-sm font-semibold text-secondary">
             <Link to="/" hash="inicio" className="hover:text-primary">Inicio</Link>
             <Link to="/ranking" className="hover:text-primary">Ranking</Link>
@@ -204,4 +204,7 @@ function HomePage() {
     </div>
   )
 }
+
+
+
 

@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 
-import heroImage from '@/assets/hero-reining.webp'
+import { heroReiningPath } from '@/lib/brand-assets'
 import { HorseTrail } from '@/components/horse-trail'
 import { RankingTable } from '@/components/ranking-table'
 import { SiteHeader } from '@/components/site-header'
@@ -41,7 +41,7 @@ function PublicRankingPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-7xl space-y-5 px-4 py-8 sm:px-6">
         <Card className="relative overflow-hidden border-primary/20 bg-primary text-primary-foreground">
-          <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
+          <img src={heroReiningPath} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/55" />
           <HorseTrail className="opacity-25" />
           <CardHeader className="relative z-10 space-y-2">
@@ -98,4 +98,6 @@ function PublicRankingPage() {
     </div>
   )
 }
+
+
 
