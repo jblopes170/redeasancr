@@ -69,6 +69,7 @@ As migrations estão em:
 - `supabase/migrations/202607120001_official_ntmr_categories.sql`
 - `supabase/migrations/202607120002_registration_request_levels.sql`
 - `supabase/migrations/202607120003_financial_dre_cashflow.sql`
+- `supabase/migrations/202607140001_payment_finance_workflow.sql`
 - `supabase/migrations/202605220002_seed_ntmr_sample.sql`
 - Guia SQL em ordem (copiar/colar no SQL Editor): `supabase/manual/setup-step-by-step.sql`
 
@@ -93,11 +94,14 @@ Cole os SQLs no editor SQL do Supabase, **nesta ordem exata**:
 8. `202607120001_official_ntmr_categories.sql`
 9. `202607120002_registration_request_levels.sql`
 10. `202607120003_financial_dre_cashflow.sql`
-11. `202605220002_seed_ntmr_sample.sql` (opcional, somente para dados de teste)
+11. `202607140001_payment_finance_workflow.sql`
+12. `202605220002_seed_ntmr_sample.sql` (opcional, somente para dados de teste)
 
 Se o banco principal já está configurado, execute apenas os SQLs novos necessários. Para corrigir categorias em eventos existentes, rode `supabase/manual/fix-categorias-oficiais-ntmr.sql`. Para habilitar níveis separados nas solicitações públicas, rode `supabase/manual/fix-inscricoes-niveis-separados.sql`.
 
-Para habilitar a aba Financeiro, fluxo de caixa e DRE em um banco já configurado, execute `supabase/manual/setup-financeiro-dre.sql`.
+Para habilitar a aba Financeiro, fluxo de caixa e DRE em um banco já configurado, execute `supabase/manual/setup-financeiro-dre.sql` e depois `supabase/manual/setup-pagamentos-dre-automatico.sql`.
+
+O SQL `setup-pagamentos-dre-automatico.sql` adiciona valores de inscrição por categoria, status de pagamento, envio de comprovante, confirmação/rejeição de pagamento, receita automática no DRE e bloqueio de nota para inscrição sem pagamento confirmado ou isenção.
 
 ## Criar primeiro usuário admin
 
@@ -141,7 +145,9 @@ No Supabase Dashboard:
 - Público vê ranking ao vivo e resultados de eventos ativos, finalizados e publicados
 - Usuário comum solicita inscrições, acompanha aprovações e envia sugestões em `/minha-area`
 - Administrador aprova inscrições, responde sugestões e publica notícias
-- Administrador controla entradas, saídas, pendências, fluxo de caixa e DRE por evento
+- Administrador valida pagamentos de inscrições; pagamento confirmado gera receita automática no DRE
+- Administrador controla entradas, saídas, pendências, fluxo de caixa e DRE por evento e consolidado em `/admin/finance`
+- Notas só podem ser lançadas para inscrições com pagamento confirmado ou isento
 - Exclusão de evento exige confirmação pelo nome e remove os dados operacionais vinculados em cascata
 
 ## Reiniciar servidor local
@@ -198,6 +204,7 @@ Também foram gerados CSVs de apoio a partir da planilha em:
 - `/admin` - painel administrativo (admin/juiz)
 - `/admin/events/$eventId` - gestão completa do evento
 - `/admin/requests` - aprovação de inscrições e atendimento (admin)
+- `/admin/finance` - financeiro, fluxo de caixa e DRE consolidado (admin)
 - `/admin/content` - notícias e publicações (admin)
 - `/admin/access` - gerenciamento de acessos (admin)
 

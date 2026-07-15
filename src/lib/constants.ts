@@ -140,7 +140,7 @@ export function getUniqueCategoryOptions<T extends CategoryLike>(categories: T[]
 export const IMPORT_TEMPLATES = {
   competidores: 'nome,documento,telefone,email,cidade,uf,observacoes',
   cavalos: 'nome,registro,proprietario,observacoes',
-  categorias: 'nome,nivel,ativa,ordem',
+  categorias: 'nome,nivel,ativa,ordem,valor_inscricao',
   inscricoes:
     'competidor_nome,cavalo_nome,categoria_nome,nivel,etapa,numero_entrada,ordem_apresentacao',
   notas:

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import type { CategoryLevel, EntryRecord, EventRecord, Level, ScoreRecord, Stage } from '@/types/domain'
+import type { CategoryLevel, EntryRecord, EventRecord, Level, PaymentStatus, ScoreRecord, Stage } from '@/types/domain'
 import {
   LEVEL_OPTIONS,
   BRAZILIAN_UF_OPTIONS,
@@ -120,6 +120,14 @@ const defaultSelectedLevels: Record<Level, boolean> = {
   N2: true,
   N3: true,
   N4: true,
+}
+
+const PAYMENT_BADGE: Record<PaymentStatus, { label: string; className: string }> = {
+  pending: { label: 'Pgto pendente', className: 'border-amber-300 bg-amber-50 text-amber-800' },
+  submitted: { label: 'Comprovante', className: 'border-blue-300 bg-blue-50 text-blue-800' },
+  confirmed: { label: 'Pago', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
+  rejected: { label: 'Pgto rejeitado', className: 'border-red-300 bg-red-50 text-red-800' },
+  waived: { label: 'Isento', className: 'border-slate-300 bg-slate-50 text-slate-700' },
 }
 
 function normalizeSearch(value: string): string {
@@ -322,6 +330,9 @@ export function ScoreLaunchPanel({
       if (entries.some((entry) => entry.status === 'cancelled')) {
         throw new Error('Nao e possivel lancar nota em inscricao cancelada.')
       }
+      if (entries.some((entry) => entry.payment_status !== 'confirmed' && entry.payment_status !== 'waived')) {
+        throw new Error('Pagamento ainda nao confirmado. Confirme o pagamento no atendimento antes de lancar a nota.')
+      }
       if (payload.score.trim() === '') {
         throw new Error('Informe a nota antes de salvar.')
       }
@@ -406,6 +417,8 @@ export function ScoreLaunchPanel({
           entry_number: entryForm.entry_number,
           draw_order: entryForm.draw_order ? Number(entryForm.draw_order) : undefined,
           status: entryForm.status,
+          entry_fee: category.entry_fee ?? 0,
+          payment_status: 'confirmed',
         })
         return { created: 1, errors: [] as string[] }
       }
@@ -450,6 +463,8 @@ export function ScoreLaunchPanel({
               entry_number: entryForm.entry_number,
               draw_order: entryForm.draw_order ? Number(entryForm.draw_order) : undefined,
               status: entryForm.status,
+              entry_fee: categoryToCreate.entry_fee ?? 0,
+              payment_status: 'confirmed',
             })
             created += 1
           } catch (error) {
@@ -1496,6 +1511,13 @@ export function ScoreLaunchPanel({
                 const draft = readDraft(row.key, entry.stage, row.entries)
                 const entryIds = row.entries.map((item) => item.id)
                 const cancelled = row.entries.some((item) => item.status === 'cancelled')
+                const paymentStatus = row.entries.some((item) => item.payment_status === 'confirmed')
+                  ? 'confirmed'
+                  : row.entries.some((item) => item.payment_status === 'waived')
+                    ? 'waived'
+                    : row.entries.find((item) => item.payment_status !== 'confirmed')?.payment_status ?? 'pending'
+                const paymentBadge = PAYMENT_BADGE[paymentStatus]
+                const paymentBlocked = paymentStatus !== 'confirmed' && paymentStatus !== 'waived'
 
                 return (
                   <TableRow key={row.key}>
@@ -1519,7 +1541,10 @@ export function ScoreLaunchPanel({
                       </div>
                     </TableCell>
                     <TableCell className="w-28">
-                      <StatusBadge type="entry" status={cancelled ? 'cancelled' : entry.status} />
+                      <div className="space-y-1">
+                        <StatusBadge type="entry" status={cancelled ? 'cancelled' : entry.status} />
+                        <Badge variant="outline" className={paymentBadge.className}>{paymentBadge.label}</Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="w-28">
                       <Input
@@ -1559,7 +1584,7 @@ export function ScoreLaunchPanel({
                         <Button
                           size="sm"
                           className="gap-2"
-                          disabled={!canJudgeWrite || saveScoreMutation.isPending || cancelled}
+                          disabled={!canJudgeWrite || saveScoreMutation.isPending || cancelled || paymentBlocked}
                           onClick={() => saveScoreMutation.mutate({ rowKey: row.key, entryIds, payload: draft })}
                         >
                           <Save className="h-4 w-4" />

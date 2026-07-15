@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as AdminRequestsRouteImport } from './routes/admin.requests'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
 import { Route as AdminEventsEventIdRouteImport } from './routes/admin.events.$eventId'
@@ -67,6 +68,11 @@ const AdminRequestsRoute = AdminRequestsRouteImport.update({
   path: '/requests',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminContentRoute = AdminContentRouteImport.update({
   id: '/content',
   path: '/content',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/finance': typeof AdminFinanceRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/finance': typeof AdminFinanceRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/finance': typeof AdminFinanceRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/access'
     | '/admin/content'
+    | '/admin/finance'
     | '/admin/requests'
     | '/events/$eventId'
     | '/admin/'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/access'
     | '/admin/content'
+    | '/admin/finance'
     | '/admin/requests'
     | '/events/$eventId'
     | '/admin'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/access'
     | '/admin/content'
+    | '/admin/finance'
     | '/admin/requests'
     | '/events/$eventId'
     | '/admin/'
@@ -244,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRequestsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/content': {
       id: '/admin/content'
       path: '/content'
@@ -271,6 +290,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
   AdminContentRoute: typeof AdminContentRoute
+  AdminFinanceRoute: typeof AdminFinanceRoute
   AdminRequestsRoute: typeof AdminRequestsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEventsEventIdRoute: typeof AdminEventsEventIdRoute
@@ -279,6 +299,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
   AdminContentRoute: AdminContentRoute,
+  AdminFinanceRoute: AdminFinanceRoute,
   AdminRequestsRoute: AdminRequestsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEventsEventIdRoute: AdminEventsEventIdRoute,

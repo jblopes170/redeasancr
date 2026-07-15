@@ -5,6 +5,7 @@ export type CategoryLevel = Level | null
 export type EntryStatus = 'registered' | 'cancelled' | 'finished'
 export type Stage = 1 | 2 | 3
 export type RegistrationRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+export type PaymentStatus = 'pending' | 'submitted' | 'confirmed' | 'rejected' | 'waived'
 export type SuggestionStatus = 'new' | 'read' | 'answered' | 'archived'
 export type NewsPostStatus = 'draft' | 'published'
 export type NewsPostType = 'news' | 'event_update'
@@ -32,6 +33,7 @@ export interface CategoryRecord {
   level: CategoryLevel
   active: boolean
   display_order: number
+  entry_fee: number
   created_at: string
 }
 
@@ -69,6 +71,9 @@ export interface EntryRecord {
   entry_number: string | null
   draw_order: number | null
   status: EntryStatus
+  entry_fee: number
+  payment_status: PaymentStatus
+  payment_confirmed_at: string | null
   created_at: string
   updated_at: string
   competitor?: CompetitorRecord
@@ -149,6 +154,12 @@ export interface RegistrationRequestRecord {
   horse_owner: string | null
   notes: string | null
   status: RegistrationRequestStatus
+  amount_due: number
+  payment_status: PaymentStatus
+  payment_receipt_url: string | null
+  payment_notes: string | null
+  payment_confirmed_at: string | null
+  payment_confirmed_by: string | null
   admin_notes: string | null
   entry_ids: string[]
   approved_by: string | null
@@ -195,6 +206,7 @@ export interface FinancialTransactionRecord {
   created_by: string | null
   created_at: string
   updated_at: string
+  event?: EventRecord
 }
 
 export interface StageRankingRow {

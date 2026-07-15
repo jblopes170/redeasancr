@@ -27,6 +27,7 @@ interface CategoryFormState {
   level: Level
   active: boolean
   display_order: string
+  entry_fee: string
 }
 
 const defaultForm: CategoryFormState = {
@@ -35,6 +36,17 @@ const defaultForm: CategoryFormState = {
   level: 'N1',
   active: true,
   display_order: '0',
+  entry_fee: '0',
+}
+
+function parseMoney(value: string) {
+  const normalized = value.trim().replace(/\s/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.')
+  const amount = Number(normalized)
+  return Number.isFinite(amount) ? amount : 0
+}
+
+function formatCurrency(value: number) {
+  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
@@ -61,6 +73,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
         level: levelToSave,
         active: form.active,
         display_order: Number(form.display_order || 0),
+        entry_fee: parseMoney(form.entry_fee),
       })
     },
     onSuccess: () => {
@@ -86,6 +99,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
                 level,
                 active: true,
                 display_order: order,
+                entry_fee: 0,
               })
             } catch (error) {
               if (!(error instanceof Error) || !error.message.toLowerCase().includes('duplicado')) {
@@ -104,6 +118,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
             level: null,
             active: true,
             display_order: order,
+            entry_fee: 0,
           })
         } catch (error) {
           if (!(error instanceof Error) || !error.message.toLowerCase().includes('duplicado')) {
@@ -153,6 +168,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
       level: category.level ?? 'N1',
       active: category.active,
       display_order: String(category.display_order),
+      entry_fee: String(category.entry_fee ?? 0).replace('.', ','),
     })
   }
 
@@ -185,7 +201,7 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div className="md:col-span-2">
               <Label>Nome da categoria</Label>
               <Input
@@ -217,6 +233,15 @@ export function CategoryManager({ eventId, canEdit }: CategoryManagerProps) {
                 type="number"
                 value={form.display_order}
                 onChange={(e) => setForm((prev) => ({ ...prev, display_order: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Valor inscricao (R$)</Label>
+              <Input
+                inputMode="decimal"
+                value={form.entry_fee}
+                onChange={(e) => setForm((prev) => ({ ...prev, entry_fee: e.target.value }))}
+                placeholder="0,00"
               />
             </div>
           </div>
@@ -303,13 +328,14 @@ function CategoryTableSection({ title, rows, canEdit, onEdit, onDelete }: Catego
             <TableHead>Nível</TableHead>
             <TableHead>Ativa</TableHead>
             <TableHead>Ordem</TableHead>
+            <TableHead>Valor</TableHead>
             {canEdit && <TableHead className="text-right">Ações</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={canEdit ? 5 : 4} className="text-muted-foreground">
+              <TableCell colSpan={canEdit ? 6 : 5} className="text-muted-foreground">
                 Nenhuma categoria cadastrada nesta seção.
               </TableCell>
             </TableRow>
@@ -322,6 +348,7 @@ function CategoryTableSection({ title, rows, canEdit, onEdit, onDelete }: Catego
                 </TableCell>
                 <TableCell>{category.active ? 'Sim' : 'Não'}</TableCell>
                 <TableCell>{category.display_order}</TableCell>
+                <TableCell className="font-semibold">{formatCurrency(category.entry_fee ?? 0)}</TableCell>
                 {canEdit && (
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

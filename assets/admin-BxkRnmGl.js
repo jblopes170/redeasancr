@@ -1,1 +1,0 @@
-import{h as e,u as t}from"./index-CElvjSbg.js";var n=e();function r(){return(0,n.jsx)(t,{})}export{r as component};

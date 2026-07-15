@@ -16,6 +16,7 @@ import type {
   NewsPostRecord,
   NewsPostStatus,
   NewsPostType,
+  PaymentStatus,
   ProfileRecord,
   RegistrationRequestRecord,
   RegistrationRequestStatus,
@@ -51,9 +52,14 @@ function mapSupabaseError(message: string): string {
     || normalized.includes('news_posts')
     || normalized.includes('suggestions')
     || normalized.includes('approve_registration_request')
+    || normalized.includes('submit_registration_payment_receipt')
+    || normalized.includes('confirm_registration_payment')
+    || normalized.includes('reject_registration_payment')
     || normalized.includes('requested_levels')
+    || normalized.includes('payment_status')
+    || normalized.includes('amount_due')
   ) {
-    return 'Configuracao do portal pendente. No Supabase SQL Editor, execute o arquivo supabase/manual/fix-portal-pendente.sql.'
+    return 'Configuracao do portal pendente. No Supabase SQL Editor, execute supabase/manual/fix-portal-pendente.sql e depois supabase/manual/setup-pagamentos-dre-automatico.sql.'
   }
 
   if (normalized.includes('financial_transactions')) {
@@ -163,6 +169,7 @@ export interface CategoryInput {
   level: CategoryLevel
   active: boolean
   display_order: number
+  entry_fee?: number
 }
 
 export async function saveCategory(payload: CategoryInput) {
@@ -183,6 +190,7 @@ export async function saveCategory(payload: CategoryInput) {
           level: levelToSave,
           active: payload.active,
           display_order: payload.display_order,
+          entry_fee: payload.entry_fee ?? 0,
         })
         .eq('id', payload.id)
         .select('*')
@@ -197,6 +205,7 @@ export async function saveCategory(payload: CategoryInput) {
         ...payload,
         name: categoryName,
         level: levelToSave,
+        entry_fee: payload.entry_fee ?? 0,
       })
       .select('*')
       .single(),
@@ -400,6 +409,8 @@ export interface EntryInput {
   entry_number?: string
   draw_order?: number
   status: EntryRecord['status']
+  entry_fee?: number
+  payment_status?: PaymentStatus
 }
 
 export async function saveEntry(payload: EntryInput) {
@@ -416,6 +427,8 @@ export async function saveEntry(payload: EntryInput) {
           entry_number: payload.entry_number ?? null,
           draw_order: payload.draw_order ?? null,
           status: payload.status,
+          entry_fee: payload.entry_fee ?? 0,
+          payment_status: payload.payment_status ?? 'confirmed',
         })
         .eq('id', payload.id)
         .select('*')
@@ -431,6 +444,8 @@ export async function saveEntry(payload: EntryInput) {
         level: payload.level ?? null,
         entry_number: payload.entry_number ?? null,
         draw_order: payload.draw_order ?? null,
+        entry_fee: payload.entry_fee ?? 0,
+        payment_status: payload.payment_status ?? 'confirmed',
       })
       .select('*')
       .single(),
@@ -699,6 +714,33 @@ export async function approveRegistrationRequest(id: string) {
   return unwrap<string[]>(supabase.rpc('approve_registration_request', { p_request_id: id }))
 }
 
+export async function submitRegistrationPaymentReceipt(id: string, receiptUrl: string) {
+  return unwrap<RegistrationRequestRecord>(
+    supabase.rpc('submit_registration_payment_receipt', {
+      p_request_id: id,
+      p_receipt_url: receiptUrl.trim(),
+    }),
+  )
+}
+
+export async function confirmRegistrationPayment(id: string, notes?: string) {
+  return unwrap<RegistrationRequestRecord>(
+    supabase.rpc('confirm_registration_payment', {
+      p_request_id: id,
+      p_payment_notes: notes?.trim() || null,
+    }),
+  )
+}
+
+export async function rejectRegistrationPayment(id: string, notes?: string) {
+  return unwrap<RegistrationRequestRecord>(
+    supabase.rpc('reject_registration_payment', {
+      p_request_id: id,
+      p_payment_notes: notes?.trim() || null,
+    }),
+  )
+}
+
 export async function updateRegistrationRequestStatus(
   id: string,
   status: RegistrationRequestStatus,
@@ -791,14 +833,19 @@ export async function deleteSuggestion(id: string) {
   if (error) throw new Error(mapSupabaseError(error.message))
 }
 
-export async function getFinancialTransactions(eventId: string) {
+export async function getFinancialTransactions(eventId?: string) {
+  let query = supabase
+    .from('financial_transactions')
+    .select('*, event:events(*)')
+    .order('competence_date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (eventId) {
+    query = query.eq('event_id', eventId)
+  }
+
   return unwrap<FinancialTransactionRecord[]>(
-    supabase
-      .from('financial_transactions')
-      .select('*')
-      .eq('event_id', eventId)
-      .order('competence_date', { ascending: false })
-      .order('created_at', { ascending: false }),
+    query,
   )
 }
 
@@ -1025,6 +1072,7 @@ export async function importCategories(eventId: string, rows: Array<Record<strin
         level,
         active: row.ativa?.toLowerCase() !== 'nao',
         display_order: Number(row.ordem || 0),
+        entry_fee: parseNumericValue(row.valor_inscricao || row.valor || row.preco || row.preço || '') ?? 0,
       })
       success += 1
     } catch (error) {
@@ -1274,6 +1322,7 @@ export async function importUnifiedSheet(eventId: string, judgeId: string, rows:
             level,
             active: true,
             display_order: 0,
+            entry_fee: parseNumericValue(pickField(row, ['valor_inscricao', 'valor', 'preco', 'preço'])) ?? 0,
           })
         }
 

@@ -9,8 +9,10 @@ import {
   Lightbulb,
   Medal,
   PlusCircle,
+  ReceiptText,
   Send,
   Trophy,
+  WalletCards,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -42,9 +44,10 @@ import {
   getMyRegistrationRequests,
   getMySuggestions,
   getPublicEvents,
+  submitRegistrationPaymentReceipt,
   updateRegistrationRequestStatus,
 } from '@/services/api'
-import type { Level, RegistrationRequestStatus, Stage, SuggestionStatus } from '@/types/domain'
+import type { Level, PaymentStatus, RegistrationRequestStatus, Stage, SuggestionStatus } from '@/types/domain'
 
 const REQUEST_STATUS: Record<RegistrationRequestStatus, { label: string; className: string }> = {
   pending: { label: 'Aguardando análise', className: 'border-amber-300 bg-amber-50 text-amber-800' },
@@ -58,6 +61,14 @@ const SUGGESTION_STATUS: Record<SuggestionStatus, string> = {
   read: 'Em análise',
   answered: 'Respondida',
   archived: 'Arquivada',
+}
+
+const PAYMENT_STATUS: Record<PaymentStatus, { label: string; className: string }> = {
+  pending: { label: 'Aguardando pagamento', className: 'border-amber-300 bg-amber-50 text-amber-800' },
+  submitted: { label: 'Comprovante enviado', className: 'border-blue-300 bg-blue-50 text-blue-800' },
+  confirmed: { label: 'Pagamento confirmado', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
+  rejected: { label: 'Pagamento rejeitado', className: 'border-red-300 bg-red-50 text-red-800' },
+  waived: { label: 'Isento', className: 'border-slate-300 bg-slate-50 text-slate-700' },
 }
 
 interface RegistrationForm {
@@ -97,6 +108,10 @@ function formatDate(value: string) {
   return new Date(value).toLocaleDateString('pt-BR')
 }
 
+function formatCurrency(value: number) {
+  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 export function MemberPortal() {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
@@ -106,6 +121,7 @@ export function MemberPortal() {
   const [suggestionEventId, setSuggestionEventId] = useState('none')
   const [suggestionSubject, setSuggestionSubject] = useState('')
   const [suggestionMessage, setSuggestionMessage] = useState('')
+  const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({})
 
   const eventsQuery = useQuery({ queryKey: ['public-events'], queryFn: getPublicEvents })
   const categoriesQuery = useQuery({
@@ -169,6 +185,18 @@ export function MemberPortal() {
       .map((level) => categories.find((category) => category.name === selectedCategory.name && category.level === level))
       .filter(Boolean)
     : []
+  const registrationAmountEstimate = useMemo(() => {
+    if (!selectedCategory) return 0
+    const stageMultiplier = Math.max(stages.length, 1)
+    if (!selectedCategoryIsLeveled) return Number(selectedCategory.entry_fee ?? 0) * stageMultiplier
+
+    const levelTotal = selectedLevelValues.reduce((total, level) => {
+      const category = categories.find((item) => item.name === selectedCategory.name && item.level === level)
+      return total + Number(category?.entry_fee ?? 0)
+    }, 0)
+
+    return levelTotal * stageMultiplier
+  }, [categories, selectedCategory, selectedCategoryIsLeveled, selectedLevelValues, stages.length])
 
   useEffect(() => {
     if (!registration.eventId && registrationEvents.length > 0) {
@@ -226,6 +254,19 @@ export function MemberPortal() {
       void queryClient.invalidateQueries({ queryKey: ['my-registration-requests'] })
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao cancelar solicitação.'),
+  })
+
+  const receiptMutation = useMutation({
+    mutationFn: (requestId: string) => {
+      const receipt = receiptDrafts[requestId]?.trim()
+      if (!receipt) throw new Error('Cole o link ou identificador do comprovante.')
+      return submitRegistrationPaymentReceipt(requestId, receipt)
+    },
+    onSuccess: () => {
+      toast.success('Comprovante enviado para validação.')
+      void queryClient.invalidateQueries({ queryKey: ['my-registration-requests'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao enviar comprovante.'),
   })
 
   const suggestionMutation = useMutation({
@@ -289,7 +330,7 @@ export function MemberPortal() {
       <Tabs defaultValue="new" className="space-y-4">
         <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 lg:grid-cols-4">
           <TabsTrigger value="new" className="gap-2"><PlusCircle className="h-4 w-4" />Nova inscrição</TabsTrigger>
-          <TabsTrigger value="registrations" className="gap-2"><ClipboardList className="h-4 w-4" />Minhas inscrições</TabsTrigger>
+          <TabsTrigger value="registrations" className="gap-2"><ClipboardList className="h-4 w-4" />Inscrições e pagamentos</TabsTrigger>
           <TabsTrigger value="suggestions" className="gap-2"><Lightbulb className="h-4 w-4" />Sugestões</TabsTrigger>
           <TabsTrigger value="results" className="gap-2"><Medal className="h-4 w-4" />Resultados</TabsTrigger>
         </TabsList>
@@ -455,6 +496,19 @@ export function MemberPortal() {
                     <Textarea rows={3} value={registration.notes} onChange={(event) => setRegistration((current) => ({ ...current, notes: event.target.value }))} />
                   </div>
 
+                  <div className="flex flex-col gap-3 rounded-xl border bg-muted/35 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <WalletCards className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold">Valor estimado da inscrição</p>
+                        <p className="text-xs text-muted-foreground">Calculado por categoria, níveis selecionados e quantidade de etapas.</p>
+                      </div>
+                    </div>
+                    <strong className="text-2xl text-primary">{formatCurrency(registrationAmountEstimate)}</strong>
+                  </div>
+
                   <div className="flex justify-end">
                     <Button className="gap-2" onClick={() => registrationMutation.mutate()} disabled={registrationMutation.isPending || registrationEvents.length === 0}>
                       <Send className="h-4 w-4" />
@@ -475,13 +529,16 @@ export function MemberPortal() {
               <Card><CardContent className="p-6 text-sm text-muted-foreground">Você ainda não enviou nenhuma inscrição.</CardContent></Card>
             ) : (requestsQuery.data ?? []).map((request) => {
               const status = REQUEST_STATUS[request.status]
+              const payment = PAYMENT_STATUS[request.payment_status ?? 'pending']
+              const canSendReceipt = request.status !== 'cancelled' && request.payment_status !== 'confirmed' && request.payment_status !== 'waived'
               return (
                 <Card key={request.id}>
-                  <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-1">
+                  <CardContent className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] lg:items-start">
+                    <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-bold text-primary">{request.event?.name ?? 'Evento'}</p>
                         <Badge variant="outline" className={status.className}>{status.label}</Badge>
+                        <Badge variant="outline" className={payment.className}>{payment.label}</Badge>
                       </div>
                       <p className="text-sm"><strong>{request.competitor_name}</strong> com <strong>{request.horse_name}</strong></p>
                       <p className="text-sm text-muted-foreground">
@@ -492,14 +549,49 @@ export function MemberPortal() {
                         {' '}· Etapas {request.stages.join(', ')}
                       </p>
                       <p className="text-xs text-muted-foreground">Enviada em {formatDate(request.created_at)}</p>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {request.status === 'approved' && (
+                          <Button size="sm" variant="outline" asChild><Link to="/events/$eventId" params={{ eventId: request.event_id }}>Ver evento</Link></Button>
+                        )}
+                        {request.status === 'pending' && (
+                          <Button size="sm" variant="outline" onClick={() => cancelMutation.mutate(request.id)} disabled={cancelMutation.isPending}>Cancelar solicitação</Button>
+                        )}
+                      </div>
                       {request.admin_notes && <p className="text-sm text-destructive">Observação: {request.admin_notes}</p>}
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {request.status === 'approved' && (
-                        <Button size="sm" variant="outline" asChild><Link to="/events/$eventId" params={{ eventId: request.event_id }}>Ver evento</Link></Button>
+
+                    <div className="rounded-xl border bg-muted/25 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Valor a pagar</p>
+                          <p className="text-2xl font-extrabold text-primary">{formatCurrency(request.amount_due ?? 0)}</p>
+                        </div>
+                        <ReceiptText className="h-7 w-7 text-primary" />
+                      </div>
+                      {request.payment_receipt_url && (
+                        <p className="mt-2 break-all text-xs text-muted-foreground">Comprovante: {request.payment_receipt_url}</p>
                       )}
-                      {request.status === 'pending' && (
-                        <Button size="sm" variant="outline" onClick={() => cancelMutation.mutate(request.id)} disabled={cancelMutation.isPending}>Cancelar solicitação</Button>
+                      {request.payment_notes && (
+                        <p className="mt-2 text-xs text-destructive">Pagamento: {request.payment_notes}</p>
+                      )}
+                      {canSendReceipt && (
+                        <div className="mt-3 space-y-2">
+                          <Label className="text-xs">Link ou identificação do comprovante</Label>
+                          <Input
+                            value={receiptDrafts[request.id] ?? ''}
+                            onChange={(event) => setReceiptDrafts((current) => ({ ...current, [request.id]: event.target.value }))}
+                            placeholder="Ex.: link do Drive, PIX, recibo..."
+                          />
+                          <Button
+                            size="sm"
+                            className="w-full gap-2"
+                            onClick={() => receiptMutation.mutate(request.id)}
+                            disabled={receiptMutation.isPending}
+                          >
+                            <Send className="h-4 w-4" />
+                            Enviar comprovante
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </CardContent>

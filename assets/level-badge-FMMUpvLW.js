@@ -1,0 +1,1 @@
+import{h as e}from"./index-B7ceDSAn.js";import{s as t}from"./site-header-C9SYBeda.js";var n=e();function r({level:e}){return e?(0,n.jsx)(t,{variant:`secondary`,className:`font-semibold tracking-wide`,children:e}):(0,n.jsx)(t,{variant:`outline`,className:`font-semibold tracking-wide`,children:`Sem nível`})}export{r as t};

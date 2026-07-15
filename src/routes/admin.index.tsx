@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ClipboardCheck, Gauge, KeyRound, Megaphone, Newspaper, Trophy } from 'lucide-react'
+import { ClipboardCheck, Gauge, KeyRound, Megaphone, Newspaper, Trophy, WalletCards } from 'lucide-react'
 
 import { AdminLayout } from '@/components/admin-layout'
 import { EventCard } from '@/components/event-card'
@@ -122,6 +122,16 @@ function AdminIndexPage() {
                     </div>
                     <p className="text-sm text-muted-foreground">Publique notícias gerais e atualizações de cada evento.</p>
                     <Button variant="outline" asChild><Link to="/admin/content">Gerenciar notícias</Link></Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {isAdmin && (
+                <Card>
+                  <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
+                    <div><WalletCards className="h-7 w-7 text-primary" /><h3 className="mt-3 text-lg font-bold">Financeiro e DRE</h3></div>
+                    <p className="text-sm text-muted-foreground">Controle inscricoes pagas, patrocinios, despesas e resultado do campeonato.</p>
+                    <Button variant="outline" asChild><Link to="/admin/finance">Abrir financeiro</Link></Button>
                   </CardContent>
                 </Card>
               )}

@@ -1,4 +1,4 @@
-import { Check, MessageSquareReply, Trash2, X } from 'lucide-react'
+﻿import { Check, CheckCircle2, MessageSquareReply, ReceiptText, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -14,20 +14,34 @@ import { Textarea } from '@/components/ui/textarea'
 import { categoryOptionLabel } from '@/lib/constants'
 import {
   approveRegistrationRequest,
+  confirmRegistrationPayment,
   deleteRegistrationRequest,
   deleteSuggestion,
   getAdminRegistrationRequests,
   getAdminSuggestions,
+  rejectRegistrationPayment,
   respondSuggestion,
   updateRegistrationRequestStatus,
 } from '@/services/api'
-import type { RegistrationRequestStatus, SuggestionRecord } from '@/types/domain'
+import type { PaymentStatus, RegistrationRequestStatus, SuggestionRecord } from '@/types/domain'
 
 const REQUEST_LABEL: Record<RegistrationRequestStatus, string> = {
   pending: 'Pendente',
   approved: 'Aprovada',
   rejected: 'Rejeitada',
   cancelled: 'Cancelada',
+}
+
+const PAYMENT_LABEL: Record<PaymentStatus, { label: string; className: string }> = {
+  pending: { label: 'Aguardando pagamento', className: 'border-amber-300 bg-amber-50 text-amber-800' },
+  submitted: { label: 'Comprovante enviado', className: 'border-blue-300 bg-blue-50 text-blue-800' },
+  confirmed: { label: 'Pago', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
+  rejected: { label: 'Pagamento rejeitado', className: 'border-red-300 bg-red-50 text-red-800' },
+  waived: { label: 'Isento', className: 'border-slate-300 bg-slate-50 text-slate-700' },
+}
+
+function formatCurrency(value: number) {
+  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export function RequestManagement() {
@@ -41,20 +55,41 @@ export function RequestManagement() {
   const approveMutation = useMutation({
     mutationFn: approveRegistrationRequest,
     onSuccess: () => {
-      toast.success('Inscrição aprovada e adicionada ao evento.')
+      toast.success('InscriÃ§Ã£o aprovada e adicionada ao evento.')
       void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
       void queryClient.invalidateQueries({ queryKey: ['entries'] })
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao aprovar inscrição'),
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao aprovar inscriÃ§Ã£o'),
   })
 
   const rejectMutation = useMutation({
     mutationFn: (id: string) => updateRegistrationRequestStatus(id, 'rejected'),
     onSuccess: () => {
-      toast.success('Solicitação rejeitada.')
+      toast.success('SolicitaÃ§Ã£o rejeitada.')
       void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao rejeitar solicitação'),
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao rejeitar solicitaÃ§Ã£o'),
+  })
+
+  const confirmPaymentMutation = useMutation({
+    mutationFn: (id: string) => confirmRegistrationPayment(id),
+    onSuccess: () => {
+      toast.success('Pagamento confirmado e receita enviada ao DRE.')
+      void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
+      void queryClient.invalidateQueries({ queryKey: ['financial-transactions'] })
+      void queryClient.invalidateQueries({ queryKey: ['entries'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao confirmar pagamento.'),
+  })
+
+  const rejectPaymentMutation = useMutation({
+    mutationFn: (id: string) => rejectRegistrationPayment(id),
+    onSuccess: () => {
+      toast.success('Pagamento marcado como rejeitado.')
+      void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
+      void queryClient.invalidateQueries({ queryKey: ['entries'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao rejeitar pagamento.'),
   })
 
   const responseMutation = useMutation({
@@ -63,31 +98,31 @@ export function RequestManagement() {
       return respondSuggestion(selectedSuggestion.id, response)
     },
     onSuccess: () => {
-      toast.success('Sugestão respondida.')
+      toast.success('SugestÃ£o respondida.')
       setSelectedSuggestion(null)
       setResponse('')
       void queryClient.invalidateQueries({ queryKey: ['admin-suggestions'] })
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao responder sugestão'),
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao responder sugestÃ£o'),
   })
 
   const deleteRequestMutation = useMutation({
     mutationFn: deleteRegistrationRequest,
     onSuccess: () => {
-      toast.success('Solicitação e inscrições vinculadas foram excluídas.')
+      toast.success('SolicitaÃ§Ã£o e inscriÃ§Ãµes vinculadas foram excluÃ­das.')
       void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
       void queryClient.invalidateQueries({ queryKey: ['entries'] })
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir solicitação.'),
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir solicitaÃ§Ã£o.'),
   })
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: deleteSuggestion,
     onSuccess: () => {
-      toast.success('Sugestão excluída.')
+      toast.success('SugestÃ£o excluÃ­da.')
       void queryClient.invalidateQueries({ queryKey: ['admin-suggestions'] })
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir sugestão.'),
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao excluir sugestÃ£o.'),
   })
 
   const requests = [...(requestsQuery.data ?? [])].sort((a, b) => {
@@ -102,15 +137,15 @@ export function RequestManagement() {
     <div className="space-y-4">
       {managementError && (
         <Alert variant="destructive">
-          <AlertTitle>Não foi possível carregar o atendimento</AlertTitle>
+          <AlertTitle>NÃ£o foi possÃ­vel carregar o atendimento</AlertTitle>
           <AlertDescription>{managementError instanceof Error ? managementError.message : 'Tente novamente.'}</AlertDescription>
         </Alert>
       )}
 
       <Tabs defaultValue="registrations" className="space-y-4">
         <TabsList className="grid h-auto w-full max-w-lg grid-cols-2">
-          <TabsTrigger value="registrations">Inscrições ({requests.filter((item) => item.status === 'pending').length})</TabsTrigger>
-          <TabsTrigger value="suggestions">Sugestões ({suggestions.filter((item) => item.status === 'new').length})</TabsTrigger>
+          <TabsTrigger value="registrations">InscriÃ§Ãµes ({requests.filter((item) => item.status === 'pending').length})</TabsTrigger>
+          <TabsTrigger value="suggestions">SugestÃµes ({suggestions.filter((item) => item.status === 'new').length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="registrations">
@@ -123,16 +158,20 @@ export function RequestManagement() {
                   <TableHead>Competidor / Animal</TableHead>
                   <TableHead>Categoria</TableHead>
                   <TableHead>Etapas</TableHead>
+                  <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Pagamento</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requestsQuery.isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-muted-foreground">Carregando solicitações...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-muted-foreground">Carregando solicitaÃ§Ãµes...</TableCell></TableRow>
                 ) : requests.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-muted-foreground">Nenhuma solicitação de inscrição.</TableCell></TableRow>
-                ) : requests.map((request) => (
+                  <TableRow><TableCell colSpan={9} className="text-muted-foreground">Nenhuma solicitaÃ§Ã£o de inscriÃ§Ã£o.</TableCell></TableRow>
+                ) : requests.map((request) => {
+                  const payment = PAYMENT_LABEL[request.payment_status ?? 'pending']
+                  return (
                   <TableRow key={request.id}>
                     <TableCell>
                       <p className="font-semibold">{request.user?.name ?? request.user?.email ?? '--'}</p>
@@ -141,16 +180,25 @@ export function RequestManagement() {
                     <TableCell>{request.event?.name ?? '--'}</TableCell>
                     <TableCell>
                       <p className="font-semibold">{request.competitor_name}</p>
-                      <p className="text-xs text-muted-foreground">{request.horse_name} · {request.horse_registration || 'sem registro'}</p>
+                      <p className="text-xs text-muted-foreground">{request.horse_name} Â· {request.horse_registration || 'sem registro'}</p>
                     </TableCell>
                     <TableCell>
                       {request.category ? categoryOptionLabel(request.category.name) : '--'}
                       {request.requested_levels?.length
-                        ? ` · Níveis ${request.requested_levels.join(', ')}`
-                        : request.category?.level ? ` · ${request.category.level}` : ''}
+                        ? ` Â· NÃ­veis ${request.requested_levels.join(', ')}`
+                        : request.category?.level ? ` Â· ${request.category.level}` : ''}
                     </TableCell>
                     <TableCell>{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
+                    <TableCell className="font-bold text-primary">{formatCurrency(request.amount_due ?? 0)}</TableCell>
                     <TableCell><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Badge variant="outline" className={payment.className}>{payment.label}</Badge>
+                        {request.payment_receipt_url && (
+                          <p className="max-w-[180px] break-all text-xs text-muted-foreground">{request.payment_receipt_url}</p>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         {request.status === 'pending' && (
@@ -163,11 +211,27 @@ export function RequestManagement() {
                           </Button>
                           </>
                         )}
-                        <Button size="icon" variant="destructive" aria-label="Excluir solicitação" onClick={() => deleteRequestMutation.mutate(request.id)} disabled={deleteRequestMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
+                        {request.status === 'approved' && request.payment_status !== 'confirmed' && request.payment_status !== 'waived' && (
+                          <>
+                            <Button size="sm" className="gap-2" onClick={() => confirmPaymentMutation.mutate(request.id)} disabled={confirmPaymentMutation.isPending}>
+                              <CheckCircle2 className="h-4 w-4" /> Confirmar pgto
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-2" onClick={() => rejectPaymentMutation.mutate(request.id)} disabled={rejectPaymentMutation.isPending}>
+                              <X className="h-4 w-4" /> Rejeitar pgto
+                            </Button>
+                          </>
+                        )}
+                        {request.status === 'approved' && (request.payment_status === 'confirmed' || request.payment_status === 'waived') && (
+                          <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-800">
+                            <ReceiptText className="mr-1 h-3 w-3" /> Liberada
+                          </Badge>
+                        )}
+                        <Button size="icon" variant="destructive" aria-label="Excluir solicitaÃ§Ã£o" onClick={() => deleteRequestMutation.mutate(request.id)} disabled={deleteRequestMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
               </TableBody>
             </Table>
           </div>
@@ -178,19 +242,19 @@ export function RequestManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Usuário</TableHead>
+                  <TableHead>UsuÃ¡rio</TableHead>
                   <TableHead>Assunto</TableHead>
                   <TableHead>Evento</TableHead>
                   <TableHead>Mensagem</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ação</TableHead>
+                  <TableHead className="text-right">AÃ§Ã£o</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {suggestionsQuery.isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-muted-foreground">Carregando sugestões...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-muted-foreground">Carregando sugestÃµes...</TableCell></TableRow>
                 ) : suggestions.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-muted-foreground">Nenhuma sugestão recebida.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-muted-foreground">Nenhuma sugestÃ£o recebida.</TableCell></TableRow>
                 ) : suggestions.map((suggestion) => (
                   <TableRow key={suggestion.id}>
                     <TableCell>{suggestion.user?.name ?? suggestion.user?.email ?? '--'}</TableCell>
@@ -203,7 +267,7 @@ export function RequestManagement() {
                         <Button size="sm" variant="outline" className="gap-2" onClick={() => { setSelectedSuggestion(suggestion); setResponse(suggestion.response ?? '') }}>
                           <MessageSquareReply className="h-4 w-4" /> Responder
                         </Button>
-                        <Button size="icon" variant="destructive" aria-label="Excluir sugestão" onClick={() => deleteSuggestionMutation.mutate(suggestion.id)} disabled={deleteSuggestionMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="destructive" aria-label="Excluir sugestÃ£o" onClick={() => deleteSuggestionMutation.mutate(suggestion.id)} disabled={deleteSuggestionMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -216,7 +280,7 @@ export function RequestManagement() {
 
       <Dialog open={Boolean(selectedSuggestion)} onOpenChange={(open) => { if (!open) { setSelectedSuggestion(null); setResponse('') } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Responder sugestão</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Responder sugestÃ£o</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="rounded-md bg-muted/45 p-3 text-sm">{selectedSuggestion?.message}</div>
             <div className="grid gap-1.5">

@@ -1,6 +1,6 @@
 ﻿import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ClipboardCheck, Home, LayoutDashboard, Newspaper, UsersRound } from 'lucide-react'
+import { ClipboardCheck, Home, LayoutDashboard, Newspaper, UsersRound, WalletCards } from 'lucide-react'
 
 import heroImage from '@/assets/hero-reining.webp'
 import { HorseTrail } from '@/components/horse-trail'
@@ -54,6 +54,12 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
                     <Link to="/admin/content">
                       <Newspaper className="mr-2 h-4 w-4" />
                       Publicacoes
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/finance">
+                      <WalletCards className="mr-2 h-4 w-4" />
+                      Financeiro
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
