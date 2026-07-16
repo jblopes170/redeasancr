@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsr generate && vite",
     "build": "tsr generate && tsc -b && vite build",
+    "build:sites": "pnpm build && node scripts/prepare-sites.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc -b",
