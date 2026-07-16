@@ -7,6 +7,7 @@ import {
   Home,
   LayoutDashboard,
   Newspaper,
+  Radio,
   Trophy,
   UserCircle,
   UsersRound,
@@ -22,122 +23,142 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/auth-provider'
 
-const text = {
-  quick: 'Acesso r\u00e1pido',
-  publicArea: '\u00c1rea p\u00fablica',
-  start: 'In\u00edcio',
-  news: 'Not\u00edcias',
-  calendar: 'Ver calend\u00e1rio',
-  publicRanking: 'Ranking p\u00fablico',
-  entries: 'Inscri\u00e7\u00f5es',
-  myArea: 'Minha \u00e1rea',
-  approveEntries: 'Aprovar inscri\u00e7\u00f5es',
-  admin: 'Administra\u00e7\u00e3o',
-  operation: 'Opera\u00e7\u00e3o',
-  launchScores: 'Lan\u00e7ar notas',
-  posts: 'Publica\u00e7\u00f5es',
+interface AppQuickNavProps {
+  eventId?: string
+  tone?: 'light' | 'dark'
+  className?: string
 }
 
 function QuickMenu({
   icon: Icon,
   label,
   children,
+  tone,
 }: {
   icon: typeof Home
   label: string
   children: ReactNode
+  tone: 'light' | 'dark'
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-10 justify-between gap-2 rounded-xl bg-white px-3 shadow-sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'h-10 shrink-0 justify-between gap-2 rounded px-3 text-xs font-bold uppercase tracking-[0.08em]',
+            tone === 'dark'
+              ? 'text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/15'
+              : 'text-foreground hover:bg-muted data-[state=open]:bg-muted',
+          )}
+        >
           <span className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-primary" />
+            <Icon className="h-4 w-4" />
             {label}
           </span>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <ChevronDown className="h-3.5 w-3.5 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56 rounded-xl p-2">
+      <DropdownMenuContent align="start" className="w-64 rounded-md p-2">
         {children}
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
 
-export function AppQuickNav() {
+export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavProps) {
   const { session, profile } = useAuth()
   const canUseAdmin = profile?.role === 'admin' || profile?.role === 'judge'
   const isAdmin = profile?.role === 'admin'
 
   return (
-    <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-white/85 p-2 shadow-sm backdrop-blur">
-      <span className="px-2 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{text.quick}</span>
+    <nav
+      className={cn('flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', className)}
+      aria-label="Navegação principal"
+    >
+      <Button
+        variant="ghost"
+        size="sm"
+        asChild
+        className={cn(
+          'h-10 shrink-0 rounded px-3 text-xs font-bold uppercase tracking-[0.08em]',
+          tone === 'dark' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-foreground hover:bg-muted',
+        )}
+      >
+        <Link to="/"><Home className="h-4 w-4" />Início</Link>
+      </Button>
 
-      <QuickMenu icon={Home} label="Site">
-        <DropdownMenuLabel>{text.publicArea}</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to="/" hash="inicio">{text.start}</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/" hash="calendario">Eventos publicados</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/" hash="noticias">{text.news}</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/" hash="como-funciona">Como funciona</Link></DropdownMenuItem>
-      </QuickMenu>
-
-      <QuickMenu icon={CalendarDays} label="Eventos">
-        <DropdownMenuLabel>Eventos e provas</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to="/" hash="calendario">{text.calendar}</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/ranking">{text.publicRanking}</Link></DropdownMenuItem>
+      <QuickMenu icon={CalendarDays} label="Eventos" tone={tone}>
+        <DropdownMenuLabel>Competições NTMR</DropdownMenuLabel>
+        <DropdownMenuItem asChild><Link to="/" hash="calendario">Calendário e etapas</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/ranking">Resultados dos eventos</Link></DropdownMenuItem>
         {canUseAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/admin">Gerenciar eventos</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to="/admin" hash="admin-events">Gerenciar eventos</Link></DropdownMenuItem>
+            {eventId && <DropdownMenuItem asChild><Link to="/admin/events/$eventId" params={{ eventId }}>Painel deste evento</Link></DropdownMenuItem>}
           </>
         )}
       </QuickMenu>
 
-      <QuickMenu icon={ClipboardCheck} label={text.entries}>
-        <DropdownMenuLabel>Competidores</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to={session ? '/minha-area' : '/login'}>{session ? text.myArea : 'Entrar ou criar conta'}</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/" hash="calendario">Escolher evento</Link></DropdownMenuItem>
+      <QuickMenu icon={ClipboardCheck} label="Inscrições" tone={tone}>
+        <DropdownMenuLabel>Competidores e inscrições</DropdownMenuLabel>
+        <DropdownMenuItem asChild><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área' : 'Entrar ou criar conta'}</Link></DropdownMenuItem>
+        {session && <DropdownMenuItem asChild><Link to="/minha-area" hash="nova-inscricao">Fazer nova inscrição</Link></DropdownMenuItem>}
+        {eventId && canUseAdmin && <DropdownMenuItem asChild><Link to="/admin/events/$eventId" params={{ eventId }} hash="inscricoes">Inscrições deste evento</Link></DropdownMenuItem>}
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/admin/requests">{text.approveEntries}</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to="/admin/requests">Aprovar solicitações</Link></DropdownMenuItem>
           </>
         )}
       </QuickMenu>
 
-      <QuickMenu icon={Trophy} label="Ranking">
-        <DropdownMenuLabel>Resultados</DropdownMenuLabel>
+      <QuickMenu icon={Trophy} label="Ranking" tone={tone}>
+        <DropdownMenuLabel>Classificação oficial</DropdownMenuLabel>
         <DropdownMenuItem asChild><Link to="/ranking">Ranking ao vivo</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link to="/" hash="calendario">Ranking por evento</Link></DropdownMenuItem>
       </QuickMenu>
 
-      {canUseAdmin && (
-        <QuickMenu icon={LayoutDashboard} label={text.admin}>
-          <DropdownMenuLabel>{text.operation}</DropdownMenuLabel>
-          <DropdownMenuItem asChild><Link to="/admin">Painel</Link></DropdownMenuItem>
-          <DropdownMenuItem asChild><Link to="/admin">{text.launchScores}</Link></DropdownMenuItem>
-          {isAdmin && (
+      <QuickMenu icon={Newspaper} label="Notícias" tone={tone}>
+        <DropdownMenuLabel>Central NTMR</DropdownMenuLabel>
+        <DropdownMenuItem asChild><Link to="/" hash="noticias">Últimas notícias</Link></DropdownMenuItem>
+        {isAdmin && <DropdownMenuItem asChild><Link to="/admin/content">Gerenciar publicações</Link></DropdownMenuItem>}
+      </QuickMenu>
+
+      {session && (
+        <QuickMenu icon={UserCircle} label={canUseAdmin ? 'Administrativo' : 'Minha área'} tone={tone}>
+          {canUseAdmin ? (
             <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild><Link to="/admin/finance"><WalletCards className="mr-2 h-4 w-4" />Financeiro e DRE</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link to="/admin/content"><Newspaper className="mr-2 h-4 w-4" />{text.posts}</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link to="/admin/access"><UsersRound className="mr-2 h-4 w-4" />Acessos</Link></DropdownMenuItem>
+              <DropdownMenuLabel>Operação do campeonato</DropdownMenuLabel>
+              <DropdownMenuItem asChild><Link to="/admin"><LayoutDashboard className="mr-2 h-4 w-4" />Painel administrativo</Link></DropdownMenuItem>
+              {eventId ? (
+                <DropdownMenuItem asChild><Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="mr-2 h-4 w-4" />Lançamento ao vivo</Link></DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem asChild><Link to="/admin" hash="admin-events"><Radio className="mr-2 h-4 w-4" />Escolher prova para notas</Link></DropdownMenuItem>
+              )}
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/admin/finance"><WalletCards className="mr-2 h-4 w-4" />Financeiro e DRE</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/admin/access"><UsersRound className="mr-2 h-4 w-4" />Gerenciar acessos</Link></DropdownMenuItem>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <DropdownMenuLabel>Área do competidor</DropdownMenuLabel>
+              <DropdownMenuItem asChild><Link to="/minha-area" hash="resumo">Resumo</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/minha-area" hash="nova-inscricao">Nova inscrição</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/minha-area" hash="inscricoes">Minhas inscrições</Link></DropdownMenuItem>
             </>
           )}
         </QuickMenu>
       )}
-
-      {!canUseAdmin && session && (
-        <Button asChild size="sm" className="h-10 rounded-xl">
-          <Link to="/minha-area">
-            <UserCircle className="mr-2 h-4 w-4" />
-            {text.myArea}
-          </Link>
-        </Button>
-      )}
-    </div>
+    </nav>
   )
 }

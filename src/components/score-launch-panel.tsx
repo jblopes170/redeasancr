@@ -54,6 +54,7 @@ interface ScoreLaunchPanelProps {
   isAdmin: boolean
   isJudge: boolean
   showLiveRanking?: boolean
+  allowEntryManagement?: boolean
 }
 
 interface DraftRow {
@@ -223,6 +224,7 @@ export function ScoreLaunchPanel({
   isAdmin,
   isJudge,
   showLiveRanking = false,
+  allowEntryManagement = true,
 }: ScoreLaunchPanelProps) {
   const eventId = event.id
   const eventStatus = event.status
@@ -244,7 +246,7 @@ export function ScoreLaunchPanel({
   const [selectedEntryLevels, setSelectedEntryLevels] = useState<Record<Level, boolean>>(defaultSelectedLevels)
 
   const canJudgeWrite = isAdmin || (isJudge && eventStatus === 'active')
-  const canManageEntries = isAdmin
+  const canManageEntries = isAdmin && allowEntryManagement
 
   const categoriesQuery = useQuery({
     queryKey: ['categories', eventId],
@@ -1435,7 +1437,17 @@ export function ScoreLaunchPanel({
 
             <div className="grid gap-3 md:grid-cols-3">
               {overviewRows.slice(0, 3).map((row, index) => (
-                <article key={`podium-${row.key}`} className="rounded-2xl border bg-white p-4 shadow-sm">
+                <article
+                  key={`podium-${row.key}`}
+                  className={`relative overflow-hidden rounded border p-5 shadow-sm ${
+                    index === 0
+                      ? 'border-amber-300 bg-amber-50/80 md:-translate-y-2'
+                      : index === 1
+                        ? 'border-slate-300 bg-slate-50'
+                        : 'border-orange-300 bg-orange-50/70'
+                  }`}
+                >
+                  <span className="absolute right-3 top-1 font-serif text-6xl font-bold text-primary/5">{index + 1}</span>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{index + 1}o lugar</p>

@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { CalendarDays, ClipboardList, Home, LogOut, PlusCircle, Trophy } from 'lucide-react'
+import { LogOut, UserCircle } from 'lucide-react'
 
+import { AppQuickNav } from '@/components/app-quick-nav'
 import { Button } from '@/components/ui/button'
 import { ntmrLogoPath } from '@/lib/brand-assets'
 import { useAuth } from '@/providers/auth-provider'
@@ -10,28 +11,25 @@ export function MemberLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
 
   return (
-    <div className="min-h-screen bg-background lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside className="hidden h-screen border-r bg-card lg:sticky lg:top-0 lg:flex lg:flex-col">
-        <Link to="/" className="flex items-center gap-3 border-b p-6">
-          <img src={ntmrLogoPath} alt="Logo NTMR" className="h-12 w-12 rounded-md border bg-white object-contain" />
-          <div><p className="font-serif text-xl font-bold">Competidor</p><p className="max-w-36 truncate text-xs text-muted-foreground">{profile?.name ?? profile?.email}</p></div>
-        </Link>
-        <nav className="grid flex-1 content-start gap-1 p-4">
-          <a href="#resumo" className="member-nav-link"><Home className="h-5 w-5" />Meu painel</a>
-          <a href="#nova-inscricao" className="member-nav-link"><PlusCircle className="h-5 w-5" />Nova inscrição</a>
-          <a href="#inscricoes" className="member-nav-link"><ClipboardList className="h-5 w-5" />Minhas inscrições</a>
-          <Link to="/" hash="calendario" className="member-nav-link"><CalendarDays className="h-5 w-5" />Eventos</Link>
-          <Link to="/ranking" className="member-nav-link"><Trophy className="h-5 w-5" />Classificação</Link>
-        </nav>
-        <button type="button" onClick={() => void signOut()} className="member-nav-link m-4 border-t pt-5"><LogOut className="h-5 w-5" />Sair</button>
-      </aside>
-      <section className="min-w-0">
-        <div className="flex items-center justify-between border-b bg-card p-4 lg:hidden">
-          <Link to="/" className="flex items-center gap-2 font-serif text-xl font-bold"><img src={ntmrLogoPath} alt="" className="h-9 w-9 rounded border object-contain" />Minha área</Link>
-          <div className="flex gap-1"><Button variant="ghost" size="icon" asChild><Link to="/ranking"><Trophy className="h-5 w-5" /></Link></Button><Button variant="ghost" size="icon" onClick={() => void signOut()}><LogOut className="h-5 w-5" /></Button></div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-white/15 bg-primary text-white shadow-[0_8px_28px_rgba(65,0,0,0.18)]">
+        <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex shrink-0 items-center gap-3">
+            <img src={ntmrLogoPath} alt="Logo NTMR" className="h-11 w-11 rounded border border-white/30 bg-white object-contain" />
+            <div className="hidden sm:block"><p className="font-serif text-2xl font-semibold italic leading-none">NTMR Heritage</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/65">Área do competidor</p></div>
+          </Link>
+
+          <AppQuickNav tone="dark" className="hidden flex-1 justify-center lg:flex" />
+
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="hidden items-center gap-2 border border-white/20 px-3 py-2 md:flex"><UserCircle className="h-4 w-4" /><span className="max-w-40 truncate text-sm">{profile?.name ?? profile?.email}</span></div>
+            <Button variant="ghost" size="icon" onClick={() => void signOut()} className="text-white hover:bg-white/10 hover:text-white" aria-label="Sair"><LogOut className="h-5 w-5" /></Button>
+          </div>
         </div>
-        <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
-      </section>
+        <div className="border-t border-white/10 px-4 py-1 lg:hidden"><AppQuickNav tone="dark" /></div>
+      </header>
+
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-10">{children}</main>
     </div>
   )
 }

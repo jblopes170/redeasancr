@@ -7,11 +7,11 @@ import { CategoryManager } from '@/components/category-manager'
 import { CompetitorManager } from '@/components/competitor-manager'
 import { EventFormDialog } from '@/components/event-form-dialog'
 import { DeleteEventDialog } from '@/components/delete-event-dialog'
+import { EntryManager } from '@/components/entry-manager'
 import { FinancialManager } from '@/components/financial-manager'
 import { ImportExportPanel } from '@/components/import-export-panel'
 import { HorseManager } from '@/components/horse-manager'
 import { ProtectedRoute } from '@/components/protected-route'
-import { ScoreLaunchPanel } from '@/components/score-launch-panel'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,10 +28,9 @@ function AdminEventPage() {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(() => window.location.hash === '#inscricoes' ? 'entries' : 'overview')
 
   const isAdmin = profile?.role === 'admin'
-  const isJudge = profile?.role === 'judge'
 
   const eventQuery = useQuery({ queryKey: ['event', eventId], queryFn: () => getEventById(eventId) })
   const categoriesQuery = useQuery({ queryKey: ['categories', eventId], queryFn: () => getCategories(eventId) })
@@ -53,7 +52,7 @@ function AdminEventPage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'judge']}>
-      <AdminLayout title="Painel do Evento">
+      <AdminLayout title="Painel do Evento" eventId={eventId}>
         {!eventQuery.data ? (
           <Card>
             <CardContent className="p-6 text-sm text-muted-foreground">Carregando evento...</CardContent>
@@ -80,6 +79,11 @@ function AdminEventPage() {
                       }}
                     />
                   )}
+                  <Button asChild>
+                    <Link to="/admin/events/$eventId/scores" params={{ eventId }}>
+                      Lançamento ao vivo
+                    </Link>
+                  </Button>
                   <Button variant="outline" asChild>
                     <Link to="/events/$eventId" params={{ eventId }}>
                       Ranking público
@@ -89,12 +93,12 @@ function AdminEventPage() {
               </CardHeader>
             </Card>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <Tabs id="inscricoes" value={activeTab} onValueChange={setActiveTab} className="scroll-mt-36 space-y-4">
               <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-6">
                 <TabsTrigger value="overview">Resumo</TabsTrigger>
                 <TabsTrigger value="categories">Categorias</TabsTrigger>
                 <TabsTrigger value="records">Bases</TabsTrigger>
-                <TabsTrigger value="entries">Inscrições + notas</TabsTrigger>
+                <TabsTrigger value="entries">Inscrições</TabsTrigger>
                 {isAdmin && <TabsTrigger value="finance">Financeiro</TabsTrigger>}
                 <TabsTrigger value="import-export">Importar</TabsTrigger>
               </TabsList>
@@ -110,7 +114,7 @@ function AdminEventPage() {
 
                 <Card className="mt-3">
                   <CardContent className="flex flex-wrap gap-2 p-4">
-                    <Button onClick={() => setActiveTab('entries')}>Lançar notas</Button>
+                    <Button asChild><Link to="/admin/events/$eventId/scores" params={{ eventId }}>Abrir prova e lançar notas</Link></Button>
                     <Button variant="outline" asChild>
                       <Link to="/events/$eventId" params={{ eventId }}>Ver ranking</Link>
                     </Button>
@@ -150,13 +154,7 @@ function AdminEventPage() {
               </TabsContent>
 
               <TabsContent value="entries">
-                <ScoreLaunchPanel
-                  event={eventQuery.data}
-                  currentUserId={profile?.id ?? ''}
-                  isAdmin={isAdmin}
-                  isJudge={isJudge}
-                  showLiveRanking
-                />
+                <EntryManager eventId={eventId} canEdit={isAdmin} />
               </TabsContent>
 
               {isAdmin && <TabsContent value="finance"><FinancialManager eventId={eventId} /></TabsContent>}

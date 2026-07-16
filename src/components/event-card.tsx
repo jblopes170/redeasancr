@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Trophy } from 'lucide-react'
+import { CalendarDays, MapPin, Radio, Trophy } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import type { EventRecord } from '@/types/domain'
@@ -43,7 +43,8 @@ export function EventCard({ event, admin = false }: EventCardProps) {
         </div>
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button size="sm" variant="outline" asChild><Link to="/events/$eventId" params={{ eventId: event.id }}>Detalhes e ranking</Link></Button>
-          {admin && <Button size="sm" asChild><Link to="/admin/events/$eventId" params={{ eventId: event.id }}>Gerenciar evento</Link></Button>}
+          {admin && <Button size="sm" variant="outline" asChild><Link to="/admin/events/$eventId" params={{ eventId: event.id }}>Gerenciar evento</Link></Button>}
+          {admin && <Button size="sm" asChild><Link to="/admin/events/$eventId/scores" params={{ eventId: event.id }}><Radio className="h-4 w-4" />Prova ao vivo</Link></Button>}
         </div>
       </CardContent>
     </Card>
