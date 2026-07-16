@@ -1,8 +1,31 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
+const distDirectory = resolve('dist')
+const clientDirectory = resolve(distDirectory, 'client')
 const outputDirectory = resolve('dist', 'server')
 const workerPath = resolve(outputDirectory, 'index.js')
+const hostingOutputDirectory = resolve(distDirectory, '.openai')
+
+// Sites serves static assets from dist/client, while Netlify uses dist directly.
+// Keep both layouts so one build configuration can support both hosts.
+await rm(clientDirectory, { recursive: true, force: true })
+await mkdir(clientDirectory, { recursive: true })
+
+const distEntries = await readdir(distDirectory, { withFileTypes: true })
+for (const entry of distEntries) {
+  if (['client', 'server', '.openai'].includes(entry.name)) continue
+
+  await cp(resolve(distDirectory, entry.name), resolve(clientDirectory, entry.name), {
+    recursive: entry.isDirectory(),
+  })
+}
+
+await mkdir(hostingOutputDirectory, { recursive: true })
+await cp(
+  resolve('.openai', 'hosting.json'),
+  resolve(hostingOutputDirectory, 'hosting.json'),
+)
 
 const workerSource = `const worker = {
   async fetch(request, env) {
