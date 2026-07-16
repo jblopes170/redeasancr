@@ -98,7 +98,20 @@ function AdminIndexPage() {
                     <h3 className="mt-3 text-lg font-bold">{isAdmin ? '3.' : '2.'} Prova e notas</h3>
                     <p className="text-sm text-muted-foreground">Escolha o evento abaixo para inscrever, ordenar entradas e lançar notas.</p>
                   </div>
-                  <Button asChild><a href="#admin-events">Escolher evento para lançar notas</a></Button>
+                  {events.length > 0 ? (
+                    <div className="grid gap-2">
+                      {events.slice(0, 3).map((event) => (
+                        <Button key={event.id} size="sm" className="justify-start" asChild>
+                          <Link to="/admin/events/$eventId/scores" params={{ eventId: event.id }}>
+                            Lançar notas ao vivo · {event.name}
+                          </Link>
+                        </Button>
+                      ))}
+                      {events.length > 3 && <Button size="sm" variant="outline" asChild><a href="#admin-events">Ver todos os eventos</a></Button>}
+                    </div>
+                  ) : (
+                    <Button asChild><a href="#admin-events">Escolher evento para lançar notas</a></Button>
+                  )}
                 </CardContent>
               </Card>
 
