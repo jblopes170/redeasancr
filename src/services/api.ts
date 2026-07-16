@@ -55,11 +55,16 @@ function mapSupabaseError(message: string): string {
     || normalized.includes('submit_registration_payment_receipt')
     || normalized.includes('confirm_registration_payment')
     || normalized.includes('reject_registration_payment')
+    || normalized.includes('update_registration_request_amount')
     || normalized.includes('requested_levels')
     || normalized.includes('payment_status')
     || normalized.includes('amount_due')
   ) {
     return 'Configuracao do portal pendente. No Supabase SQL Editor, execute supabase/manual/fix-portal-pendente.sql e depois supabase/manual/setup-pagamentos-dre-automatico.sql.'
+  }
+
+  if (normalized.includes('payment-receipts') || normalized.includes('storage')) {
+    return 'O armazenamento de comprovantes ainda nao foi configurado. Execute a migration 202607160001_registration_amount_and_receipts.sql no Supabase.'
   }
 
   if (normalized.includes('financial_transactions')) {
@@ -714,6 +719,22 @@ export async function approveRegistrationRequest(id: string) {
   return unwrap<string[]>(supabase.rpc('approve_registration_request', { p_request_id: id }))
 }
 
+export async function uploadPaymentReceipt(requestId: string, file: File) {
+  const { data: authData } = await supabase.auth.getUser()
+  const userId = authData.user?.id
+  if (!userId) throw new Error('Faça login para enviar o comprovante.')
+
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `${userId}/${requestId}-${Date.now()}.${extension}`
+  const { error } = await supabase.storage.from('payment-receipts').upload(path, file, {
+    contentType: file.type || 'image/jpeg',
+    upsert: false,
+  })
+
+  if (error) throw new Error(mapSupabaseError(error.message))
+  return supabase.storage.from('payment-receipts').getPublicUrl(path).data.publicUrl
+}
+
 export async function submitRegistrationPaymentReceipt(id: string, receiptUrl: string) {
   return unwrap<RegistrationRequestRecord>(
     supabase.rpc('submit_registration_payment_receipt', {
@@ -728,6 +749,15 @@ export async function confirmRegistrationPayment(id: string, notes?: string) {
     supabase.rpc('confirm_registration_payment', {
       p_request_id: id,
       p_payment_notes: notes?.trim() || null,
+    }),
+  )
+}
+
+export async function updateRegistrationRequestAmount(id: string, amount: number) {
+  return unwrap<RegistrationRequestRecord>(
+    supabase.rpc('update_registration_request_amount', {
+      p_request_id: id,
+      p_amount: amount,
     }),
   )
 }

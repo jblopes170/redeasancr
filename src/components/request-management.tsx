@@ -1,4 +1,4 @@
-import { Check, CheckCircle2, MessageSquareReply, ReceiptText, Trash2, X } from 'lucide-react'
+import { Check, CheckCircle2, MessageSquareReply, Pencil, ReceiptText, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,6 +22,7 @@ import {
   getAdminSuggestions,
   rejectRegistrationPayment,
   respondSuggestion,
+  updateRegistrationRequestAmount,
   updateRegistrationRequestStatus,
 } from '@/services/api'
 import type { PaymentStatus, RegistrationRequestStatus, SuggestionRecord } from '@/types/domain'
@@ -48,6 +50,8 @@ export function RequestManagement() {
   const queryClient = useQueryClient()
   const [selectedSuggestion, setSelectedSuggestion] = useState<SuggestionRecord | null>(null)
   const [response, setResponse] = useState('')
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
+  const [amountDraft, setAmountDraft] = useState('')
 
   const requestsQuery = useQuery({ queryKey: ['admin-registration-requests'], queryFn: () => getAdminRegistrationRequests() })
   const suggestionsQuery = useQuery({ queryKey: ['admin-suggestions'], queryFn: () => getAdminSuggestions() })
@@ -90,6 +94,25 @@ export function RequestManagement() {
       void queryClient.invalidateQueries({ queryKey: ['entries'] })
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao rejeitar pagamento.'),
+  })
+
+  const updateAmountMutation = useMutation({
+    mutationFn: () => {
+      const amount = Number(amountDraft.replace(',', '.'))
+      if (!selectedRequestId || !Number.isFinite(amount) || amount <= 0) {
+        throw new Error('Informe um valor maior que zero.')
+      }
+      return updateRegistrationRequestAmount(selectedRequestId, amount)
+    },
+    onSuccess: () => {
+      toast.success('Valor da inscriÃ§Ã£o atualizado.')
+      setSelectedRequestId(null)
+      setAmountDraft('')
+      void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
+      void queryClient.invalidateQueries({ queryKey: ['financial-transactions'] })
+      void queryClient.invalidateQueries({ queryKey: ['entries'] })
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Erro ao atualizar o valor.'),
   })
 
   const responseMutation = useMutation({
@@ -189,7 +212,17 @@ export function RequestManagement() {
                         : request.category?.level ? ` · ${request.category.level}` : ''}
                     </TableCell>
                     <TableCell>{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
-                    <TableCell className="font-bold text-primary">{formatCurrency(request.amount_due ?? 0)}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto gap-1 p-1 font-bold text-primary"
+                        onClick={() => { setSelectedRequestId(request.id); setAmountDraft(String(request.amount_due ?? 0)) }}
+                      >
+                        {formatCurrency(request.amount_due ?? 0)}
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </TableCell>
                     <TableCell><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
                     <TableCell>
                       <div className="space-y-1">
@@ -226,6 +259,9 @@ export function RequestManagement() {
                             <ReceiptText className="mr-1 h-3 w-3" /> Liberada
                           </Badge>
                         )}
+                        <Button size="sm" variant="outline" className="gap-1" onClick={() => { setSelectedRequestId(request.id); setAmountDraft(String(request.amount_due ?? 0)) }}>
+                          <Pencil className="h-3 w-3" /> Valor
+                        </Button>
                         <Button size="icon" variant="destructive" aria-label="Excluir solicitação" onClick={() => deleteRequestMutation.mutate(request.id)} disabled={deleteRequestMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
@@ -291,6 +327,31 @@ export function RequestManagement() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedSuggestion(null)}>Cancelar</Button>
             <Button onClick={() => responseMutation.mutate()} disabled={responseMutation.isPending}>Enviar resposta</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(selectedRequestId)} onOpenChange={(open) => { if (!open) { setSelectedRequestId(null); setAmountDraft('') } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar valor da inscriÃ§Ã£o</DialogTitle></DialogHeader>
+          <div className="grid gap-2">
+            <Label htmlFor="registration-amount">Novo valor total (R$)</Label>
+            <Input
+              id="registration-amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={amountDraft}
+              onChange={(event) => setAmountDraft(event.target.value)}
+              autoFocus
+            />
+            <p className="text-xs text-muted-foreground">Se o pagamento jÃ¡ foi confirmado, a receita vinculada tambÃ©m serÃ¡ atualizada no DRE.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedRequestId(null)}>Cancelar</Button>
+            <Button onClick={() => updateAmountMutation.mutate()} disabled={updateAmountMutation.isPending}>
+              {updateAmountMutation.isPending ? 'Salvando...' : 'Salvar valor'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

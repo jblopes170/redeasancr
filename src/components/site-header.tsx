@@ -16,16 +16,14 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/15 bg-primary text-white shadow-[0_8px_28px_rgba(65,0,0,0.18)]">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-[72px] items-center justify-between gap-4">
+        <div className="flex min-h-[72px] items-center justify-between gap-3">
           <Link to="/" className="flex min-w-0 shrink-0 items-center gap-3" aria-label="Ir para o início">
             <img src={ntmrLogoPath} alt="Logo NTMR" className="h-11 w-11 shrink-0 rounded border border-white/30 bg-white object-contain" />
             <div className="min-w-0">
               <p className="hidden truncate text-[9px] font-bold uppercase tracking-[0.12em] text-white/65 sm:block">Núcleo Triângulo Mineiro de Rédeas</p>
-              <p className="truncate font-serif text-2xl font-semibold italic leading-none text-white">NTMR Heritage</p>
+              <p className="truncate font-serif text-2xl font-semibold italic leading-none text-white">NTMR</p>
             </div>
           </Link>
-
-          <AppQuickNav tone="dark" className="hidden flex-1 justify-center lg:flex" />
 
           <div className="flex shrink-0 items-center gap-2">
             {session && profile ? (
@@ -49,7 +47,7 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 py-1 lg:hidden">
+        <div className="border-t border-white/10 px-3 py-1.5 sm:px-0">
           <AppQuickNav tone="dark" />
         </div>
 

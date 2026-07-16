@@ -39,6 +39,7 @@ interface EntryFormState {
   entry_number: string
   draw_order: string
   status: EntryRecord['status']
+  entry_fee: string
 }
 
 const defaultForm: EntryFormState = {
@@ -49,6 +50,7 @@ const defaultForm: EntryFormState = {
   entry_number: '',
   draw_order: '',
   status: 'registered',
+  entry_fee: '0',
 }
 
 export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
@@ -100,6 +102,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
           entry_number: form.entry_number,
           draw_order: form.draw_order ? Number(form.draw_order) : undefined,
           status: form.status,
+          entry_fee: Number(form.entry_fee.replace(',', '.')) || 0,
         })
 
         return { created: 1, errors: [] as string[] }
@@ -128,6 +131,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
             entry_number: form.entry_number,
             draw_order: form.draw_order ? Number(form.draw_order) : undefined,
             status: form.status,
+            entry_fee: Number(form.entry_fee.replace(',', '.')) || 0,
           })
           created += 1
         } catch (error) {
@@ -194,6 +198,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
       entry_number: entry.entry_number ?? '',
       draw_order: entry.draw_order ? String(entry.draw_order) : '',
       status: entry.status,
+      entry_fee: String(entry.entry_fee ?? 0),
     })
     setRegisterAllStages(false)
     setDialogOpen(true)
@@ -473,7 +478,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                   <div className="grid gap-1">
                     <Label>Número de entrada</Label>
                     <Input
@@ -484,6 +489,17 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
                   <div className="grid gap-1">
                     <Label>Ordem de apresentação</Label>
                     <Input value={form.draw_order} onChange={(e) => setForm((prev) => ({ ...prev, draw_order: e.target.value }))} />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label>Valor da inscriÃ§Ã£o (R$)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.entry_fee}
+                      onChange={(e) => setForm((prev) => ({ ...prev, entry_fee: e.target.value }))}
+                      placeholder="0,00"
+                    />
                   </div>
                   <div className="grid gap-1">
                     <Label>Status</Label>
@@ -527,6 +543,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
               <TableHead>Categoria</TableHead>
               <TableHead>Nível</TableHead>
               <TableHead>Etapa</TableHead>
+              <TableHead>Valor</TableHead>
               <TableHead>Status</TableHead>
               {canEdit && <TableHead className="text-right">Ações</TableHead>}
             </TableRow>
@@ -534,7 +551,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canEdit ? 8 : 7} className="text-muted-foreground">
+                <TableCell colSpan={canEdit ? 9 : 8} className="text-muted-foreground">
                   Nenhuma inscrição encontrada.
                 </TableCell>
               </TableRow>
@@ -549,6 +566,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
                     <LevelBadge level={entry.level} />
                   </TableCell>
                   <TableCell>{entry.stage}a etapa</TableCell>
+                  <TableCell className="font-semibold">{Number(entry.entry_fee ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
                   <TableCell>
                     <StatusBadge status={entry.status} type="entry" />
                   </TableCell>

@@ -98,7 +98,7 @@ function AdminIndexPage() {
                     <h3 className="mt-3 text-lg font-bold">{isAdmin ? '3.' : '2.'} Prova e notas</h3>
                     <p className="text-sm text-muted-foreground">Escolha o evento abaixo para inscrever, ordenar entradas e lançar notas.</p>
                   </div>
-                  <Button asChild><a href="#admin-events">Ir para os eventos</a></Button>
+                  <Button asChild><a href="#admin-events">Escolher evento para lançar notas</a></Button>
                 </CardContent>
               </Card>
 

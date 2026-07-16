@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   CircleAlert,
   ClipboardList,
+  ImagePlus,
   Lightbulb,
   Medal,
   PlusCircle,
@@ -43,6 +44,7 @@ import {
   getMySuggestions,
   getPublicEvents,
   submitRegistrationPaymentReceipt,
+  uploadPaymentReceipt,
   updateRegistrationRequestStatus,
 } from '@/services/api'
 import type { Level, PaymentStatus, RegistrationRequestStatus, Stage, SuggestionStatus } from '@/types/domain'
@@ -119,7 +121,7 @@ export function MemberPortal() {
   const [suggestionEventId, setSuggestionEventId] = useState('none')
   const [suggestionSubject, setSuggestionSubject] = useState('')
   const [suggestionMessage, setSuggestionMessage] = useState('')
-  const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({})
+  const [receiptFiles, setReceiptFiles] = useState<Record<string, File | undefined>>({})
 
   const eventsQuery = useQuery({ queryKey: ['public-events'], queryFn: getPublicEvents })
   const categoriesQuery = useQuery({
@@ -255,10 +257,13 @@ export function MemberPortal() {
   })
 
   const receiptMutation = useMutation({
-    mutationFn: (requestId: string) => {
-      const receipt = receiptDrafts[requestId]?.trim()
-      if (!receipt) throw new Error('Cole o link ou identificador do comprovante.')
-      return submitRegistrationPaymentReceipt(requestId, receipt)
+    mutationFn: async (requestId: string) => {
+      const file = receiptFiles[requestId]
+      if (!file) throw new Error('Selecione uma imagem do comprovante.')
+      if (!file.type.startsWith('image/')) throw new Error('O comprovante deve ser uma imagem.')
+      if (file.size > 5 * 1024 * 1024) throw new Error('A imagem deve ter no máximo 5 MB.')
+      const receiptUrl = await uploadPaymentReceipt(requestId, file)
+      return submitRegistrationPaymentReceipt(requestId, receiptUrl)
     },
     onSuccess: () => {
       toast.success('Comprovante enviado para validação.')
@@ -570,26 +575,27 @@ export function MemberPortal() {
                         <ReceiptText className="h-7 w-7 text-primary" />
                       </div>
                       {request.payment_receipt_url && (
-                        <p className="mt-2 break-all text-xs text-muted-foreground">Comprovante: {request.payment_receipt_url}</p>
+                        <a className="mt-2 block truncate text-xs text-primary underline" href={request.payment_receipt_url} target="_blank" rel="noreferrer">Abrir comprovante enviado</a>
                       )}
                       {request.payment_notes && (
                         <p className="mt-2 text-xs text-destructive">Pagamento: {request.payment_notes}</p>
                       )}
                       {canSendReceipt && (
                         <div className="mt-3 space-y-2">
-                          <Label className="text-xs">Link ou identificação do comprovante</Label>
+                          <Label className="text-xs">Imagem do comprovante</Label>
                           <Input
-                            value={receiptDrafts[request.id] ?? ''}
-                            onChange={(event) => setReceiptDrafts((current) => ({ ...current, [request.id]: event.target.value }))}
-                            placeholder="Ex.: link do Drive, PIX, recibo..."
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(event) => setReceiptFiles((current) => ({ ...current, [request.id]: event.target.files?.[0] }))}
                           />
+                          {receiptFiles[request.id] && <p className="text-xs text-muted-foreground">{receiptFiles[request.id]?.name}</p>}
                           <Button
                             size="sm"
                             className="w-full gap-2"
                             onClick={() => receiptMutation.mutate(request.id)}
                             disabled={receiptMutation.isPending}
                           >
-                            <Send className="h-4 w-4" />
+                            <ImagePlus className="h-4 w-4" />
                             Enviar comprovante
                           </Button>
                         </div>

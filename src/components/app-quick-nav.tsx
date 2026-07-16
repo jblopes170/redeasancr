@@ -50,7 +50,7 @@ function QuickMenu({
           variant="ghost"
           size="sm"
           className={cn(
-            'h-10 shrink-0 justify-between gap-2 rounded px-3 text-xs font-bold uppercase tracking-[0.08em]',
+            'h-9 shrink-0 justify-between gap-1.5 rounded px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:h-10 sm:gap-2 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
             tone === 'dark'
               ? 'text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/15'
               : 'text-foreground hover:bg-muted data-[state=open]:bg-muted',
@@ -77,7 +77,7 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
 
   return (
     <nav
-      className={cn('flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', className)}
+      className={cn('flex min-w-0 max-w-full flex-wrap items-center justify-center gap-1 py-0.5', className)}
       aria-label="Navegação principal"
     >
       <Button
@@ -85,12 +85,26 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
         size="sm"
         asChild
         className={cn(
-          'h-10 shrink-0 rounded px-3 text-xs font-bold uppercase tracking-[0.08em]',
+          'h-9 shrink-0 rounded px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:h-10 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
           tone === 'dark' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-foreground hover:bg-muted',
         )}
       >
         <Link to="/"><Home className="h-4 w-4" />Início</Link>
       </Button>
+
+      {canUseAdmin && eventId && (
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className={cn(
+            'h-9 shrink-0 gap-1.5 rounded px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:h-10 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
+            tone === 'dark' ? 'bg-white/15 text-white hover:bg-white/25 hover:text-white' : 'bg-primary text-primary-foreground hover:bg-primary/90',
+          )}
+        >
+          <Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="h-4 w-4" />Lançar notas</Link>
+        </Button>
+      )}
 
       <QuickMenu icon={CalendarDays} label="Eventos" tone={tone}>
         <DropdownMenuLabel>Competições NTMR</DropdownMenuLabel>
