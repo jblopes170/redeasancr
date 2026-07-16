@@ -11,7 +11,11 @@ import { useAuth } from '@/providers/auth-provider'
 
 export function SiteHeader() {
   const { session, profile, signOut } = useAuth()
-  const panelRoute = profile?.role === 'user' ? '/minha-area' : '/admin'
+  const panelRoute = profile?.role === 'user'
+    ? '/minha-area'
+    : profile?.role === 'admin' || profile?.role === 'judge'
+      ? '/admin/live'
+      : '/admin'
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/15 bg-primary text-white shadow-[0_8px_28px_rgba(65,0,0,0.18)]">

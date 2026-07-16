@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as AdminRequestsRouteImport } from './routes/admin.requests'
+import { Route as AdminLiveRouteImport } from './routes/admin.live'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
@@ -69,6 +70,11 @@ const AdminRequestsRoute = AdminRequestsRouteImport.update({
   path: '/requests',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLiveRoute = AdminLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFinanceRoute = AdminFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/live': typeof AdminLiveRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/admin/access'
     | '/admin/content'
     | '/admin/finance'
+    | '/admin/live'
     | '/admin/requests'
     | '/events/$eventId'
     | '/admin/'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin/access'
     | '/admin/content'
     | '/admin/finance'
+    | '/admin/live'
     | '/admin/requests'
     | '/events/$eventId'
     | '/admin'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/admin/access'
     | '/admin/content'
     | '/admin/finance'
+    | '/admin/live'
     | '/admin/requests'
     | '/events/$eventId'
     | '/admin/'
@@ -269,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRequestsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/live': {
+      id: '/admin/live'
+      path: '/live'
+      fullPath: '/admin/live'
+      preLoaderRoute: typeof AdminLiveRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/finance': {
       id: '/admin/finance'
       path: '/finance'
@@ -322,6 +341,7 @@ interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
   AdminContentRoute: typeof AdminContentRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminLiveRoute: typeof AdminLiveRoute
   AdminRequestsRoute: typeof AdminRequestsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEventsEventIdRoute: typeof AdminEventsEventIdRouteWithChildren
@@ -331,6 +351,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
   AdminContentRoute: AdminContentRoute,
   AdminFinanceRoute: AdminFinanceRoute,
+  AdminLiveRoute: AdminLiveRoute,
   AdminRequestsRoute: AdminRequestsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEventsEventIdRoute: AdminEventsEventIdRouteWithChildren,

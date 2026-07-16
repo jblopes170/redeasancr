@@ -153,7 +153,7 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
               {eventId ? (
                 <DropdownMenuItem asChild><Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="mr-2 h-4 w-4" />Lançamento ao vivo</Link></DropdownMenuItem>
               ) : (
-                <DropdownMenuItem asChild><Link to="/admin" hash="admin-events"><Radio className="mr-2 h-4 w-4" />Escolher prova para notas</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/admin/live"><Radio className="mr-2 h-4 w-4" />Lançamento ao vivo</Link></DropdownMenuItem>
               )}
               {isAdmin && (
                 <>
