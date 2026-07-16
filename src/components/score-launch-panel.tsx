@@ -332,7 +332,7 @@ export function ScoreLaunchPanel({
       if (entries.some((entry) => entry.status === 'cancelled')) {
         throw new Error('Nao e possivel lancar nota em inscricao cancelada.')
       }
-      if (entries.some((entry) => entry.payment_status !== 'confirmed' && entry.payment_status !== 'waived')) {
+      if (!isAdmin && entries.some((entry) => entry.payment_status !== 'confirmed' && entry.payment_status !== 'waived')) {
         throw new Error('Pagamento ainda nao confirmado. Confirme o pagamento no atendimento antes de lancar a nota.')
       }
       if (payload.score.trim() === '') {
@@ -1551,7 +1551,7 @@ export function ScoreLaunchPanel({
                     ? 'waived'
                     : row.entries.find((item) => item.payment_status !== 'confirmed')?.payment_status ?? 'pending'
                 const paymentBadge = PAYMENT_BADGE[paymentStatus]
-                const paymentBlocked = paymentStatus !== 'confirmed' && paymentStatus !== 'waived'
+                const paymentBlocked = !isAdmin && paymentStatus !== 'confirmed' && paymentStatus !== 'waived'
 
                 return (
                   <TableRow key={row.key}>
