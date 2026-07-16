@@ -833,6 +833,28 @@ export function ScoreLaunchPanel({
 
   return (
     <div className="space-y-4">
+      <section className="overflow-hidden rounded-lg border bg-card">
+        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div>
+            <p className="eyebrow"><Save className="h-4 w-4" />Operação da prova</p>
+            <h2 className="mt-3 font-serif text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Lançamento de notas</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+              Filtre a passada, digite a nota e pressione Enter para salvar. O ranking é recalculado automaticamente.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-md border bg-muted/35 px-4 py-3">
+              <span className="block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">Etapa</span>
+              <strong className="mt-1 block text-xl text-foreground">{filterStage}ª</strong>
+            </div>
+            <div className="rounded-md border bg-muted/35 px-4 py-3">
+              <span className="block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">Passadas</span>
+              <strong className="mt-1 block text-xl text-foreground">{rows.length}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {!canJudgeWrite && isJudge && (
         <Alert variant="destructive">
           <AlertTitle>Evento não está ativo</AlertTitle>
@@ -873,7 +895,7 @@ export function ScoreLaunchPanel({
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-3 rounded-lg border bg-card p-3 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 rounded-lg border bg-card p-4 shadow-sm md:grid-cols-4">
         <div>
           <Label>Etapa</Label>
           <Select value={String(filterStage)} onValueChange={(value) => setFilterStage(Number(value) as Stage)}>
@@ -1472,11 +1494,11 @@ export function ScoreLaunchPanel({
           </div>
         </section>
       )}
-      <div className="rounded-2xl border bg-card shadow-sm">
+      <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-secondary/35 px-4 py-3">
           <div>
-            <h3 className="font-bold">Lancamento rapido de notas</h3>
-            <p className="text-xs text-muted-foreground">{rows.length} inscricao(oes) encontrada(s) nos filtros.</p>
+            <h3 className="font-serif text-xl font-bold">Lançamento rápido de notas</h3>
+            <p className="text-xs text-muted-foreground">{rows.length} inscrição(ões) encontrada(s). Pressione Enter no campo Nota para salvar.</p>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline">{filterStage}a etapa</Badge>
@@ -1558,7 +1580,7 @@ export function ScoreLaunchPanel({
                           }
                         }}
                         disabled={!canJudgeWrite}
-                        className="border-primary/40 bg-white text-center text-base font-bold"
+                        className="h-12 min-w-24 border-primary/50 bg-white text-center text-xl font-extrabold tabular-nums focus-visible:ring-primary"
                       />
                     </TableCell>
                     <TableCell className="w-24">
@@ -1568,7 +1590,7 @@ export function ScoreLaunchPanel({
                         value={draft.penalties}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { penalties: e.target.value })}
                         disabled={!canJudgeWrite}
-                        className="bg-white text-center font-semibold"
+                        className="h-12 min-w-20 bg-white text-center text-base font-bold tabular-nums"
                       />
                     </TableCell>
                     <TableCell className="w-44">

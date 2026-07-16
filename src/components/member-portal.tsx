@@ -16,8 +16,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { heroReiningPath } from '@/lib/brand-assets'
-import { HorseTrail } from '@/components/horse-trail'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -301,20 +299,23 @@ export function MemberPortal() {
   const portalError = requestsQuery.error ?? suggestionsQuery.error
 
   return (
-    <div className="space-y-5">
-      <Card className="relative overflow-hidden border-primary/20 bg-primary text-primary-foreground">
-        <img src={heroReiningPath} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/55" />
-        <HorseTrail className="opacity-25" />
-        <CardContent className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6" id="resumo">
+      <div className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow">Área do competidor</p>
+          <h1 className="font-headline-md">Meu painel</h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">Olá, {profile?.name ?? profile?.email ?? 'competidor'}. Gerencie inscrições, pagamentos e resultados.</p>
+        </div>
+        <Button asChild><a href="#nova-inscricao"><PlusCircle className="h-4 w-4" />Criar nova inscrição</a></Button>
+      </div>
+
+      <Card className="border-amber-300 bg-amber-50/70">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/75">Area do participante</p>
-            <h1 className="mt-1 text-3xl font-extrabold">Ola, {profile?.name ?? profile?.email ?? 'competidor'}</h1>
-            <p className="mt-1 max-w-2xl text-sm text-primary-foreground/85">
-              Faca sua inscricao, acompanhe a aprovacao e consulte os resultados em um so lugar.
-            </p>
+            <p className="font-bold text-amber-950">Acompanhe suas solicitações</p>
+            <p className="mt-1 text-sm text-amber-900/75">Veja aprovações, valores e comprovantes na aba de inscrições e pagamentos.</p>
           </div>
-          <Button variant="secondary" asChild>
+          <Button variant="outline" asChild>
             <Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Ranking ao vivo</Link>
           </Button>
         </CardContent>
@@ -327,7 +328,7 @@ export function MemberPortal() {
         </Alert>
       )}
 
-      <Tabs defaultValue="new" className="space-y-4">
+      <Tabs defaultValue="new" className="space-y-4" id="nova-inscricao">
         <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 lg:grid-cols-4">
           <TabsTrigger value="new" className="gap-2"><PlusCircle className="h-4 w-4" />Nova inscrição</TabsTrigger>
           <TabsTrigger value="registrations" className="gap-2"><ClipboardList className="h-4 w-4" />Inscrições e pagamentos</TabsTrigger>

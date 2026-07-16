@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { MemberPortal } from '@/components/member-portal'
+import { MemberLayout } from '@/components/member-layout'
 import { ProtectedRoute } from '@/components/protected-route'
-import { SiteHeader } from '@/components/site-header'
 
 export const Route = createFileRoute('/minha-area')({
   component: MemberAreaPage,
@@ -11,12 +11,7 @@ export const Route = createFileRoute('/minha-area')({
 function MemberAreaPage() {
   return (
     <ProtectedRoute allowedRoles={['user', 'admin', 'judge']}>
-      <div className="min-h-screen">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-          <MemberPortal />
-        </main>
-      </div>
+      <MemberLayout><MemberPortal /></MemberLayout>
     </ProtectedRoute>
   )
 }

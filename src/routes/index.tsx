@@ -1,87 +1,55 @@
-﻿import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarDays, CircleDollarSign, Newspaper, Trophy } from 'lucide-react'
+import { ArrowRight, CalendarDays, CheckCircle2, Newspaper, Trophy } from 'lucide-react'
 
-import { heroReiningPath } from '@/lib/brand-assets'
 import { EventCard } from '@/components/event-card'
-import { HorseTrail } from '@/components/horse-trail'
 import { SiteHeader } from '@/components/site-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { homeHeroPath, newsRiderPath } from '@/lib/brand-assets'
 import { useAuth } from '@/providers/auth-provider'
 import { getPublicEvents, getPublicNews } from '@/services/api'
 
-export const Route = createFileRoute('/')({
-  component: HomePage,
-})
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value)
-}
+export const Route = createFileRoute('/')({ component: HomePage })
 
 function HomePage() {
   const { session } = useAuth()
   const eventsQuery = useQuery({ queryKey: ['public-events'], queryFn: getPublicEvents })
   const newsQuery = useQuery({ queryKey: ['public-news'], queryFn: () => getPublicNews(undefined, 6) })
-
   const events = eventsQuery.data ?? []
   const news = newsQuery.data ?? []
-  const totalPrize = events.reduce((total, event) => total + Number(event.prize_pool || 0), 0)
+  const featuredPost = news.find((post) => post.featured) ?? news[0]
 
   return (
     <div className="min-h-screen" id="inicio">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-7xl space-y-14 px-4 py-10 sm:px-6 lg:py-14">
-        <section className="relative grid overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-sm lg:grid-cols-[0.9fr_1.1fr]">
-          <HorseTrail className="z-0 opacity-20" />
-          <div className="relative z-10 flex flex-col justify-center space-y-6 p-6 md:p-10 lg:p-12">
-            <Badge className="w-fit bg-primary text-primary-foreground hover:bg-primary">Sistema oficial NTMR</Badge>
-            <div className="space-y-4">
-              <h1 className="font-headline-lg max-w-3xl text-primary">Ranking de Rédeas simples, rápido e ao vivo.</h1>
-              <p className="font-body-md max-w-2xl text-lg text-muted-foreground">
-                Inscrições, notas, pontos e resultados do Núcleo Triângulo Mineiro de Rédeas em uma experiencia organizada para secretaria, juízes e público.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button size="lg" asChild>
-                <Link to={session ? '/minha-area' : '/login'}>{session ? 'Abrir minha área' : 'Fazer inscricao'}</Link>
+      <section className="relative isolate min-h-[560px] overflow-hidden bg-primary text-white lg:min-h-[650px]">
+        <img src={homeHeroPath} alt="Competidor executando uma manobra de rédeas" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
+        <div className="mx-auto flex min-h-[560px] max-w-[1440px] items-center px-5 py-16 sm:px-8 lg:min-h-[650px] lg:px-12">
+          <div className="max-w-3xl">
+            <Badge className="mb-6 border-white/25 bg-white/10 text-white backdrop-blur">Temporada oficial NTMR</Badge>
+            <h1 className="font-headline-lg text-white">Campeonato de Rédeas NTMR</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/85">Inscrições, notas e classificação ao vivo para competidores, organização e público acompanharem cada passada.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90" asChild>
+                <Link to={session ? '/minha-area' : '/login'}>{session ? 'Abrir minha área' : 'Ver próxima etapa e inscrever-se'}<ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Ranking ao vivo</Link>
-              </Button>
+              <Button size="lg" variant="outline" className="border-white/60 bg-black/15 text-white hover:bg-white hover:text-foreground" asChild><Link to="/ranking"><Trophy className="h-4 w-4" />Ranking ao vivo</Link></Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="relative min-h-[420px] overflow-hidden bg-muted">
-            <img src={heroReiningPath} alt="Competidor em prova de rédeas" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-black/10" />
-            <div className="absolute inset-x-4 bottom-4 grid grid-cols-2 gap-3 sm:left-auto sm:w-[420px]">
-              <div className="rounded-2xl border border-white/45 bg-white/90 p-4 shadow-sm backdrop-blur">
-                <CalendarDays className="h-5 w-5 text-primary" />
-                <p className="mt-3 text-3xl font-extrabold text-foreground">{events.length}</p>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Eventos publicados</p>
-              </div>
-              <div className="rounded-2xl border border-white/45 bg-white/90 p-4 shadow-sm backdrop-blur">
-                <CircleDollarSign className="h-5 w-5 text-primary" />
-                <p className="mt-3 text-2xl font-extrabold text-foreground">{formatCurrency(totalPrize)}</p>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Bolsa anunciada</p>
-              </div>
-            </div>
+      <main className="mx-auto w-full max-w-[1440px] space-y-20 px-4 py-16 sm:px-6 lg:px-8">
+        <section id="calendario" className="scroll-mt-36 space-y-7">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div><p className="eyebrow"><CalendarDays className="h-4 w-4" />Calendário oficial</p><h2 className="font-headline-md">Próximos eventos</h2><p className="mt-2 text-muted-foreground">Acompanhe as etapas, inscrições e resultados do campeonato.</p></div>
+            <Button variant="link" asChild><Link to="/ranking">Ver classificação completa<ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
-        </section>
-
-        <section id="calendario" className="scroll-mt-44 space-y-5">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Calendário oficial</p>
-              <h2 className="font-headline-md text-foreground">Eventos e resultados</h2>
-            </div>
-            <Button variant="outline" asChild><Link to="/ranking">Consultar todos os rankings</Link></Button>
-          </div>
-
           {eventsQuery.isLoading ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando eventos publicados...</CardContent></Card>
           ) : eventsQuery.error ? (
@@ -89,122 +57,56 @@ function HomePage() {
           ) : events.length === 0 ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhum evento publicado no momento.</CardContent></Card>
           ) : (
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              {events.map((event) => <EventCard key={event.id} event={event} />)}
-            </div>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{events.map((event) => <EventCard key={event.id} event={event} />)}</div>
           )}
         </section>
 
-        <section id="como-funciona" className="scroll-mt-44 rounded-[2rem] border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Como funciona</p>
-              <h2 className="font-headline-md text-foreground">Fluxo simples para prova ao vivo.</h2>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-muted/35 p-4">
-                <p className="text-xl font-extrabold text-primary">1</p>
-                <p className="font-bold text-foreground">Inscreve</p>
-                <p className="text-sm text-muted-foreground">Competidor, animal, categoria, etapa e niveis.</p>
-              </div>
-              <div className="rounded-2xl border bg-muted/35 p-4">
-                <p className="text-xl font-extrabold text-primary">2</p>
-                <p className="font-bold text-foreground">Lança nota</p>
-                <p className="text-sm text-muted-foreground">Admin registra a nota na hora da passada.</p>
-              </div>
-              <div className="rounded-2xl border bg-muted/35 p-4">
-                <p className="text-xl font-extrabold text-primary">3</p>
-                <p className="font-bold text-foreground">Acompanha</p>
-                <p className="text-sm text-muted-foreground">Ranking atualiza para público e organização.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="rounded-[2rem] border border-gray-200 bg-white p-7 shadow-sm md:p-10">
-          <div className="mx-auto max-w-4xl space-y-5 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Ranking oficial</p>
-            <h2 className="font-headline-md text-foreground">Pódio, pontos e premiação em uma leitura só.</h2>
-            <p className="font-body-md text-muted-foreground">
-              A visualização foi pensada para ficar parecida com a planilha oficial, mas com atualização ao vivo: uma linha por conjunto, níveis na mesma linha e premiação calculada ao lado.
-            </p>
-            <div className="grid gap-3 pt-2 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-muted/40 p-4">
-                <p className="text-2xl font-extrabold text-primary">1</p>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Conjunto por linha</p>
-              </div>
-              <div className="rounded-2xl border bg-muted/40 p-4">
-                <p className="text-2xl font-extrabold text-primary">N1-N4</p>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Níveis juntos</p>
-              </div>
-              <div className="rounded-2xl border bg-muted/40 p-4">
-                <p className="text-2xl font-extrabold text-primary">Ao vivo</p>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Notas e ranking</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="noticias" className="scroll-mt-44 space-y-5">
+        <section id="noticias" className="scroll-mt-36 grid gap-8 border-y py-14 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.75fr)]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Central NTMR</p>
-            <h2 className="font-headline-md text-foreground">Noticias e comunicados</h2>
+            <p className="eyebrow"><Newspaper className="h-4 w-4" />Central NTMR</p>
+            <h2 className="font-headline-md mb-6">Últimas notícias</h2>
+            {newsQuery.isLoading ? (
+              <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando publicações...</CardContent></Card>
+            ) : featuredPost ? (
+              <article className="group relative min-h-[360px] overflow-hidden rounded-lg bg-primary text-white">
+                <img src={newsRiderPath} alt="Competidora ao lado de seu cavalo" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                  <Badge className="mb-3 bg-secondary text-secondary-foreground">Destaque</Badge>
+                  <h3 className="max-w-3xl font-serif text-3xl font-semibold leading-tight">{featuredPost.title}</h3>
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85">{featuredPost.summary || featuredPost.content}</p>
+                </div>
+              </article>
+            ) : (
+              <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhuma notícia publicada ainda.</CardContent></Card>
+            )}
           </div>
 
-          {newsQuery.isLoading ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando publicações...</CardContent></Card>
-          ) : newsQuery.error ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground">As publicações ficarao disponiveis apos a configuração do portal.</CardContent></Card>
-          ) : news.length === 0 ? (
-            <Card><CardContent className="flex items-center gap-3 p-6 text-sm text-muted-foreground"><Newspaper className="h-5 w-5" />Nenhuma noticia publicada ainda.</CardContent></Card>
-          ) : (
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {news.map((post) => (
-                <Card key={post.id} className={post.featured ? 'border-primary/30 shadow-md' : ''}>
-                  <CardContent className="flex h-full flex-col p-6">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={post.featured ? 'default' : 'outline'}>{post.post_type === 'event_update' ? 'Evento' : 'Noticia'}</Badge>
-                      {post.event && <span className="text-xs font-semibold text-muted-foreground">{post.event.name}</span>}
-                    </div>
-                    <h3 className="mt-4 font-serif text-2xl font-bold text-primary">{post.title}</h3>
-                    <p className="mt-2 flex-1 whitespace-pre-line text-sm leading-6 text-muted-foreground">{post.summary || post.content}</p>
-                    <div className="mt-5 flex items-center justify-between gap-2 border-t pt-3 text-xs text-muted-foreground">
-                      <span>{new Date(post.published_at ?? post.created_at).toLocaleDateString('pt-BR')}</span>
-                      {post.event && <Button size="sm" variant="ghost" asChild><Link to="/events/$eventId" params={{ eventId: post.event.id }}>Ver evento</Link></Button>}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <div className="self-end">
+            <div className="mb-5 flex items-center justify-between"><h2 className="font-serif text-3xl font-semibold">Classificação ao vivo</h2><Trophy className="h-7 w-7 text-secondary" /></div>
+            <Card className="rounded-lg shadow-none"><CardContent className="space-y-4 p-6">
+              <div className="flex items-center gap-4 border-b pb-4"><span className="podium-number podium-number--gold">1</span><div><p className="font-bold">Liderança atualizada</p><p className="text-sm text-muted-foreground">Consulte por evento, categoria e nível.</p></div></div>
+              <div className="grid gap-3 text-sm">
+                <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-700" />Notas publicadas em tempo real</p>
+                <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-700" />N1, N2, N3 e N4 separados</p>
+                <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-700" />Etapas e resultado do campeonato</p>
+              </div>
+              <Button className="w-full" asChild><Link to="/ranking">Abrir ranking oficial<ArrowRight className="h-4 w-4" /></Link></Button>
+            </CardContent></Card>
+          </div>
         </section>
 
-        <section className="grid gap-4 rounded-3xl border border-gray-200 bg-white p-8 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
-          <div>
-            <h2 className="font-headline-md text-primary">Tudo pronto para acompanhar a temporada</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Crie sua conta para solicitar inscrições e enviar sugestões. O ranking permanece aberto para todos.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área' : 'Criar conta'}</Link></Button>
-            <Button variant="outline" asChild><Link to="/ranking">Ver resultados</Link></Button>
+        <section id="como-funciona" className="scroll-mt-36">
+          <div className="mb-8 max-w-2xl"><p className="eyebrow">Como funciona</p><h2 className="font-headline-md">Da inscrição ao pódio</h2></div>
+          <div className="grid gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-3">
+            {[['01', 'Inscreva o conjunto', 'Escolha evento, cavalo, categoria, níveis e etapas.'], ['02', 'Acompanhe a prova', 'As notas são lançadas na ordem de entrada.'], ['03', 'Veja a classificação', 'O ranking atualiza por etapa e no campeonato.']].map(([number, title, description]) => (
+              <div key={number} className="bg-card p-7"><span className="font-serif text-4xl font-bold text-secondary">{number}</span><h3 className="mt-6 text-xl font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p></div>
+            ))}
           </div>
         </section>
       </main>
 
-      <footer className="mt-10 border-t border-gray-200 bg-muted/60 px-4 py-10 sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 text-center md:flex-row md:text-left">
-          <span className="font-serif text-2xl font-bold text-primary">NTMR</span>
-          <p className="text-sm text-muted-foreground">Núcleo Triângulo Mineiro de Rédeas. Todos os direitos reservados.</p>
-          <div className="flex flex-wrap justify-center gap-5 text-sm font-semibold text-secondary">
-            <Link to="/" hash="inicio" className="hover:text-primary">Inicio</Link>
-            <Link to="/ranking" className="hover:text-primary">Ranking</Link>
-            <Link to="/" hash="como-funciona" className="hover:text-primary">Como funciona</Link>
-          </div>
-        </div>
-      </footer>
+      <footer className="border-t bg-muted/50 px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-6 md:flex-row md:items-center"><div><p className="font-serif text-2xl font-bold">NTMR</p><p className="text-sm text-muted-foreground">Núcleo Triângulo Mineiro de Rédeas</p></div><div className="flex flex-wrap gap-5 text-sm font-semibold"><Link to="/" hash="calendario">Eventos</Link><Link to="/ranking">Ranking</Link><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área' : 'Entrar'}</Link></div></div></footer>
     </div>
   )
 }
-
-
-
-
