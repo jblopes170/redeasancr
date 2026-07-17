@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -28,6 +28,7 @@ function AdminEventPage() {
   const { profile } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const pathname = useLocation({ select: (location) => location.pathname })
   const [activeTab, setActiveTab] = useState(() => window.location.hash === '#inscricoes' ? 'entries' : 'overview')
 
   const isAdmin = profile?.role === 'admin'
@@ -49,6 +50,12 @@ function AdminEventPage() {
     }),
     [categoriesQuery.data, competitorsQuery.data, entriesQuery.data, horsesQuery.data, scoresQuery.data],
   )
+
+  // The scores route is a child of this route. Render only the child there so
+  // the event overview does not remain above the live scoring workspace.
+  if (pathname.endsWith('/scores')) {
+    return <Outlet />
+  }
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'judge']}>
