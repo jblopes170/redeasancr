@@ -19,7 +19,14 @@ export default defineConfig({
   },
   server: {
     watch: {
-      ignored: ['**/github-upload-source-*/**'],
+      usePolling: true,
+      interval: 500,
+      ignored: [
+        '**/github-upload-*/**',
+        '**/stitch-redesign-reference/**',
+        '**/.tmp_old_ntmr/**',
+        '**/.tanstack/**',
+      ],
     },
   },
 })
