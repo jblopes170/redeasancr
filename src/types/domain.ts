@@ -233,6 +233,9 @@ export interface ChampionshipRankingRow {
   competitor_name: string
   horse_id: string
   horse_name: string
+  stage_1_note: number
+  stage_2_note: number
+  stage_3_note: number
   stage_1_score: number
   stage_2_score: number
   stage_3_score: number

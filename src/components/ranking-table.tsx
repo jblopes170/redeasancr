@@ -69,6 +69,12 @@ function sortByScoreThenName<T extends { total_score: number; competitor_name: s
   })
 }
 
+function formatRankingNumber(value: number | null | undefined): string {
+  return typeof value === 'number'
+    ? value.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })
+    : '--'
+}
+
 function dedupeCumulativeRows(rows: StageRankingRow[]) {
   const map = new Map<string, StageRankingRow>()
 
@@ -207,6 +213,9 @@ export function RankingTable({ eventId }: RankingTableProps) {
             competitor_name: row.competitor_name,
             horse_id: row.horse_id,
             horse_name: row.horse_name,
+            stage_1_note: stageNumber === 1 ? row.total_score : 0,
+            stage_2_note: stageNumber === 2 ? row.total_score : 0,
+            stage_3_note: stageNumber === 3 ? row.total_score : 0,
             stage_1_score: stageNumber === 1 ? stagePoints : 0,
             stage_2_score: stageNumber === 2 ? stagePoints : 0,
             stage_3_score: stageNumber === 3 ? stagePoints : 0,
@@ -222,6 +231,9 @@ export function RankingTable({ eventId }: RankingTableProps) {
         if (stageNumber === 1) existing.stage_1_score = stagePoints
         if (stageNumber === 2) existing.stage_2_score = stagePoints
         if (stageNumber === 3) existing.stage_3_score = stagePoints
+        if (stageNumber === 1) existing.stage_1_note = row.total_score
+        if (stageNumber === 2) existing.stage_2_note = row.total_score
+        if (stageNumber === 3) existing.stage_3_note = row.total_score
       })
     })
 
@@ -236,6 +248,9 @@ export function RankingTable({ eventId }: RankingTableProps) {
       competitor_name: row.competitor_name,
       horse_id: row.horse_id,
       horse_name: row.horse_name,
+      stage_1_note: row.stage_1_note,
+      stage_2_note: row.stage_2_note,
+      stage_3_note: row.stage_3_note,
       stage_1_score: row.stage_1_score,
       stage_2_score: row.stage_2_score,
       stage_3_score: row.stage_3_score,
@@ -273,6 +288,9 @@ export function RankingTable({ eventId }: RankingTableProps) {
       cavalo: row.horse_name,
       categoria: row.category_name,
       nivel: row.level ?? 'Sem nível',
+      nota_etapa_1: row.stage_1_note,
+      nota_etapa_2: row.stage_2_note,
+      nota_etapa_3: row.stage_3_note,
       pontos_etapa_1: row.stage_1_score,
       pontos_etapa_2: row.stage_2_score,
       pontos_etapa_3: row.stage_3_score,
@@ -504,7 +522,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
               sheetName: mode === 'stage' ? 'Ranking Etapa' : 'Ranking Campeonato',
               headers: mode === 'stage'
                 ? ['posicao', 'competidor', 'cavalo', 'categoria', 'nivel', 'etapa', 'nota_etapa', 'pontos_etapa', 'status']
-                : ['posicao', 'competidor', 'cavalo', 'categoria', 'nivel', 'pontos_etapa_1', 'pontos_etapa_2', 'pontos_etapa_3', 'total_pontos', 'status'],
+                : ['posicao', 'competidor', 'cavalo', 'categoria', 'nivel', 'nota_etapa_1', 'nota_etapa_2', 'nota_etapa_3', 'pontos_etapa_1', 'pontos_etapa_2', 'pontos_etapa_3', 'total_pontos', 'status'],
             },
           )}
         >
@@ -548,7 +566,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
               <TableHead>Conjunto</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Exibicao</TableHead>
-              <TableHead>Etapas / pontos</TableHead>
+              <TableHead>Etapas: notas + pontos</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -618,10 +636,22 @@ export function RankingTable({ eventId }: RankingTableProps) {
                   </TableCell>
                   <TableCell><Badge variant="secondary">Campeonato</Badge></TableCell>
                   <TableCell>
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 1</span><strong>{row.stage_1_score}</strong></div>
-                      <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 2</span><strong>{row.stage_2_score}</strong></div>
-                      <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 3</span><strong>{row.stage_3_score}</strong></div>
+                    <div className="grid min-w-[330px] grid-cols-3 gap-2 text-center text-xs">
+                      <div className="rounded-md border bg-muted/30 p-2">
+                        <span className="block text-muted-foreground">Et. 1</span>
+                        <strong className="block text-sm">Nota {formatRankingNumber(row.stage_1_note)}</strong>
+                        <span className="block text-[11px] font-semibold text-primary">{row.stage_1_score} pts</span>
+                      </div>
+                      <div className="rounded-md border bg-muted/30 p-2">
+                        <span className="block text-muted-foreground">Et. 2</span>
+                        <strong className="block text-sm">Nota {formatRankingNumber(row.stage_2_note)}</strong>
+                        <span className="block text-[11px] font-semibold text-primary">{row.stage_2_score} pts</span>
+                      </div>
+                      <div className="rounded-md border bg-muted/30 p-2">
+                        <span className="block text-muted-foreground">Et. 3</span>
+                        <strong className="block text-sm">Nota {formatRankingNumber(row.stage_3_note)}</strong>
+                        <span className="block text-[11px] font-semibold text-primary">{row.stage_3_score} pts</span>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-lg font-extrabold text-foreground">{row.total_score}</TableCell>

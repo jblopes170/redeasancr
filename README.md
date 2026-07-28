@@ -70,6 +70,7 @@ As migrations estão em:
 - `supabase/migrations/202607120002_registration_request_levels.sql`
 - `supabase/migrations/202607120003_financial_dre_cashflow.sql`
 - `supabase/migrations/202607140001_payment_finance_workflow.sql`
+- `supabase/migrations/202607270001_championship_ranking_notes.sql`
 - `supabase/migrations/202605220002_seed_ntmr_sample.sql`
 - Guia SQL em ordem (copiar/colar no SQL Editor): `supabase/manual/setup-step-by-step.sql`
 
