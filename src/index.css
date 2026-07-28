@@ -126,12 +126,17 @@ code {
 }
 
 .horse-trail__ribbon,
-.horse-trail__dots {
+.horse-trail__horse {
   animation: horse-trail-run 18s linear infinite;
+  animation-delay: -8s;
 }
 
-.horse-trail__dots {
-  animation-delay: -4s;
+@media (prefers-reduced-motion: reduce) {
+  .horse-trail__ribbon,
+  .horse-trail__horse {
+    animation: none;
+    transform: translateX(calc(100vw - 14rem));
+  }
 }
 
 .eyebrow {

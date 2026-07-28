@@ -491,7 +491,7 @@ export function EntryManager({ eventId, canEdit }: EntryManagerProps) {
                     <Input value={form.draw_order} onChange={(e) => setForm((prev) => ({ ...prev, draw_order: e.target.value }))} />
                   </div>
                   <div className="grid gap-1">
-                    <Label>Valor da inscriÃ§Ã£o (R$)</Label>
+                    <Label>Valor da inscrição (R$)</Label>
                     <Input
                       type="number"
                       min="0"

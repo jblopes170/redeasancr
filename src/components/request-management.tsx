@@ -105,7 +105,7 @@ export function RequestManagement() {
       return updateRegistrationRequestAmount(selectedRequestId, amount)
     },
     onSuccess: () => {
-      toast.success('Valor da inscriÃ§Ã£o atualizado.')
+      toast.success('Valor da inscrição atualizado.')
       setSelectedRequestId(null)
       setAmountDraft('')
       void queryClient.invalidateQueries({ queryKey: ['admin-registration-requests'] })
@@ -333,7 +333,7 @@ export function RequestManagement() {
 
       <Dialog open={Boolean(selectedRequestId)} onOpenChange={(open) => { if (!open) { setSelectedRequestId(null); setAmountDraft('') } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Editar valor da inscriÃ§Ã£o</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Editar valor da inscrição</DialogTitle></DialogHeader>
           <div className="grid gap-2">
             <Label htmlFor="registration-amount">Novo valor total (R$)</Label>
             <Input
@@ -345,7 +345,7 @@ export function RequestManagement() {
               onChange={(event) => setAmountDraft(event.target.value)}
               autoFocus
             />
-            <p className="text-xs text-muted-foreground">Se o pagamento jÃ¡ foi confirmado, a receita vinculada tambÃ©m serÃ¡ atualizada no DRE.</p>
+            <p className="text-xs text-muted-foreground">Se o pagamento já foi confirmado, a receita vinculada também será atualizada no DRE.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedRequestId(null)}>Cancelar</Button>

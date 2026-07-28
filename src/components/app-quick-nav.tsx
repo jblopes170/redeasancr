@@ -50,7 +50,7 @@ function QuickMenu({
           variant="ghost"
           size="sm"
           className={cn(
-            'h-9 shrink-0 justify-between gap-1.5 rounded px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:h-10 sm:gap-2 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
+            'h-9 min-w-0 w-full justify-between gap-1.5 rounded px-2 text-[10px] font-bold uppercase tracking-[0.04em] sm:h-10 sm:w-auto sm:shrink-0 sm:gap-2 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
             tone === 'dark'
               ? 'text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/15'
               : 'text-foreground hover:bg-muted data-[state=open]:bg-muted',
@@ -77,7 +77,7 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
 
   return (
     <nav
-      className={cn('flex min-w-0 max-w-full flex-wrap items-center justify-center gap-1 py-0.5', className)}
+      className={cn('grid min-w-0 max-w-full grid-cols-2 gap-1 py-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:py-0.5', className)}
       aria-label="Navegação principal"
     >
       <Button
@@ -85,7 +85,7 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
         size="sm"
         asChild
         className={cn(
-          'h-9 shrink-0 rounded px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:h-10 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
+          'h-9 min-w-0 w-full rounded px-2 text-[10px] font-bold uppercase tracking-[0.04em] sm:h-10 sm:w-auto sm:shrink-0 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
           tone === 'dark' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-foreground hover:bg-muted',
         )}
       >

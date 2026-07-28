@@ -3,12 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, CalendarDays, CheckCircle2, Newspaper, Trophy } from 'lucide-react'
 
 import { EventCard } from '@/components/event-card'
+import { HorseTrail } from '@/components/horse-trail'
 import { SiteHeader } from '@/components/site-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { homeHeroPath, newsRiderPath } from '@/lib/brand-assets'
+import { heroReiningPath, newsRiderPath } from '@/lib/brand-assets'
 import { useAuth } from '@/providers/auth-provider'
 import { getPublicEvents, getPublicNews } from '@/services/api'
 
@@ -27,7 +28,7 @@ function HomePage() {
       <SiteHeader />
 
       <section className="relative isolate min-h-[560px] overflow-hidden bg-primary text-white lg:min-h-[650px]">
-        <img src={homeHeroPath} alt="Competidor executando uma manobra de rédeas" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <img src={heroReiningPath} alt="Competidor executando uma manobra de rédeas" className="absolute inset-0 -z-20 h-full w-full object-cover object-[64%_center]" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
         <div className="mx-auto flex min-h-[560px] max-w-[1440px] items-center px-5 py-16 sm:px-8 lg:min-h-[650px] lg:px-12">
           <div className="max-w-3xl">
@@ -43,6 +44,10 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="relative h-24 overflow-hidden border-b border-border bg-[#f7f1e8] sm:h-28">
+        <HorseTrail />
+      </div>
 
       <main className="mx-auto w-full max-w-[1440px] space-y-20 px-4 py-16 sm:px-6 lg:px-8">
         <section id="calendario" className="scroll-mt-36 space-y-7">
@@ -69,7 +74,7 @@ function HomePage() {
               <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando publicações...</CardContent></Card>
             ) : featuredPost ? (
               <article className="group relative min-h-[360px] overflow-hidden rounded-lg bg-primary text-white">
-                <img src={newsRiderPath} alt="Competidora ao lado de seu cavalo" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <img loading="lazy" decoding="async" src={newsRiderPath} alt="Competidora ao lado de seu cavalo" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
                   <Badge className="mb-3 bg-secondary text-secondary-foreground">Destaque</Badge>

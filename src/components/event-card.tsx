@@ -28,7 +28,7 @@ export function EventCard({ event, admin = false }: EventCardProps) {
   return (
     <Card className="group h-full overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-44 overflow-hidden bg-muted">
-        <img src={eventImage(event)} alt="Arena de competição de rédeas" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+        <img loading="lazy" decoding="async" src={eventImage(event)} alt="Arena de competição de rédeas" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
         <div className="absolute right-3 top-3"><StatusBadge type="event" status={event.status} /></div>
       </div>

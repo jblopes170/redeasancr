@@ -1,4 +1,5 @@
-﻿import { cn } from '@/lib/utils'
+import { horseMascotPath } from '@/lib/brand-assets'
+import { cn } from '@/lib/utils'
 
 interface HorseTrailProps {
   className?: string
@@ -6,11 +7,9 @@ interface HorseTrailProps {
 
 export function HorseTrail({ className }: HorseTrailProps) {
   return (
-    <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 h-16 overflow-hidden', className)} aria-hidden="true">
-      <div className="horse-trail__ribbon absolute bottom-5 h-px w-64 bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
-      <div className="horse-trail__dots absolute bottom-3 flex gap-6 text-primary/25">
-        <span>•</span><span>•</span><span>•</span><span>•</span><span>•</span>
-      </div>
+    <div className={cn('pointer-events-none absolute inset-x-0 bottom-0 h-full overflow-hidden', className)} aria-hidden="true">
+      <div className="horse-trail__ribbon absolute bottom-5 h-px w-72 bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
+      <img src={horseMascotPath} alt="" className="horse-trail__horse absolute bottom-0 h-24 w-44 object-cover object-[75%_center] mix-blend-multiply opacity-90 sm:h-28 sm:w-52" />
     </div>
   )
 }
