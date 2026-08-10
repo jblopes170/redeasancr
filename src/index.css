@@ -131,24 +131,184 @@ code {
 
 @keyframes horse-trail-run {
   from {
-    transform: translateX(-12rem);
+    transform: translate3d(-23rem, 0, 0);
   }
   to {
-    transform: translateX(calc(100vw + 12rem));
+    transform: translate3d(calc(100vw + 23rem), 0, 0);
   }
 }
 
-.horse-trail__ribbon,
-.horse-trail__horse {
+@keyframes horse-trail-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-0.7deg);
+  }
+}
+
+@keyframes horse-trail-leg-rear {
+  0%,
+  100% {
+    transform: rotate(12deg);
+  }
+  50% {
+    transform: rotate(-16deg);
+  }
+}
+
+@keyframes horse-trail-leg-front {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+
+@keyframes horse-trail-dust {
+  0% {
+    opacity: 0;
+    transform: translate3d(14px, 8px, 0) scale(0.3);
+  }
+  25% {
+    opacity: 0.68;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-56px, -30px, 0) scale(1.45);
+  }
+}
+
+.horse-trail__scene {
+  left: 0;
+  z-index: 2;
+  width: 22rem;
+  height: 10.5rem;
+  color: hsl(var(--primary));
   animation: horse-trail-run 18s linear infinite;
-  animation-delay: -8s;
+  animation-delay: -7s;
+  will-change: transform;
+}
+
+.horse-trail__scene--sprint {
+  animation-duration: 10s;
+}
+
+.horse-trail__horse {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 19rem;
+  height: 9.5rem;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.horse-trail__horse:hover,
+.horse-trail__horse:focus-visible {
+  filter: drop-shadow(0 0 12px hsl(var(--secondary) / 0.48));
+  transform: scale(1.04);
+}
+
+.horse-trail__figure {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: horse-trail-bob 1.05s ease-in-out infinite;
+}
+
+.horse-trail__leg {
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+
+.horse-trail__leg--rear {
+  animation: horse-trail-leg-rear 0.72s ease-in-out infinite;
+}
+
+.horse-trail__leg--rear-alt {
+  animation: horse-trail-leg-rear 0.72s ease-in-out -0.36s infinite;
+}
+
+.horse-trail__leg--front {
+  animation: horse-trail-leg-front 0.72s ease-in-out -0.18s infinite;
+}
+
+.horse-trail__leg--front-alt {
+  animation: horse-trail-leg-front 0.72s ease-in-out -0.54s infinite;
+}
+
+.horse-trail__scene--sprint .horse-trail__figure {
+  animation-duration: 0.68s;
+}
+
+.horse-trail__scene--sprint .horse-trail__leg {
+  animation-duration: 0.46s;
+}
+
+.horse-trail__dust {
+  position: absolute;
+  left: 0.8rem;
+  bottom: 1.3rem;
+  width: 8rem;
+  height: 4rem;
+  pointer-events: none;
+}
+
+.horse-trail__dust-particle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  background: hsl(var(--secondary) / 0.42);
+  animation: horse-trail-dust 2.4s ease-out infinite;
+}
+
+.horse-trail__dust-particle:nth-child(2) { left: 1.8rem; bottom: 0.4rem; width: 0.55rem; height: 0.55rem; animation-delay: -0.35s; }
+.horse-trail__dust-particle:nth-child(3) { left: 3.2rem; bottom: 0.1rem; width: 1.1rem; height: 1.1rem; animation-delay: -0.8s; }
+.horse-trail__dust-particle:nth-child(4) { left: 4.5rem; bottom: 0.8rem; width: 0.65rem; height: 0.65rem; animation-delay: -1.2s; }
+.horse-trail__dust-particle:nth-child(5) { left: 5.6rem; bottom: 0.2rem; width: 0.45rem; height: 0.45rem; animation-delay: -1.65s; }
+.horse-trail__dust-particle:nth-child(6) { left: 2.4rem; bottom: 1.3rem; width: 0.45rem; height: 0.45rem; animation-delay: -2s; }
+.horse-trail__dust-particle:nth-child(7) { left: 0.6rem; bottom: 1.4rem; width: 0.6rem; height: 0.6rem; animation-delay: -2.3s; }
+.horse-trail__dust-particle:nth-child(8) { left: 3.8rem; bottom: 1.8rem; width: 0.4rem; height: 0.4rem; animation-delay: -0.55s; }
+.horse-trail__dust-particle:nth-child(9) { left: 6.5rem; bottom: 1.1rem; width: 0.7rem; height: 0.7rem; animation-delay: -1.9s; }
+
+.horse-trail__scene--sprint .horse-trail__dust-particle {
+  animation-duration: 1.55s;
+}
+
+@media (max-width: 640px) {
+  .horse-trail__scene {
+    width: 18rem;
+    height: 8.5rem;
+  }
+
+  .horse-trail__horse {
+    width: 15.5rem;
+    height: 7.8rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .horse-trail__ribbon,
-  .horse-trail__horse {
+  .horse-trail__scene {
+    left: 50%;
     animation: none;
-    transform: translateX(calc(100vw - 14rem));
+    transform: translateX(-50%);
+  }
+
+  .horse-trail__figure,
+  .horse-trail__leg,
+  .horse-trail__dust-particle {
+    animation: none;
   }
 }
 
