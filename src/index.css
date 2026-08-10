@@ -23,7 +23,7 @@
   --input: 15 10% 82%;
   --ring: 43 100% 30%;
   --heritage: 0 71% 38%;
-  --radius: 0.375rem;
+  --radius: 0.5rem;
 }
 
 @theme inline {
@@ -73,6 +73,19 @@ body {
   font-family: "Hanken Grotesk", "Inter", "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Bootstrap-like defaults: compact controls, clear cards and predictable spacing. */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .table-responsive table {
+    min-width: 680px;
+  }
 }
 
 h1,
