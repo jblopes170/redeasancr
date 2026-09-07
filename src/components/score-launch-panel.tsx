@@ -1353,16 +1353,16 @@ export function ScoreLaunchPanel({
       )}
 
       {showLiveRanking && (
-        <section className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm">
-          <div className="bg-primary px-4 py-4 text-primary-foreground sm:px-6">
+        <section className="overflow-hidden rounded-xl border border-secondary/20 bg-card shadow-[0_20px_70px_rgba(0,0,0,.22)]">
+          <div className="border-b border-white/10 bg-[#17100e] px-4 py-5 text-white sm:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
-                  <Trophy className="h-6 w-6" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/15 text-secondary">
+                  <Trophy className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-extrabold">Ranking ao vivo da prova</h3>
-                  <p className="text-sm text-primary-foreground/80">Notas, pontos e premiacao em leitura rapida.</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-secondary">Placar da prova</p>
+                  <h3 className="font-sans text-xl font-extrabold">Ranking ao vivo</h3>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1370,8 +1370,8 @@ export function ScoreLaunchPanel({
                   size="sm"
                   variant="outline"
                   className={rankingMode === 'stage'
-                    ? 'border-white bg-white text-primary hover:bg-white/90'
-                    : 'border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white'}
+                    ? 'border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90'
+                    : 'border-white/20 bg-transparent text-white/75 hover:bg-white/10 hover:text-white'}
                   onClick={() => setRankingMode('stage')}
                 >
                   {filterStage}a etapa
@@ -1380,8 +1380,8 @@ export function ScoreLaunchPanel({
                   size="sm"
                   variant="outline"
                   className={rankingMode === 'championship'
-                    ? 'border-white bg-white text-primary hover:bg-white/90'
-                    : 'border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white'}
+                    ? 'border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90'
+                    : 'border-white/20 bg-transparent text-white/75 hover:bg-white/10 hover:text-white'}
                   onClick={() => setRankingMode('championship')}
                 >
                   Campeonato
@@ -1389,7 +1389,7 @@ export function ScoreLaunchPanel({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  className="border-white/20 bg-transparent text-white/75 hover:bg-white/10 hover:text-white"
                   onClick={refreshOverview}
                 >
                   <RefreshCw className={`mr-2 h-4 w-4 ${overviewRefreshing ? 'animate-spin' : ''}`} />
@@ -1399,61 +1399,56 @@ export function ScoreLaunchPanel({
             </div>
           </div>
 
-          <div className="grid gap-3 border-b bg-muted/30 p-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-xl border bg-card p-4">
+          <div className="grid gap-x-8 gap-y-4 border-b bg-muted/15 px-5 py-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div>
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Evento</p>
               <p className="mt-1 font-bold text-foreground">{event.name}</p>
             </div>
-            <div className="rounded-xl border bg-card p-4">
+            <div>
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Data e local</p>
-              <p className="mt-1 flex items-center gap-2 font-bold text-foreground"><CalendarDays className="h-4 w-4 text-primary" />{formatEventPeriod(event.starts_on, event.ends_on)}</p>
+              <p className="mt-1 flex items-center gap-2 font-bold text-foreground"><CalendarDays className="h-4 w-4 text-secondary" />{formatEventPeriod(event.starts_on, event.ends_on)}</p>
               <p className="text-xs text-muted-foreground">{event.location || 'Local nao informado'}</p>
             </div>
-            <div className="rounded-xl border bg-card p-4">
+            <div>
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Categoria</p>
               <p className="mt-1 font-bold text-foreground">{selectedCategory ? categoryOptionLabel(selectedCategory.name) : 'Todas as categorias'}</p>
             </div>
-            <div className="rounded-xl border bg-card p-4">
+            <div>
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Exibicao</p>
               <p className="mt-1 font-bold text-foreground">{rankingMode === 'stage' ? `${filterStage}a etapa` : 'Resultado do campeonato'}</p>
             </div>
           </div>
 
           <div className="space-y-4 p-4">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Inscricoes</p>
-                <p className="mt-1 text-3xl font-extrabold text-foreground">{rows.length}</p>
+            <div className="grid overflow-hidden rounded-lg border sm:grid-cols-3 sm:divide-x">
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Inscrições</p>
+                <p className="mt-1 text-2xl font-extrabold text-foreground">{rows.length}</p>
               </div>
-              <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Notas lancadas</p>
-                <p className="mt-1 text-3xl font-extrabold text-foreground">{filteredScoresCount}</p>
+              <div className="border-t p-4 sm:border-t-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Notas lançadas</p>
+                <p className="mt-1 text-2xl font-extrabold text-foreground">{filteredScoresCount}</p>
               </div>
-              <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Bolsa do evento</p>
-                <p className="mt-1 text-2xl font-extrabold text-primary">{formatCurrency(prizePoolValue)}</p>
+              <div className="border-t p-4 sm:border-t-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Bolsa do evento</p>
+                <p className="mt-1 text-2xl font-extrabold text-secondary">{formatCurrency(prizePoolValue)}</p>
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div>
+              <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.18em] text-secondary">Destaques atuais</p>
+              <div className="grid gap-3 md:grid-cols-3">
               {overviewRows.slice(0, 3).map((row, index) => (
                 <article
                   key={`podium-${row.key}`}
-                  className={`relative overflow-hidden rounded border p-5 shadow-sm ${
-                    index === 0
-                      ? 'border-amber-300 bg-amber-50/80 md:-translate-y-2'
-                      : index === 1
-                        ? 'border-slate-300 bg-slate-50'
-                        : 'border-orange-300 bg-orange-50/70'
-                  }`}
+                  className={`relative overflow-hidden rounded-lg border bg-muted/15 p-5 ${index === 0 ? 'border-secondary/55' : 'border-border'}`}
                 >
-                  <span className="absolute right-3 top-1 font-serif text-6xl font-bold text-primary/5">{index + 1}</span>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{index + 1}o lugar</p>
-                      <p className="mt-1 text-lg font-extrabold text-primary">{row.positionLabel}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Classificação</p>
+                      <p className="mt-1 text-2xl font-extrabold text-secondary">{row.positionLabel}</p>
                     </div>
-                    <Medal className="h-6 w-6 text-primary" />
+                    <Medal className="h-5 w-5 text-secondary" />
                   </div>
                   <p className="mt-3 line-clamp-1 font-bold text-foreground">{row.competitorName}</p>
                   <p className="line-clamp-1 text-sm text-muted-foreground">{row.horseName}</p>
@@ -1471,6 +1466,7 @@ export function ScoreLaunchPanel({
                   Nenhuma nota encontrada para os filtros selecionados.
                 </div>
               )}
+              </div>
             </div>
 
             <div className="rounded-2xl border bg-card">
@@ -1481,7 +1477,7 @@ export function ScoreLaunchPanel({
               <div className="divide-y">
                 {overviewRows.map((row) => (
                   <article key={row.key} className="grid gap-3 p-4 lg:grid-cols-[72px_minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(230px,0.9fr)] lg:items-center">
-                    <div className="text-2xl font-extrabold text-primary">{row.positionLabel}</div>
+                    <div className="text-2xl font-extrabold text-secondary">{row.positionLabel}</div>
                     <div className="min-w-0">
                       <p className="truncate font-bold text-foreground">{row.competitorName}</p>
                       <p className="truncate text-sm text-muted-foreground">{row.horseName} {row.registration !== '--' ? `- ${row.registration}` : ''}</p>
