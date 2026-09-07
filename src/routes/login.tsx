@@ -94,7 +94,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4efe8]">
+    <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto grid w-full max-w-[1180px] overflow-hidden px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,.9fr)] lg:py-14">
         <section className="relative hidden min-h-[680px] overflow-hidden bg-primary text-white lg:block">

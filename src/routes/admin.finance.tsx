@@ -71,7 +71,7 @@ function AdminFinancePage() {
                 <p className="mt-2 text-2xl font-extrabold text-emerald-800">{formatCurrency(summary.income)}</p>
               </CardContent>
             </Card>
-            <Card className="border-red-200 bg-red-50/60">
+            <Card className="border-red-900/60 bg-red-950/25">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between"><p className="text-sm font-semibold text-red-800">Despesas totais</p><BanknoteArrowDown className="h-5 w-5 text-red-700" /></div>
                 <p className="mt-2 text-2xl font-extrabold text-red-800">{formatCurrency(summary.expense)}</p>

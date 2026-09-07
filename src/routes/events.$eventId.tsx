@@ -34,7 +34,7 @@ function EventPublicPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         {eventQuery.isLoading ? (
           <Card>
             <CardContent className="p-6 text-sm text-muted-foreground">Carregando evento...</CardContent>
@@ -52,9 +52,10 @@ function EventPublicPage() {
           </Card>
         ) : (
           <div className="space-y-5">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-3xl text-primary">{event.name}</CardTitle>
+            <Card className="relative overflow-hidden border-white/10 bg-[#17100e]">
+              <CardHeader className="px-6 py-9 sm:px-10">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-secondary">Evento oficial NTMR</p>
+                <CardTitle className="mt-2 font-serif text-3xl text-foreground sm:text-5xl">{event.name}</CardTitle>
                 <div className="text-sm text-muted-foreground">
                   {event.location || 'Local não informado'} | {event.starts_on || '--'} a {event.ends_on || '--'}
                 </div>
@@ -64,7 +65,7 @@ function EventPublicPage() {
 
             {(newsQuery.data ?? []).length > 0 && (
               <section className="space-y-3">
-                <h2 className="text-2xl font-extrabold">Publicações do evento</h2>
+                <h2 className="font-serif text-2xl font-semibold">Atualizações do evento</h2>
                 <div className="grid gap-3 md:grid-cols-2">
                   {(newsQuery.data ?? []).map((post) => (
                     <Card key={post.id} className={post.featured ? 'border-primary/35' : ''}>

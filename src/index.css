@@ -3,25 +3,25 @@
 @plugin "tailwindcss-animate";
 
 :root {
-  --background: 34 30% 97%;
-  --foreground: 8 24% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 8 20% 12%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 8 20% 12%;
-  --primary: 4 48% 16%;
+  --background: 18 26% 5%;
+  --foreground: 38 28% 93%;
+  --card: 16 22% 9%;
+  --card-foreground: 38 24% 92%;
+  --popover: 16 24% 8%;
+  --popover-foreground: 38 24% 92%;
+  --primary: 357 64% 38%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 41 74% 38%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 32 18% 93%;
-  --muted-foreground: 10 9% 38%;
-  --accent: 40 96% 65%;
-  --accent-foreground: 43 100% 20%;
+  --secondary: 41 72% 46%;
+  --secondary-foreground: 18 40% 7%;
+  --muted: 16 15% 15%;
+  --muted-foreground: 28 11% 66%;
+  --accent: 40 74% 26%;
+  --accent-foreground: 40 65% 92%;
   --destructive: 0 70% 38%;
   --destructive-foreground: 0 0% 100%;
-  --border: 25 16% 84%;
-  --input: 25 16% 78%;
-  --ring: 43 100% 30%;
+  --border: 20 14% 20%;
+  --input: 20 12% 27%;
+  --ring: 41 74% 46%;
   --heritage: 0 71% 38%;
   --radius: 0.625rem;
 }
@@ -68,7 +68,9 @@ body,
 }
 
 body {
-  background-color: hsl(var(--background));
+  background:
+    radial-gradient(circle at 82% 10%, rgb(141 98 18 / 0.08), transparent 24rem),
+    hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: "Hanken Grotesk", "Inter", "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
@@ -142,58 +144,30 @@ code {
   font-family: "Hanken Grotesk", "Inter", "Segoe UI", sans-serif;
 }
 
-.floating-nav-item {
+.public-nav-link {
   position: relative;
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  place-items: center;
-  border-radius: 9999px;
-  color: rgb(255 255 255 / 0.72);
-  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+  border-radius: 0.375rem;
+  padding: 0.65rem 0.8rem;
+  color: rgb(255 255 255 / 0.68);
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  transition: color 160ms ease, background-color 160ms ease;
 }
 
-.floating-nav-item:hover,
-.floating-nav-item:focus-visible {
+.public-nav-link:hover,
+.public-nav-link:focus-visible {
   color: white;
-  background: rgb(255 255 255 / 0.12);
-  transform: translateX(-2px);
+  background: rgb(255 255 255 / 0.08);
   outline: none;
 }
 
-.floating-nav-item span {
-  position: absolute;
-  right: calc(100% + 0.65rem);
-  top: 50%;
-  padding: 0.4rem 0.65rem;
-  border: 1px solid rgb(255 255 255 / 0.12);
-  border-radius: 0.35rem;
-  color: white;
-  background: rgb(23 16 14 / 0.95);
-  font-size: 0.72rem;
-  font-weight: 700;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(0.4rem, -50%);
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.floating-nav-item:hover span,
-.floating-nav-item:focus-visible span {
-  opacity: 1;
-  transform: translate(0, -50%);
-}
-
-.floating-nav-item--accent {
-  color: #19100d;
-  background: #d09a2b;
-}
-
-.floating-nav-item--accent:hover,
-.floating-nav-item--accent:focus-visible {
-  color: #19100d;
-  background: #e1ad51;
+.surface-band {
+  background:
+    linear-gradient(115deg, rgb(255 255 255 / 0.035), transparent 45%),
+    hsl(var(--card));
+  border: 1px solid hsl(var(--border));
 }
 
 @media (prefers-reduced-motion: reduce) {

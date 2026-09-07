@@ -32,15 +32,15 @@ function PublicRankingPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[1440px] space-y-8 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <header className="flex flex-col gap-5 border-b pb-8 lg:flex-row lg:items-end lg:justify-between">
-          <div><p className="eyebrow"><Trophy className="h-4 w-4" />Classificação oficial</p><h1 className="font-headline-lg !text-[clamp(2.6rem,5vw,4.5rem)]">Ranking do campeonato</h1><p className="mt-3 max-w-3xl text-lg text-muted-foreground">Explore o desempenho por evento, etapa, categoria e nível. Os resultados são atualizados conforme as notas são lançadas.</p></div>
-          <span className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"><Download className="h-4 w-4" />Exportação disponível nos filtros</span>
+      <main className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <header className="relative overflow-hidden border border-white/10 bg-[#17100e] px-6 py-10 sm:px-10 lg:py-14">
+          <div className="absolute -right-14 -top-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
+          <div className="relative max-w-3xl"><p className="eyebrow"><Trophy className="h-4 w-4" />Classificação oficial</p><h1 className="hero-display text-[clamp(2.8rem,6vw,5.5rem)] font-extrabold uppercase leading-[.9] tracking-[-.055em]">Ranking<br /><span className="text-secondary">ao vivo.</span></h1><p className="mt-5 max-w-2xl text-base text-white/65">Escolha o evento e veja notas, pontos e posições atualizados durante a prova.</p></div>
         </header>
 
-        <Card className="shadow-none"><CardContent className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] md:items-end">
+        <Card className="surface-band shadow-none"><CardContent className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] md:items-end">
           <div className="space-y-1.5"><Label>Evento</Label><Select value={eventId ?? ''} onValueChange={setEventId} disabled={eventsQuery.isLoading || events.length === 0}><SelectTrigger><SelectValue placeholder={eventsQuery.isLoading ? 'Carregando eventos...' : 'Selecione um evento'} /></SelectTrigger><SelectContent>{events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}</SelectContent></Select></div>
-          <div className="border-l-0 text-sm text-muted-foreground md:border-l md:pl-5"><p className="font-bold text-foreground">{selectedEvent?.name ?? 'Nenhum evento publicado'}</p><p>{selectedEvent?.location || 'Local não informado'}</p><p>{formatDateRange(selectedEvent?.starts_on ?? null, selectedEvent?.ends_on ?? null)}</p></div>
+          <div className="border-l-0 text-sm text-muted-foreground md:border-l md:pl-5"><p className="font-bold text-foreground">{selectedEvent?.name ?? 'Nenhum evento publicado'}</p><p>{selectedEvent?.location || 'Local não informado'} · {formatDateRange(selectedEvent?.starts_on ?? null, selectedEvent?.ends_on ?? null)}</p><p className="mt-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-secondary"><Download className="h-3.5 w-3.5" />Resultado disponível em Excel</p></div>
         </CardContent></Card>
 
         {!eventId ? <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhum evento publicado no momento.</CardContent></Card> : <RankingTable eventId={eventId} />}

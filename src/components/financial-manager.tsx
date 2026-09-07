@@ -316,7 +316,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="border-emerald-200 bg-emerald-50/60"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-emerald-800">Entradas recebidas</p><BanknoteArrowUp className="h-5 w-5 text-emerald-700" /></div><p className="mt-2 text-2xl font-extrabold text-emerald-800">{formatCurrency(summary.cashIncome)}</p></CardContent></Card>
-        <Card className="border-red-200 bg-red-50/60"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-red-800">Saídas pagas</p><BanknoteArrowDown className="h-5 w-5 text-red-700" /></div><p className="mt-2 text-2xl font-extrabold text-red-800">{formatCurrency(summary.cashExpense)}</p></CardContent></Card>
+        <Card className="border-red-900/60 bg-red-950/25"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-red-300">Saídas pagas</p><BanknoteArrowDown className="h-5 w-5 text-red-400" /></div><p className="mt-2 text-2xl font-extrabold text-red-300">{formatCurrency(summary.cashExpense)}</p></CardContent></Card>
         <Card className="border-blue-200 bg-blue-50/60"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-blue-800">Saldo em caixa</p><WalletCards className="h-5 w-5 text-blue-700" /></div><p className="mt-2 text-2xl font-extrabold text-blue-800">{formatCurrency(summary.cashBalance)}</p></CardContent></Card>
         <Card className={summary.result >= 0 ? 'border-primary/25 bg-primary/5' : 'border-red-200 bg-red-50'}><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold">Resultado DRE</p><ReceiptText className="h-5 w-5" /></div><p className={`mt-2 text-2xl font-extrabold ${summary.result >= 0 ? 'text-primary' : 'text-red-700'}`}>{formatCurrency(summary.result)}</p></CardContent></Card>
       </div>
@@ -343,7 +343,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
           <CardHeader><CardTitle className="flex items-center gap-2"><Clock3 className="h-5 w-5" />Valores pendentes</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4"><p className="text-sm text-emerald-800">A receber</p><p className="text-xl font-extrabold text-emerald-800">{formatCurrency(summary.pendingIncome)}</p></div>
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4"><p className="text-sm text-red-800">A pagar</p><p className="text-xl font-extrabold text-red-800">{formatCurrency(summary.pendingExpense)}</p></div>
+            <div className="rounded-lg border border-red-900/60 bg-red-950/25 p-4"><p className="text-sm text-red-300">A pagar</p><p className="text-xl font-extrabold text-red-300">{formatCurrency(summary.pendingExpense)}</p></div>
             <p className="text-xs text-muted-foreground">O saldo em caixa considera apenas lançamentos marcados como realizados.</p>
           </CardContent>
         </Card>

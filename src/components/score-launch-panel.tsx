@@ -1400,20 +1400,20 @@ export function ScoreLaunchPanel({
           </div>
 
           <div className="grid gap-3 border-b bg-muted/30 p-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-xl border bg-white p-4">
+            <div className="rounded-xl border bg-card p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Evento</p>
               <p className="mt-1 font-bold text-foreground">{event.name}</p>
             </div>
-            <div className="rounded-xl border bg-white p-4">
+            <div className="rounded-xl border bg-card p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Data e local</p>
               <p className="mt-1 flex items-center gap-2 font-bold text-foreground"><CalendarDays className="h-4 w-4 text-primary" />{formatEventPeriod(event.starts_on, event.ends_on)}</p>
               <p className="text-xs text-muted-foreground">{event.location || 'Local nao informado'}</p>
             </div>
-            <div className="rounded-xl border bg-white p-4">
+            <div className="rounded-xl border bg-card p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Categoria</p>
               <p className="mt-1 font-bold text-foreground">{selectedCategory ? categoryOptionLabel(selectedCategory.name) : 'Todas as categorias'}</p>
             </div>
-            <div className="rounded-xl border bg-white p-4">
+            <div className="rounded-xl border bg-card p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Exibicao</p>
               <p className="mt-1 font-bold text-foreground">{rankingMode === 'stage' ? `${filterStage}a etapa` : 'Resultado do campeonato'}</p>
             </div>
@@ -1421,15 +1421,15 @@ export function ScoreLaunchPanel({
 
           <div className="space-y-4 p-4">
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border bg-card p-4 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Inscricoes</p>
                 <p className="mt-1 text-3xl font-extrabold text-foreground">{rows.length}</p>
               </div>
-              <div className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border bg-card p-4 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Notas lancadas</p>
                 <p className="mt-1 text-3xl font-extrabold text-foreground">{filteredScoresCount}</p>
               </div>
-              <div className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border bg-card p-4 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Bolsa do evento</p>
                 <p className="mt-1 text-2xl font-extrabold text-primary">{formatCurrency(prizePoolValue)}</p>
               </div>
@@ -1467,13 +1467,13 @@ export function ScoreLaunchPanel({
                 </article>
               ))}
               {!overviewLoading && overviewRows.length === 0 && (
-                <div className="rounded-2xl border bg-white p-4 text-sm text-muted-foreground md:col-span-3">
+                <div className="rounded-2xl border bg-card p-4 text-sm text-muted-foreground md:col-span-3">
                   Nenhuma nota encontrada para os filtros selecionados.
                 </div>
               )}
             </div>
 
-            <div className="rounded-2xl border bg-white">
+            <div className="rounded-2xl border bg-card">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
                 <h4 className="font-bold text-foreground">Classificacao completa</h4>
                 {overviewLoading && <span className="text-sm text-muted-foreground">Atualizando...</span>}
@@ -1592,7 +1592,7 @@ export function ScoreLaunchPanel({
                           }
                         }}
                         disabled={!canJudgeWrite}
-                        className="h-12 min-w-24 border-primary/50 bg-white text-center text-xl font-extrabold tabular-nums focus-visible:ring-primary"
+                        className="h-12 min-w-24 border-primary/50 bg-background text-center text-xl font-extrabold tabular-nums focus-visible:ring-primary"
                       />
                     </TableCell>
                     <TableCell className="w-24">
@@ -1602,7 +1602,7 @@ export function ScoreLaunchPanel({
                         value={draft.penalties}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { penalties: e.target.value })}
                         disabled={!canJudgeWrite}
-                        className="h-12 min-w-20 bg-white text-center text-base font-bold tabular-nums"
+                        className="h-12 min-w-20 bg-background text-center text-base font-bold tabular-nums"
                       />
                     </TableCell>
                     <TableCell className="w-44">

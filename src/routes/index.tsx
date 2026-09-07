@@ -66,7 +66,7 @@ function HomePage() {
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-[1440px] space-y-24 px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+      <main className="mx-auto w-full max-w-[1440px] space-y-24 bg-background px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <section id="calendario" className="scroll-mt-36 space-y-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
@@ -128,7 +128,7 @@ function HomePage() {
               ['02', 'Acompanhe a prova', 'Notas e passadas ficam disponíveis ao vivo.'],
               ['03', 'Consulte o resultado', 'Filtre o ranking por categoria, nível e etapa.'],
             ].map(([number, title, description]) => (
-              <div key={number} className="group border-t-2 border-primary bg-card p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <div key={number} className="group surface-band border-t-2 border-t-secondary p-7 transition hover:-translate-y-1 hover:border-secondary/50">
                 <span className="font-serif text-5xl font-semibold text-secondary/70">{number}</span>
                 <h3 className="mt-8 text-xl font-semibold">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>

@@ -130,99 +130,36 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
       </div>
 
       <div className="hidden items-center justify-center gap-1 lg:flex">
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
-        className={cn(
-          navButtonClass,
-          tone === 'dark' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-foreground hover:bg-muted',
-        )}
-      >
-        <Link to="/"><Home className="h-4 w-4" />Início</Link>
-      </Button>
-
-      {canUseAdmin && (
-        <Button
-          size="sm"
-          asChild
-          className="h-9 shrink-0 bg-secondary px-4 text-xs font-bold uppercase tracking-[0.08em] text-secondary-foreground hover:bg-secondary/90"
-        >
-          {eventId ? (
-            <Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="h-4 w-4" />Notas ao vivo</Link>
-          ) : (
-            <Link to="/admin/live"><Radio className="h-4 w-4" />Notas ao vivo</Link>
-          )}
-        </Button>
-      )}
-
-      <QuickMenu icon={CalendarDays} label="Eventos" tone={tone}>
-        <DropdownMenuLabel>Competições NTMR</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to="/" hash="calendario">Calendário e etapas</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/ranking">Resultados e classificação</Link></DropdownMenuItem>
-        {canUseAdmin && (
+        {canUseAdmin ? (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/admin" hash="admin-events">Gerenciar eventos</Link></DropdownMenuItem>
-            {eventId && <DropdownMenuItem asChild><Link to="/admin/events/$eventId" params={{ eventId }}>Painel deste evento</Link></DropdownMenuItem>}
+            <Button variant="ghost" size="sm" asChild className={cn(navButtonClass, tone === 'dark' && 'text-white/85 hover:bg-white/10 hover:text-white')}>
+              <Link to="/admin"><LayoutDashboard className="h-4 w-4" />Painel</Link>
+            </Button>
+            <Button size="sm" asChild className="h-9 bg-secondary px-4 text-xs font-extrabold uppercase tracking-[0.08em] text-secondary-foreground hover:bg-secondary/90">
+              {eventId ? <Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="h-4 w-4" />Prova ao vivo</Link> : <Link to="/admin/live"><Radio className="h-4 w-4" />Prova ao vivo</Link>}
+            </Button>
+            <Button variant="ghost" size="sm" asChild className={cn(navButtonClass, tone === 'dark' && 'text-white/85 hover:bg-white/10 hover:text-white')}>
+              <Link to="/admin" hash="admin-events"><CalendarDays className="h-4 w-4" />Eventos</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className={cn(navButtonClass, tone === 'dark' && 'text-white/85 hover:bg-white/10 hover:text-white')}>
+              <Link to="/admin/requests"><ClipboardCheck className="h-4 w-4" />Inscrições</Link>
+            </Button>
+            <QuickMenu icon={UserCircle} label="Gestão" tone={tone}>
+              <DropdownMenuLabel>Administração</DropdownMenuLabel>
+              <DropdownMenuItem asChild><Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Ranking público</Link></DropdownMenuItem>
+              {isAdmin && <DropdownMenuItem asChild><Link to="/admin/finance"><WalletCards className="mr-2 h-4 w-4" />Financeiro e DRE</Link></DropdownMenuItem>}
+              {isAdmin && <DropdownMenuItem asChild><Link to="/admin/content"><Newspaper className="mr-2 h-4 w-4" />Publicações</Link></DropdownMenuItem>}
+              {isAdmin && <DropdownMenuItem asChild><Link to="/admin/access"><UsersRound className="mr-2 h-4 w-4" />Acessos</Link></DropdownMenuItem>}
+            </QuickMenu>
           </>
-        )}
-      </QuickMenu>
-
-      <QuickMenu icon={ClipboardCheck} label="Inscrições" tone={tone}>
-        <DropdownMenuLabel>Competidores e inscrições</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área' : 'Entrar ou criar conta'}</Link></DropdownMenuItem>
-        {session && <DropdownMenuItem asChild><Link to="/minha-area" hash="nova-inscricao">Fazer nova inscrição</Link></DropdownMenuItem>}
-        {eventId && canUseAdmin && <DropdownMenuItem asChild><Link to="/admin/events/$eventId" params={{ eventId }} hash="inscricoes">Inscrições deste evento</Link></DropdownMenuItem>}
-        {isAdmin && (
+        ) : session ? (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/admin/requests">Aprovar solicitações</Link></DropdownMenuItem>
+            <Button variant="ghost" size="sm" asChild className={cn(navButtonClass, tone === 'dark' && 'text-white/85 hover:bg-white/10 hover:text-white')}><Link to="/minha-area" hash="resumo"><LayoutDashboard className="h-4 w-4" />Resumo</Link></Button>
+            <Button size="sm" asChild className="h-9 bg-secondary px-4 text-xs font-extrabold uppercase tracking-[0.08em] text-secondary-foreground hover:bg-secondary/90"><Link to="/minha-area" hash="nova-inscricao"><ClipboardCheck className="h-4 w-4" />Nova inscrição</Link></Button>
+            <Button variant="ghost" size="sm" asChild className={cn(navButtonClass, tone === 'dark' && 'text-white/85 hover:bg-white/10 hover:text-white')}><Link to="/minha-area" hash="inscricoes">Minhas inscrições</Link></Button>
+            <Button variant="ghost" size="sm" asChild className={cn(navButtonClass, tone === 'dark' && 'text-white/85 hover:bg-white/10 hover:text-white')}><Link to="/ranking"><Trophy className="h-4 w-4" />Resultados</Link></Button>
           </>
-        )}
-      </QuickMenu>
-
-      <QuickMenu icon={Trophy} label="Ranking" tone={tone}>
-        <DropdownMenuLabel>Classificação oficial</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to="/ranking">Ranking ao vivo</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/" hash="calendario">Ranking por evento</Link></DropdownMenuItem>
-      </QuickMenu>
-
-      <QuickMenu icon={Newspaper} label="Notícias" tone={tone}>
-        <DropdownMenuLabel>Central NTMR</DropdownMenuLabel>
-        <DropdownMenuItem asChild><Link to="/" hash="noticias">Últimas notícias</Link></DropdownMenuItem>
-        {isAdmin && <DropdownMenuItem asChild><Link to="/admin/content">Gerenciar publicações</Link></DropdownMenuItem>}
-      </QuickMenu>
-
-      {session && (
-        <QuickMenu icon={UserCircle} label={canUseAdmin ? 'Gestão' : 'Minha área'} tone={tone}>
-          {canUseAdmin ? (
-            <>
-              <DropdownMenuLabel>Operação do campeonato</DropdownMenuLabel>
-              <DropdownMenuItem asChild><Link to="/admin"><LayoutDashboard className="mr-2 h-4 w-4" />Painel administrativo</Link></DropdownMenuItem>
-              {eventId ? (
-                <DropdownMenuItem asChild><Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="mr-2 h-4 w-4" />Lançamento ao vivo</Link></DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem asChild><Link to="/admin/live"><Radio className="mr-2 h-4 w-4" />Lançamento ao vivo</Link></DropdownMenuItem>
-              )}
-              {isAdmin && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild><Link to="/admin/finance"><WalletCards className="mr-2 h-4 w-4" />Financeiro e DRE</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/admin/access"><UsersRound className="mr-2 h-4 w-4" />Gerenciar acessos</Link></DropdownMenuItem>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <DropdownMenuLabel>Área do competidor</DropdownMenuLabel>
-              <DropdownMenuItem asChild><Link to="/minha-area" hash="resumo">Resumo</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link to="/minha-area" hash="nova-inscricao">Nova inscrição</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link to="/minha-area" hash="inscricoes">Minhas inscrições</Link></DropdownMenuItem>
-            </>
-          )}
-        </QuickMenu>
-      )}
+        ) : null}
       </div>
     </nav>
   )
