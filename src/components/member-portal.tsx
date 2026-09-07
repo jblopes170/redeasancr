@@ -9,6 +9,7 @@ import {
   ImagePlus,
   Lightbulb,
   Medal,
+  Newspaper,
   PlusCircle,
   ReceiptText,
   Send,
@@ -43,6 +44,7 @@ import {
   getMyRegistrationRequests,
   getMySuggestions,
   getPublicEvents,
+  getPublicNews,
   submitRegistrationPaymentReceipt,
   uploadPaymentReceipt,
   updateRegistrationRequestStatus,
@@ -124,6 +126,7 @@ export function MemberPortal() {
   const [receiptFiles, setReceiptFiles] = useState<Record<string, File | undefined>>({})
 
   const eventsQuery = useQuery({ queryKey: ['public-events'], queryFn: getPublicEvents })
+  const newsQuery = useQuery({ queryKey: ['public-news', 'member-dashboard'], queryFn: () => getPublicNews(undefined, 3) })
   const categoriesQuery = useQuery({
     queryKey: ['categories', registration.eventId, 'member'],
     queryFn: () => getCategories(registration.eventId),
@@ -197,6 +200,9 @@ export function MemberPortal() {
 
     return levelTotal * stageMultiplier
   }, [categories, selectedCategory, selectedCategoryIsLeveled, selectedLevelValues, stages.length])
+  const myRequests = requestsQuery.data ?? []
+  const pendingRequests = myRequests.filter((item) => item.status === 'pending').length
+  const pendingPayments = myRequests.filter((item) => item.status === 'approved' && (item.payment_status === 'pending' || !item.payment_status)).length
 
   useEffect(() => {
     if (!registration.eventId && registrationEvents.length > 0) {
@@ -314,23 +320,33 @@ export function MemberPortal() {
         <Button asChild><a href="#nova-inscricao"><PlusCircle className="h-4 w-4" />Criar nova inscrição</a></Button>
       </div>
 
-      <Card className="border-amber-300 bg-amber-50/70">
-        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-bold text-amber-950">Acompanhe suas solicitações</p>
-            <p className="mt-1 text-sm text-amber-900/75">Veja aprovações, valores e comprovantes na aba de inscrições e pagamentos.</p>
-          </div>
-          <Button variant="outline" asChild>
-            <Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Ranking ao vivo</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Em análise</p><p className="mt-2 text-3xl font-extrabold text-foreground">{pendingRequests}</p><p className="text-sm text-muted-foreground">inscrições aguardando retorno</p></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Pagamento</p><p className="mt-2 text-3xl font-extrabold text-secondary">{pendingPayments}</p><p className="text-sm text-muted-foreground">pendências para concluir</p></CardContent></Card>
+        <Card className="bg-primary text-primary-foreground"><CardContent className="flex h-full flex-col justify-between gap-4 p-5"><div><p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/60">Ao vivo</p><p className="mt-2 font-serif text-2xl font-semibold">Ranking oficial</p></div><Button size="sm" className="bg-white text-primary hover:bg-white/90" asChild><Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Acompanhar</Link></Button></CardContent></Card>
+      </div>
       {portalError && (
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
           <AlertTitle>Não foi possível carregar o portal</AlertTitle>
           <AlertDescription>{portalError instanceof Error ? portalError.message : 'Tente novamente.'}</AlertDescription>
         </Alert>
+      )}
+
+      {(newsQuery.data ?? []).length > 0 && (
+        <Card>
+          <CardContent className="grid gap-4 p-5 lg:grid-cols-[220px_1fr] lg:items-start">
+            <div><p className="eyebrow"><Newspaper className="h-4 w-4" />Avisos e notícias</p><p className="text-sm text-muted-foreground">Atualizações importantes da organização.</p></div>
+            <div className="divide-y">
+              {(newsQuery.data ?? []).map((post) => (
+                <div key={post.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                  <div><p className="font-semibold">{post.title}</p>{post.summary && <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{post.summary}</p>}</div>
+                  <Newspaper className="mt-1 h-4 w-4 shrink-0 text-secondary" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Tabs defaultValue="new" className="space-y-4" id="nova-inscricao">

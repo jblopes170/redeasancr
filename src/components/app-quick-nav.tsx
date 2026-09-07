@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   Home,
   LayoutDashboard,
+  Menu,
   Newspaper,
   Radio,
   Trophy,
@@ -32,6 +33,8 @@ interface AppQuickNavProps {
   className?: string
 }
 
+const navButtonClass = 'h-9 rounded-md px-3 text-xs font-bold uppercase tracking-[0.08em]'
+
 function QuickMenu({
   icon: Icon,
   label,
@@ -50,7 +53,7 @@ function QuickMenu({
           variant="ghost"
           size="sm"
           className={cn(
-            'h-9 min-w-0 w-full justify-between gap-1.5 rounded px-2 text-[10px] font-bold uppercase tracking-[0.04em] sm:h-10 sm:w-auto sm:shrink-0 sm:gap-2 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
+            navButtonClass,
             tone === 'dark'
               ? 'text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/15'
               : 'text-foreground hover:bg-muted data-[state=open]:bg-muted',
@@ -76,40 +79,87 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
   const isAdmin = profile?.role === 'admin'
 
   return (
-    <nav
-      className={cn('grid min-w-0 max-w-full grid-cols-2 gap-1 py-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:py-0.5', className)}
-      aria-label="Navegação principal"
-    >
+    <nav className={cn('min-w-0 max-w-full', className)} aria-label="Navegação principal">
+      <div className="flex items-center justify-between gap-2 lg:hidden">
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className={cn(navButtonClass, tone === 'dark' ? 'text-white hover:bg-white/10 hover:text-white' : '')}
+        >
+          <Link to="/"><Home className="h-4 w-4" />Início</Link>
+        </Button>
+
+        {canUseAdmin && (
+          <Button size="sm" asChild className="h-9 bg-secondary px-3 text-xs font-bold text-secondary-foreground hover:bg-secondary/90">
+            {eventId ? (
+              <Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="h-4 w-4" />Notas ao vivo</Link>
+            ) : (
+              <Link to="/admin/live"><Radio className="h-4 w-4" />Notas ao vivo</Link>
+            )}
+          </Button>
+        )}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(navButtonClass, tone === 'dark' ? 'text-white hover:bg-white/10 hover:text-white' : '')}
+            >
+              <Menu className="h-4 w-4" />Menu
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72 p-2">
+            <DropdownMenuLabel>Campeonato</DropdownMenuLabel>
+            <DropdownMenuItem asChild><Link to="/" hash="calendario"><CalendarDays className="mr-2 h-4 w-4" />Eventos e etapas</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to={session ? '/minha-area' : '/login'}><ClipboardCheck className="mr-2 h-4 w-4" />Inscrições</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Ranking ao vivo</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to="/" hash="noticias"><Newspaper className="mr-2 h-4 w-4" />Notícias</Link></DropdownMenuItem>
+            {session && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>{canUseAdmin ? 'Administração' : 'Minha área'}</DropdownMenuLabel>
+                <DropdownMenuItem asChild><Link to={canUseAdmin ? '/admin' : '/minha-area'}><LayoutDashboard className="mr-2 h-4 w-4" />Painel principal</Link></DropdownMenuItem>
+                {isAdmin && <DropdownMenuItem asChild><Link to="/admin/finance"><WalletCards className="mr-2 h-4 w-4" />Financeiro e DRE</Link></DropdownMenuItem>}
+                {isAdmin && <DropdownMenuItem asChild><Link to="/admin/access"><UsersRound className="mr-2 h-4 w-4" />Acessos</Link></DropdownMenuItem>}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="hidden items-center justify-center gap-1 lg:flex">
       <Button
         variant="ghost"
         size="sm"
         asChild
         className={cn(
-          'h-9 min-w-0 w-full rounded px-2 text-[10px] font-bold uppercase tracking-[0.04em] sm:h-10 sm:w-auto sm:shrink-0 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
+          navButtonClass,
           tone === 'dark' ? 'text-white/90 hover:bg-white/10 hover:text-white' : 'text-foreground hover:bg-muted',
         )}
       >
         <Link to="/"><Home className="h-4 w-4" />Início</Link>
       </Button>
 
-      {canUseAdmin && eventId && (
+      {canUseAdmin && (
         <Button
-          variant="ghost"
           size="sm"
           asChild
-          className={cn(
-            'h-9 shrink-0 gap-1.5 rounded px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:h-10 sm:px-3 sm:text-xs sm:tracking-[0.08em]',
-            tone === 'dark' ? 'bg-white/15 text-white hover:bg-white/25 hover:text-white' : 'bg-primary text-primary-foreground hover:bg-primary/90',
-          )}
+          className="h-9 shrink-0 bg-secondary px-4 text-xs font-bold uppercase tracking-[0.08em] text-secondary-foreground hover:bg-secondary/90"
         >
-          <Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="h-4 w-4" />Lançar notas</Link>
+          {eventId ? (
+            <Link to="/admin/events/$eventId/scores" params={{ eventId }}><Radio className="h-4 w-4" />Notas ao vivo</Link>
+          ) : (
+            <Link to="/admin/live"><Radio className="h-4 w-4" />Notas ao vivo</Link>
+          )}
         </Button>
       )}
 
       <QuickMenu icon={CalendarDays} label="Eventos" tone={tone}>
         <DropdownMenuLabel>Competições NTMR</DropdownMenuLabel>
         <DropdownMenuItem asChild><Link to="/" hash="calendario">Calendário e etapas</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/ranking">Resultados dos eventos</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/ranking">Resultados e classificação</Link></DropdownMenuItem>
         {canUseAdmin && (
           <>
             <DropdownMenuSeparator />
@@ -145,7 +195,7 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
       </QuickMenu>
 
       {session && (
-        <QuickMenu icon={UserCircle} label={canUseAdmin ? 'Administrativo' : 'Minha área'} tone={tone}>
+        <QuickMenu icon={UserCircle} label={canUseAdmin ? 'Gestão' : 'Minha área'} tone={tone}>
           {canUseAdmin ? (
             <>
               <DropdownMenuLabel>Operação do campeonato</DropdownMenuLabel>
@@ -173,6 +223,7 @@ export function AppQuickNav({ eventId, tone = 'light', className }: AppQuickNavP
           )}
         </QuickMenu>
       )}
+      </div>
     </nav>
   )
 }

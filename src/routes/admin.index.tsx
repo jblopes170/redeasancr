@@ -50,14 +50,21 @@ function AdminIndexPage() {
     <ProtectedRoute allowedRoles={['admin', 'judge']}>
       <AdminLayout title="Painel Administrativo">
         <div className="space-y-6">
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Eventos</p><p className="mt-2 text-3xl font-extrabold">{events.length}</p><p className="text-sm text-muted-foreground">cadastrados no sistema</p></CardContent></Card>
+            <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Inscrições</p><p className="mt-2 text-3xl font-extrabold text-secondary">{pendingRequests}</p><p className="text-sm text-muted-foreground">aguardando análise</p></CardContent></Card>
+            <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Atendimento</p><p className="mt-2 text-3xl font-extrabold">{newSuggestions}</p><p className="text-sm text-muted-foreground">novas sugestões</p></CardContent></Card>
+            <Card className="bg-primary text-primary-foreground"><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/60">Conteúdo</p><p className="mt-2 text-3xl font-extrabold text-[#e1ad51]">{publishedNews}</p><p className="text-sm text-primary-foreground/65">publicações ativas</p></CardContent></Card>
+          </section>
+
           <section>
             <div className="mb-3">
               <h2 className="text-xl font-extrabold">Fluxo de trabalho</h2>
               <p className="text-sm text-muted-foreground">Acesse cada tarefa sem passar por telas repetidas.</p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <Card className="border-primary/25">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <Card className="border-t-2 border-t-primary">
                 <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
                   <div>
                     <Gauge className="h-7 w-7 text-primary" />
@@ -91,7 +98,7 @@ function AdminIndexPage() {
                 </Card>
               )}
 
-              <Card className="border-primary/25">
+              <Card className="border-t-2 border-t-secondary">
                 <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
                   <div>
                     <Megaphone className="h-7 w-7 text-primary" />

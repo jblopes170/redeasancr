@@ -1,12 +1,17 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, CalendarDays, CheckCircle2, Newspaper, Trophy } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  Newspaper,
+  ShieldCheck,
+  Trophy,
+} from 'lucide-react'
 
 import { EventCard } from '@/components/event-card'
-import { HorseTrail } from '@/components/horse-trail'
 import { SiteHeader } from '@/components/site-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { heroReiningPath, newsRiderPath } from '@/lib/brand-assets'
@@ -24,36 +29,52 @@ function HomePage() {
   const featuredPost = news.find((post) => post.featured) ?? news[0]
 
   return (
-    <div className="min-h-screen" id="inicio">
+    <div className="min-h-screen bg-background" id="inicio">
       <SiteHeader />
 
-      <section className="relative isolate min-h-[560px] overflow-hidden bg-primary text-white lg:min-h-[650px]">
-        <img src={heroReiningPath} alt="Competidor executando uma manobra de rédeas" className="absolute inset-0 -z-20 h-full w-full object-cover object-[64%_center]" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
-        <div className="mx-auto flex min-h-[560px] max-w-[1440px] items-center px-5 py-16 sm:px-8 lg:min-h-[650px] lg:px-12">
-          <div className="max-w-3xl">
-            <Badge className="mb-6 border-white/25 bg-white/10 text-white backdrop-blur">Temporada oficial NTMR</Badge>
-            <h1 className="font-headline-lg text-white">Campeonato de Rédeas NTMR</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/85">Inscrições, notas e classificação ao vivo para competidores, organização e público acompanharem cada passada.</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90" asChild>
-                <Link to={session ? '/minha-area' : '/login'}>{session ? 'Abrir minha área' : 'Ver próxima etapa e inscrever-se'}<ArrowRight className="h-4 w-4" /></Link>
+      <section className="hero-premium relative isolate min-h-[650px] overflow-hidden bg-[#17100e] text-white lg:min-h-[calc(100vh-68px)]">
+        <img
+          src={heroReiningPath}
+          alt="Cavalo e competidor em uma prova de rédeas"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-[88%_center] opacity-60 sm:object-[70%_center] sm:opacity-90"
+        />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#17100e_0%,rgba(23,16,14,.96)_24%,rgba(23,16,14,.56)_53%,rgba(23,16,14,.18)_78%,rgba(23,16,14,.42)_100%)]" />
+        <div className="absolute inset-y-0 left-0 -z-10 w-1/2 bg-[radial-gradient(circle_at_20%_50%,rgba(135,19,25,.16),transparent_65%)]" />
+
+        <div className="mx-auto flex min-h-[650px] max-w-[1440px] items-center px-5 py-16 sm:px-8 lg:min-h-[calc(100vh-68px)] lg:px-12">
+          <div className="max-w-4xl">
+            <p className="mb-6 flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.22em] text-[#e1ad51]">
+              <span className="h-px w-10 bg-[#e1ad51]" />Temporada oficial NTMR
+            </p>
+            <h1 className="hero-display max-w-4xl text-[clamp(3.5rem,8.5vw,8rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.065em] text-white">
+              Rédeas<br /><span className="text-[#e1ad51]">ao vivo.</span>
+            </h1>
+            <p className="mt-7 max-w-lg text-base font-semibold leading-7 text-white/78 sm:text-lg">
+              Inscreva-se. Acompanhe cada nota. Veja o pódio mudar.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" className="h-12 bg-secondary px-6 text-secondary-foreground hover:bg-[#b78312]" asChild>
+                <Link to={session ? '/minha-area' : '/login'}>
+                  {session ? 'Abrir minha área' : 'Ver próxima etapa e inscrever-se'}<ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white/60 bg-black/15 text-white hover:bg-white hover:text-foreground" asChild><Link to="/ranking"><Trophy className="h-4 w-4" />Ranking ao vivo</Link></Button>
+              <Button size="lg" variant="outline" className="h-12 border-white/40 bg-white/5 px-6 text-white backdrop-blur hover:bg-white hover:text-primary" asChild>
+                <Link to="/ranking"><Trophy className="h-4 w-4" />Acompanhar ranking</Link>
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="relative h-24 overflow-hidden border-b border-border bg-[#f7f1e8] sm:h-28">
-        <HorseTrail />
-      </div>
-
-      <main className="mx-auto w-full max-w-[1440px] space-y-20 px-4 py-16 sm:px-6 lg:px-8">
-        <section id="calendario" className="scroll-mt-36 space-y-7">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div><p className="eyebrow"><CalendarDays className="h-4 w-4" />Calendário oficial</p><h2 className="font-headline-md">Próximos eventos</h2><p className="mt-2 text-muted-foreground">Acompanhe as etapas, inscrições e resultados do campeonato.</p></div>
-            <Button variant="link" asChild><Link to="/ranking">Ver classificação completa<ArrowRight className="h-4 w-4" /></Link></Button>
+      <main className="mx-auto w-full max-w-[1440px] space-y-24 px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <section id="calendario" className="scroll-mt-36 space-y-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="eyebrow"><CalendarDays className="h-4 w-4" />Calendário oficial</p>
+              <h2 className="font-headline-md">Próximos eventos</h2>
+              <p className="mt-3 leading-7 text-muted-foreground">Tudo o que você precisa para chegar preparado à próxima etapa.</p>
+            </div>
+            <Button variant="outline" asChild><Link to="/ranking">Resultados anteriores<ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
           {eventsQuery.isLoading ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando eventos publicados...</CardContent></Card>
@@ -66,52 +87,65 @@ function HomePage() {
           )}
         </section>
 
-        <section id="noticias" className="scroll-mt-36 grid gap-8 border-y py-14 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.75fr)]">
-          <div>
-            <p className="eyebrow"><Newspaper className="h-4 w-4" />Central NTMR</p>
-            <h2 className="font-headline-md mb-6">Últimas notícias</h2>
-            {newsQuery.isLoading ? (
-              <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando publicações...</CardContent></Card>
-            ) : featuredPost ? (
-              <article className="group relative min-h-[360px] overflow-hidden rounded-lg bg-primary text-white">
-                <img loading="lazy" decoding="async" src={newsRiderPath} alt="Competidora ao lado de seu cavalo" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-                  <Badge className="mb-3 bg-secondary text-secondary-foreground">Destaque</Badge>
-                  <h3 className="max-w-3xl font-serif text-3xl font-semibold leading-tight">{featuredPost.title}</h3>
-                  <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85">{featuredPost.summary || featuredPost.content}</p>
-                </div>
-              </article>
-            ) : (
-              <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhuma notícia publicada ainda.</CardContent></Card>
-            )}
+        <section id="noticias" className="scroll-mt-36 grid overflow-hidden bg-[#17100e] text-white lg:grid-cols-[minmax(0,1.45fr)_minmax(340px,.75fr)]">
+          <div className="relative min-h-[470px] overflow-hidden">
+            <img loading="lazy" decoding="async" src={newsRiderPath} alt="Competidora ao lado de seu cavalo" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/10" />
+            <div className="absolute inset-x-0 bottom-0 p-7 sm:p-10">
+              <p className="eyebrow !text-[#e1ad51]"><Newspaper className="h-4 w-4" />Central NTMR</p>
+              {newsQuery.isLoading ? (
+                <p className="text-sm text-white/70">Carregando publicações...</p>
+              ) : featuredPost ? (
+                <>
+                  <h2 className="max-w-3xl font-serif text-3xl font-semibold leading-tight sm:text-4xl">{featuredPost.title}</h2>
+                  <p className="mt-4 max-w-2xl text-sm leading-6 text-white/75">{featuredPost.summary || featuredPost.content}</p>
+                </>
+              ) : (
+                <><h2 className="font-serif text-3xl font-semibold">Notícias e comunicados</h2><p className="mt-3 text-sm text-white/70">As novidades da temporada aparecerão aqui.</p></>
+              )}
+            </div>
           </div>
 
-          <div className="self-end">
-            <div className="mb-5 flex items-center justify-between"><h2 className="font-serif text-3xl font-semibold">Classificação ao vivo</h2><Trophy className="h-7 w-7 text-secondary" /></div>
-            <Card className="rounded-lg shadow-none"><CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-4 border-b pb-4"><span className="podium-number podium-number--gold">1</span><div><p className="font-bold">Liderança atualizada</p><p className="text-sm text-muted-foreground">Consulte por evento, categoria e nível.</p></div></div>
-              <div className="grid gap-3 text-sm">
-                <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-700" />Notas publicadas em tempo real</p>
-                <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-700" />N1, N2, N3 e N4 separados</p>
-                <p className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-700" />Etapas e resultado do campeonato</p>
+          <div className="flex flex-col justify-between border-l border-white/10 p-7 sm:p-10">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#e1ad51]">Classificação ao vivo</p>
+              <h2 className="mt-4 font-serif text-3xl font-semibold">Cada nota transforma o pódio.</h2>
+              <div className="mt-7 grid gap-4 text-sm text-white/70">
+                <p className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#e1ad51]" />Resultados atualizados durante a prova</p>
+                <p className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#e1ad51]" />Classificação por categoria e níveis elegíveis</p>
+                <p className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#e1ad51]" />Notas e pontos reunidos no campeonato</p>
               </div>
-              <Button className="w-full" asChild><Link to="/ranking">Abrir ranking oficial<ArrowRight className="h-4 w-4" /></Link></Button>
-            </CardContent></Card>
+            </div>
+            <Button className="mt-10 h-12 bg-white text-primary hover:bg-white/90" asChild><Link to="/ranking">Abrir ranking oficial<ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
         </section>
 
         <section id="como-funciona" className="scroll-mt-36">
-          <div className="mb-8 max-w-2xl"><p className="eyebrow">Como funciona</p><h2 className="font-headline-md">Da inscrição ao pódio</h2></div>
-          <div className="grid gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-3">
-            {[['01', 'Inscreva o conjunto', 'Escolha evento, cavalo, categoria, níveis e etapas.'], ['02', 'Acompanhe a prova', 'As notas são lançadas na ordem de entrada.'], ['03', 'Veja a classificação', 'O ranking atualiza por etapa e no campeonato.']].map(([number, title, description]) => (
-              <div key={number} className="bg-card p-7"><span className="font-serif text-4xl font-bold text-secondary">{number}</span><h3 className="mt-6 text-xl font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p></div>
+          <div className="mb-8 max-w-2xl"><p className="eyebrow"><ShieldCheck className="h-4 w-4" />Jornada simples</p><h2 className="font-headline-md">Da inscrição ao pódio</h2></div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ['01', 'Escolha a etapa', 'Veja o evento e faça sua inscrição.'],
+              ['02', 'Acompanhe a prova', 'Notas e passadas ficam disponíveis ao vivo.'],
+              ['03', 'Consulte o resultado', 'Filtre o ranking por categoria, nível e etapa.'],
+            ].map(([number, title, description]) => (
+              <div key={number} className="group border-t-2 border-primary bg-card p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                <span className="font-serif text-5xl font-semibold text-secondary/70">{number}</span>
+                <h3 className="mt-8 text-xl font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+              </div>
             ))}
           </div>
         </section>
       </main>
 
-      <footer className="border-t bg-muted/50 px-4 py-10 sm:px-6"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-6 md:flex-row md:items-center"><div><p className="font-serif text-2xl font-bold">NTMR</p><p className="text-sm text-muted-foreground">Núcleo Triângulo Mineiro de Rédeas</p></div><div className="flex flex-wrap gap-5 text-sm font-semibold"><Link to="/" hash="calendario">Eventos</Link><Link to="/ranking">Ranking</Link><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área' : 'Entrar'}</Link></div></div></footer>
+      <footer className="bg-[#17100e] px-4 py-12 text-white sm:px-6">
+        <div className="mx-auto grid max-w-[1440px] gap-8 md:grid-cols-[1fr_auto] md:items-end">
+          <div><p className="font-serif text-3xl font-semibold">NTMR</p><p className="mt-2 text-sm text-white/55">Núcleo Triângulo Mineiro de Rédeas</p></div>
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/75">
+            <Link to="/" hash="calendario">Eventos</Link><Link to="/ranking">Ranking</Link><Link to="/" hash="noticias">Notícias</Link><Link to={session ? '/minha-area' : '/login'}>{session ? 'Minha área e suporte' : 'Entrar'}</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

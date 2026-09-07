@@ -12,11 +12,11 @@ export function MemberLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-white/15 bg-primary text-white shadow-[0_8px_28px_rgba(65,0,0,0.18)]">
-        <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#17100e]/95 text-white shadow-[0_10px_32px_rgba(32,12,7,0.25)] backdrop-blur-xl">
+        <div className="mx-auto flex min-h-[66px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex shrink-0 items-center gap-3">
-            <img src={ntmrLogoPath} alt="Logo NTMR" className="h-11 w-11 rounded border border-white/30 bg-white object-contain" />
-            <div className="hidden sm:block"><p className="font-serif text-2xl font-semibold italic leading-none">NTMR</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/65">Área do competidor</p></div>
+            <img src={ntmrLogoPath} alt="Logo NTMR" className="h-12 w-12 object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,.35)]" />
+            <div className="hidden sm:block"><p className="font-serif text-2xl font-semibold leading-none">NTMR</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/65">Área do competidor</p></div>
           </Link>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -27,7 +27,7 @@ export function MemberLayout({ children }: { children: ReactNode }) {
         <div className="border-t border-white/10 px-3 py-1.5 sm:px-4"><AppQuickNav tone="dark" /></div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-10">{children}</main>
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
     </div>
   )
 }
