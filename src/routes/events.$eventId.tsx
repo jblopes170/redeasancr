@@ -1,4 +1,6 @@
-﻿import { createFileRoute, Link } from '@tanstack/react-router'
+import { PageHeading } from '@/components/page-heading'
+import { SiteFooter } from '@/components/site-footer'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
 import { RankingTable } from '@/components/ranking-table'
@@ -6,7 +8,7 @@ import { SiteHeader } from '@/components/site-header'
 import { StatusBadge } from '@/components/status-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/providers/auth-provider'
 import { getEventById, getPublicNews } from '@/services/api'
 
@@ -34,7 +36,7 @@ function EventPublicPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+      <main id="main-content" className="page-container workspace-content">
         {eventQuery.isLoading ? (
           <Card>
             <CardContent className="p-6 text-sm text-muted-foreground">Carregando evento...</CardContent>
@@ -52,16 +54,9 @@ function EventPublicPage() {
           </Card>
         ) : (
           <div className="space-y-5">
-            <Card className="relative overflow-hidden border-white/10 bg-[#17100e]">
-              <CardHeader className="px-6 py-9 sm:px-10">
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-secondary">Evento oficial NTMR</p>
-                <CardTitle className="mt-2 font-serif text-3xl text-foreground sm:text-5xl">{event.name}</CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  {event.location || 'Local não informado'} | {event.starts_on || '--'} a {event.ends_on || '--'}
-                </div>
-                <StatusBadge type="event" status={event.status} />
-              </CardHeader>
-            </Card>
+            <PageHeading title={event.name} description={event.location || 'Local a definir'} eyebrow="Evento NTMR" actions={<><Button variant="outline" asChild><Link to="/eventos">Todos os eventos</Link></Button>{event.status !== 'finished' && <Button asChild><Link to="/minha-area" hash="nova-inscricao">Fazer inscrição</Link></Button>}</>} />
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground"><StatusBadge type="event" status={event.status} /><span>{event.starts_on ? new Date(event.starts_on+'T00:00:00').toLocaleDateString('pt-BR') : 'Data a definir'}</span></div>
+            <RankingTable key={event.id} eventId={event.id} />
 
             {(newsQuery.data ?? []).length > 0 && (
               <section className="space-y-3">
@@ -85,10 +80,10 @@ function EventPublicPage() {
               </section>
             )}
 
-            <RankingTable eventId={event.id} />
+
           </div>
         )}
-      </main>
+      </main><SiteFooter />
     </div>
   )
 }

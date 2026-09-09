@@ -1,0 +1,8 @@
+import { Link } from '@tanstack/react-router'
+import { Radio } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/status-badge'
+import type { EventRecord } from '@/types/domain'
+export function AdminEventList({ events, live = false }: { events: EventRecord[]; live?: boolean }) {
+  return <div className="overflow-hidden rounded-xl border bg-card"><div className="divide-y">{events.map(event => <article key={event.id} className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0 space-y-2"><div className="flex flex-wrap items-center gap-3"><h2 className="text-base font-semibold">{event.name}</h2><StatusBadge type="event" status={event.status} /></div><p className="text-sm text-muted-foreground">{event.starts_on ? new Date(`${event.starts_on}T00:00:00`).toLocaleDateString('pt-BR') : 'Data a definir'} · {event.location || 'Local a definir'}</p></div><div className="flex shrink-0 flex-wrap gap-2">{!live && <><Button variant="outline" size="sm" asChild><Link to="/admin/events/$eventId" params={{ eventId: event.id }}>Gerenciar</Link></Button><Button variant="ghost" size="sm" asChild><Link to="/admin/events/$eventId" params={{ eventId: event.id }} hash="entries">Inscrições</Link></Button></>}<Button variant={live ? 'default' : 'outline'} size="sm" asChild><Link to="/admin/events/$eventId/scores" params={{ eventId: event.id }}><Radio className="h-4 w-4" />Lançar notas</Link></Button></div></article>)}</div>{events.length === 0 && <p className="p-8 text-sm text-muted-foreground">Nenhum evento encontrado.</p>}</div>
+}

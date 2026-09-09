@@ -1,5 +1,6 @@
+import { getEventSection } from '@/lib/navigation'
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { AdminLayout } from '@/components/admin-layout'
@@ -20,16 +21,22 @@ import { useAuth } from '@/providers/auth-provider'
 import { getCategories, getCompetitors, getEntries, getEventById, getHorses, getScores } from '@/services/api'
 
 export const Route = createFileRoute('/admin/events/$eventId')({
-  component: AdminEventPage,
+  component: AdminEventRoute,
 })
+
+function AdminEventRoute() {
+  const pathname = useLocation({ select: location => location.pathname })
+  return /\/scores\/?$/.test(pathname) ? <Outlet /> : <AdminEventPage />
+}
 
 function AdminEventPage() {
   const { eventId } = Route.useParams()
   const { profile } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const pathname = useLocation({ select: (location) => location.pathname })
-  const [activeTab, setActiveTab] = useState(() => window.location.hash === '#inscricoes' ? 'entries' : 'overview')
+  const hash = useLocation({ select: location => location.hash.replace(/^#/, '') })
+  const activeTab = getEventSection(hash)
+  const setActiveTab = (value: string) => void navigate({ to: '/admin/events/$eventId', params: { eventId }, hash: value, hashScrollIntoView: false })
 
   const isAdmin = profile?.role === 'admin'
 
@@ -51,16 +58,11 @@ function AdminEventPage() {
     [categoriesQuery.data, competitorsQuery.data, entriesQuery.data, horsesQuery.data, scoresQuery.data],
   )
 
-  // The scores route is a child of this route. Render only the child there so
-  // the event overview does not remain above the live scoring workspace.
-  if (pathname.endsWith('/scores')) {
-    return <Outlet />
-  }
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'judge']}>
-      <AdminLayout title="Painel do Evento" eventId={eventId}>
-        {!eventQuery.data ? (
+      <AdminLayout title={eventQuery.data?.name ?? "Evento"} description="Prepare os cadastros e inscrições. Para pontuar as passadas, abra o lançamento ao vivo." eventId={eventId}>
+        {eventQuery.error ? <p role="alert" className="text-destructive">{eventQuery.error.message}</p> : !eventQuery.data ? (
           <Card>
             <CardContent className="p-6 text-sm text-muted-foreground">Carregando evento...</CardContent>
           </Card>
@@ -69,7 +71,7 @@ function AdminEventPage() {
             <Card>
               <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <CardTitle className="text-3xl text-primary">{eventQuery.data.name}</CardTitle>
+
                   <p className="text-sm text-muted-foreground">
                     {eventQuery.data.location || 'Local não informado'} | {eventQuery.data.starts_on || '--'} até {eventQuery.data.ends_on || '--'}
                   </p>
@@ -101,13 +103,13 @@ function AdminEventPage() {
             </Card>
 
             <Tabs id="inscricoes" value={activeTab} onValueChange={setActiveTab} className="scroll-mt-36 space-y-4">
-              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-6">
+              <TabsList className="w-full justify-start">
                 <TabsTrigger value="overview">Resumo</TabsTrigger>
                 <TabsTrigger value="categories">Categorias</TabsTrigger>
-                <TabsTrigger value="records">Bases</TabsTrigger>
+                <TabsTrigger value="records">Competidores e cavalos</TabsTrigger>
                 <TabsTrigger value="entries">Inscrições</TabsTrigger>
                 {isAdmin && <TabsTrigger value="finance">Financeiro</TabsTrigger>}
-                <TabsTrigger value="import-export">Importar</TabsTrigger>
+                <TabsTrigger value="import-export">Planilhas</TabsTrigger>{isAdmin && <TabsTrigger value="settings">Configurações</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="overview">
@@ -130,17 +132,18 @@ function AdminEventPage() {
                   </CardContent>
                 </Card>
 
-                {isAdmin && (
-                  <Card className="mt-3 border-red-200">
-                    <CardHeader><CardTitle className="text-red-700">Zona de perigo</CardTitle></CardHeader>
+              </TabsContent>
+
+              <TabsContent value="settings">                {isAdmin && (
+                  <Card className="mt-3 border-red-800/60">
+                    <CardHeader><CardTitle className="text-red-300">Zona de perigo</CardTitle></CardHeader>
                     <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="max-w-2xl text-sm text-muted-foreground">Exclui definitivamente este evento e os cadastros operacionais vinculados a ele.</p>
                       <DeleteEventDialog event={eventQuery.data} onDeleted={() => void navigate({ to: '/admin' })} />
                     </CardContent>
                   </Card>
                 )}
-              </TabsContent>
-
+</TabsContent>
               <TabsContent value="categories">
                 <CategoryManager eventId={eventId} canEdit={isAdmin} />
               </TabsContent>

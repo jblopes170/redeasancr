@@ -1,50 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
-import { Download, Trophy } from 'lucide-react'
-
+import { useState } from 'react'
 import { RankingTable } from '@/components/ranking-table'
 import { SiteHeader } from '@/components/site-header'
-import { Card, CardContent } from '@/components/ui/card'
+import { SiteFooter } from '@/components/site-footer'
+import { PageHeading } from '@/components/page-heading'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getPublicEvents } from '@/services/api'
-
 export const Route = createFileRoute('/ranking')({ component: PublicRankingPage })
-
-function formatDateRange(startsOn: string | null, endsOn: string | null) {
-  if (!startsOn && !endsOn) return 'Data não informada'
-  const start = startsOn ? new Date(`${startsOn}T00:00:00`).toLocaleDateString('pt-BR') : '--'
-  const end = endsOn ? new Date(`${endsOn}T00:00:00`).toLocaleDateString('pt-BR') : '--'
-  return `${start} até ${end}`
-}
-
 function PublicRankingPage() {
-  const eventsQuery = useQuery({ queryKey: ['public-events'], queryFn: getPublicEvents })
-  const [eventId, setEventId] = useState<string>()
-  const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data])
-  const selectedEvent = useMemo(() => events.find((event) => event.id === eventId), [events, eventId])
-
-  useEffect(() => {
-    if (!eventId && events.length > 0) setEventId(events[0].id)
-  }, [events, eventId])
-
-  return (
-    <div className="min-h-screen">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <header className="relative overflow-hidden border border-white/10 bg-[#17100e] px-6 py-10 sm:px-10 lg:py-14">
-          <div className="absolute -right-14 -top-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
-          <div className="relative max-w-3xl"><p className="eyebrow"><Trophy className="h-4 w-4" />Classificação oficial</p><h1 className="hero-display text-[clamp(2.8rem,6vw,5.5rem)] font-extrabold uppercase leading-[.9] tracking-[-.055em]">Ranking<br /><span className="text-secondary">ao vivo.</span></h1><p className="mt-5 max-w-2xl text-base text-white/65">Escolha o evento e veja notas, pontos e posições atualizados durante a prova.</p></div>
-        </header>
-
-        <Card className="surface-band shadow-none"><CardContent className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] md:items-end">
-          <div className="space-y-1.5"><Label>Evento</Label><Select value={eventId ?? ''} onValueChange={setEventId} disabled={eventsQuery.isLoading || events.length === 0}><SelectTrigger><SelectValue placeholder={eventsQuery.isLoading ? 'Carregando eventos...' : 'Selecione um evento'} /></SelectTrigger><SelectContent>{events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}</SelectContent></Select></div>
-          <div className="border-l-0 text-sm text-muted-foreground md:border-l md:pl-5"><p className="font-bold text-foreground">{selectedEvent?.name ?? 'Nenhum evento publicado'}</p><p>{selectedEvent?.location || 'Local não informado'} · {formatDateRange(selectedEvent?.starts_on ?? null, selectedEvent?.ends_on ?? null)}</p><p className="mt-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-secondary"><Download className="h-3.5 w-3.5" />Resultado disponível em Excel</p></div>
-        </CardContent></Card>
-
-        {!eventId ? <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhum evento publicado no momento.</CardContent></Card> : <RankingTable eventId={eventId} />}
-      </main>
-    </div>
-  )
+  const query = useQuery({ queryKey: ['public-events'], queryFn: getPublicEvents })
+  const [selection, setSelection] = useState('')
+  const eventId = selection || query.data?.[0]?.id
+  const selected = query.data?.find(event => event.id === eventId)
+  return <><SiteHeader /><main id="main-content" className="page-container workspace-content"><PageHeading title="Ranking e resultados" description="Notas e pontos da etapa ou do campeonato, atualizados durante a prova." eyebrow="Classificação oficial" />
+    <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-[minmax(0,1fr)_1fr] md:items-end"><div className="space-y-2"><Label htmlFor="ranking-event">Evento</Label><Select value={eventId ?? ''} onValueChange={setSelection} disabled={query.isPending || !query.data?.length}><SelectTrigger id="ranking-event"><SelectValue placeholder={query.isPending ? 'Carregando...' : 'Escolha um evento'} /></SelectTrigger><SelectContent>{query.data?.map(event => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}</SelectContent></Select></div>{selected && <p className="text-sm text-muted-foreground md:pb-3 md:pl-4">{selected.location || 'Local a definir'}{selected.starts_on && ` · ${new Date(`${selected.starts_on}T00:00:00`).toLocaleDateString('pt-BR')}`}</p>}</div>
+    {query.error ? <p role="alert" className="text-destructive">{query.error.message}</p> : query.isPending ? <p role="status">Carregando classificação...</p> : eventId ? <RankingTable key={eventId} eventId={eventId} /> : <p className="empty-state">Nenhum evento publicado.</p>}
+  </main><SiteFooter /></>
 }

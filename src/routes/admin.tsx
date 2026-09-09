@@ -1,3 +1,4 @@
+import { ProtectedRoute } from '@/components/protected-route'
 import { Outlet, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/admin')({
@@ -5,5 +6,5 @@ export const Route = createFileRoute('/admin')({
 })
 
 function AdminRouteLayout() {
-  return <Outlet />
+  return <ProtectedRoute allowedRoles={['admin', 'judge']}><Outlet /></ProtectedRoute>
 }

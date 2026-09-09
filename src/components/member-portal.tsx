@@ -1,14 +1,13 @@
-﻿import { Link } from '@tanstack/react-router'
+import { PageHeading } from '@/components/page-heading'
+import { memberSections, getMemberSection } from '@/lib/navigation'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarDays,
   CheckCircle2,
   CircleAlert,
-  ClipboardList,
   ImagePlus,
-  Lightbulb,
-  Medal,
   Newspaper,
   PlusCircle,
   ReceiptText,
@@ -26,7 +25,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SuggestionInput } from '@/components/ui/suggestion-input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import {
   LEVEL_OPTIONS,
@@ -52,10 +51,10 @@ import {
 import type { Level, PaymentStatus, RegistrationRequestStatus, Stage, SuggestionStatus } from '@/types/domain'
 
 const REQUEST_STATUS: Record<RegistrationRequestStatus, { label: string; className: string }> = {
-  pending: { label: 'Aguardando análise', className: 'border-amber-300 bg-amber-50 text-amber-800' },
-  approved: { label: 'Aprovada', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-  rejected: { label: 'Não aprovada', className: 'border-red-300 bg-red-50 text-red-800' },
-  cancelled: { label: 'Cancelada', className: 'border-slate-300 bg-slate-50 text-slate-700' },
+  pending: { label: 'Aguardando análise', className: 'border-amber-800/60 bg-amber-950/30 text-amber-300' },
+  approved: { label: 'Aprovada', className: 'border-emerald-800/60 bg-emerald-950/30 text-emerald-300' },
+  rejected: { label: 'Não aprovada', className: 'border-red-800/60 bg-red-950/30 text-red-300' },
+  cancelled: { label: 'Cancelada', className: 'border-slate-800/60 bg-slate-950/30 text-slate-300' },
 }
 
 const SUGGESTION_STATUS: Record<SuggestionStatus, string> = {
@@ -66,11 +65,11 @@ const SUGGESTION_STATUS: Record<SuggestionStatus, string> = {
 }
 
 const PAYMENT_STATUS: Record<PaymentStatus, { label: string; className: string }> = {
-  pending: { label: 'Aguardando pagamento', className: 'border-amber-300 bg-amber-50 text-amber-800' },
-  submitted: { label: 'Comprovante enviado', className: 'border-blue-300 bg-blue-50 text-blue-800' },
-  confirmed: { label: 'Pagamento confirmado', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-  rejected: { label: 'Pagamento rejeitado', className: 'border-red-300 bg-red-50 text-red-800' },
-  waived: { label: 'Isento', className: 'border-slate-300 bg-slate-50 text-slate-700' },
+  pending: { label: 'Aguardando pagamento', className: 'border-amber-800/60 bg-amber-950/30 text-amber-300' },
+  submitted: { label: 'Comprovante enviado', className: 'border-blue-800/60 bg-blue-950/30 text-blue-300' },
+  confirmed: { label: 'Pagamento confirmado', className: 'border-emerald-800/60 bg-emerald-950/30 text-emerald-300' },
+  rejected: { label: 'Pagamento rejeitado', className: 'border-red-800/60 bg-red-950/30 text-red-300' },
+  waived: { label: 'Isento', className: 'border-slate-800/60 bg-slate-950/30 text-slate-300' },
 }
 
 interface RegistrationForm {
@@ -242,6 +241,7 @@ export function MemberPortal() {
     },
     onSuccess: () => {
       toast.success('Inscrição enviada para análise.')
+      setSection('registrations')
       setRegistration((current) => ({
         ...emptyRegistration,
         eventId: current.eventId,
@@ -308,23 +308,14 @@ export function MemberPortal() {
   }
 
   const portalError = requestsQuery.error ?? suggestionsQuery.error
+  const location = useLocation()
+  const navigate = useNavigate()
+  const section = getMemberSection(location.hash)
+  const setSection = (id: string) => void navigate({ to: '/minha-area', hash: memberSections.find(item => item.id === id)?.hash ?? 'resumo', hashScrollIntoView: false })
 
   return (
     <div className="space-y-6" id="resumo">
-      <div className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Área do competidor</p>
-          <h1 className="font-headline-md">Meu painel</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">Olá, {profile?.name ?? profile?.email ?? 'competidor'}. Gerencie inscrições, pagamentos e resultados.</p>
-        </div>
-        <Button asChild><a href="#nova-inscricao"><PlusCircle className="h-4 w-4" />Criar nova inscrição</a></Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Em análise</p><p className="mt-2 text-3xl font-extrabold text-foreground">{pendingRequests}</p><p className="text-sm text-muted-foreground">inscrições aguardando retorno</p></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Pagamento</p><p className="mt-2 text-3xl font-extrabold text-secondary">{pendingPayments}</p><p className="text-sm text-muted-foreground">pendências para concluir</p></CardContent></Card>
-        <Card className="bg-primary text-primary-foreground"><CardContent className="flex h-full flex-col justify-between gap-4 p-5"><div><p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/60">Ao vivo</p><p className="mt-2 font-serif text-2xl font-semibold">Ranking oficial</p></div><Button size="sm" className="bg-white text-primary hover:bg-white/90" asChild><Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Acompanhar</Link></Button></CardContent></Card>
-      </div>
+      <PageHeading title={section.label} description={section.id === 'summary' ? 'Acompanhe suas pendências e prepare a próxima participação.' : undefined} actions={section.id === 'summary' && <Button onClick={() => setSection('new')}><PlusCircle className="h-4 w-4" />Nova inscrição</Button>} />
       {portalError && (
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
@@ -333,6 +324,12 @@ export function MemberPortal() {
         </Alert>
       )}
 
+      <Tabs value={section.id} onValueChange={setSection} className="space-y-4">
+        <TabsContent value="summary" className="space-y-5">      <div className="grid gap-3 sm:grid-cols-3">
+        <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Em análise</p><p className="mt-2 text-3xl font-extrabold text-foreground">{requestsQuery.isPending || requestsQuery.error ? '--' : pendingRequests}</p><p className="text-sm text-muted-foreground">inscrições aguardando retorno</p></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Pagamento</p><p className="mt-2 text-3xl font-extrabold text-secondary">{requestsQuery.isPending || requestsQuery.error ? '--' : pendingPayments}</p><p className="text-sm text-muted-foreground">pendências para concluir</p></CardContent></Card>
+        <Card className="bg-card"><CardContent className="flex h-full flex-col justify-between gap-4 p-5"><div><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Ao vivo</p><p className="mt-2 font-serif text-2xl font-semibold">Ranking oficial</p></div><Button size="sm" variant="outline" asChild><Link to="/ranking"><Trophy className="mr-2 h-4 w-4" />Acompanhar</Link></Button></CardContent></Card>
+      </div>
       {(newsQuery.data ?? []).length > 0 && (
         <Card>
           <CardContent className="grid gap-4 p-5 lg:grid-cols-[220px_1fr] lg:items-start">
@@ -340,7 +337,7 @@ export function MemberPortal() {
             <div className="divide-y">
               {(newsQuery.data ?? []).map((post) => (
                 <div key={post.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                  <div><p className="font-semibold">{post.title}</p>{post.summary && <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{post.summary}</p>}</div>
+                  <div><Link to="/noticias" className="font-semibold hover:text-primary">{post.title}</Link>{post.summary && <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{post.summary}</p>}</div>
                   <Newspaper className="mt-1 h-4 w-4 shrink-0 text-secondary" />
                 </div>
               ))}
@@ -349,14 +346,7 @@ export function MemberPortal() {
         </Card>
       )}
 
-      <Tabs defaultValue="new" className="space-y-4" id="nova-inscricao">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 lg:grid-cols-4">
-          <TabsTrigger value="new" className="gap-2"><PlusCircle className="h-4 w-4" />Nova inscrição</TabsTrigger>
-          <TabsTrigger value="registrations" className="gap-2"><ClipboardList className="h-4 w-4" />Inscrições e pagamentos</TabsTrigger>
-          <TabsTrigger value="suggestions" className="gap-2"><Lightbulb className="h-4 w-4" />Sugestões</TabsTrigger>
-          <TabsTrigger value="results" className="gap-2"><Medal className="h-4 w-4" />Resultados</TabsTrigger>
-        </TabsList>
-
+</TabsContent>
         <TabsContent value="new">
           <Card>
             <CardHeader>

@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { Check, CheckCircle2, MessageSquareReply, Pencil, ReceiptText, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -35,11 +36,11 @@ const REQUEST_LABEL: Record<RegistrationRequestStatus, string> = {
 }
 
 const PAYMENT_LABEL: Record<PaymentStatus, { label: string; className: string }> = {
-  pending: { label: 'Aguardando pagamento', className: 'border-amber-300 bg-amber-50 text-amber-800' },
-  submitted: { label: 'Comprovante enviado', className: 'border-blue-300 bg-blue-50 text-blue-800' },
-  confirmed: { label: 'Pago', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-  rejected: { label: 'Pagamento rejeitado', className: 'border-red-300 bg-red-50 text-red-800' },
-  waived: { label: 'Isento', className: 'border-slate-300 bg-slate-50 text-slate-700' },
+  pending: { label: 'Aguardando pagamento', className: 'border-amber-800/60 bg-amber-950/30 text-amber-300' },
+  submitted: { label: 'Comprovante enviado', className: 'border-blue-800/60 bg-blue-950/30 text-blue-300' },
+  confirmed: { label: 'Pago', className: 'border-emerald-800/60 bg-emerald-950/30 text-emerald-300' },
+  rejected: { label: 'Pagamento rejeitado', className: 'border-red-800/60 bg-red-950/30 text-red-300' },
+  waived: { label: 'Isento', className: 'border-slate-800/60 bg-slate-950/30 text-slate-300' },
 }
 
 function formatCurrency(value: number) {
@@ -48,10 +49,15 @@ function formatCurrency(value: number) {
 
 export function RequestManagement() {
   const queryClient = useQueryClient()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const activeSection = location.hash.replace(/^#/, '') === 'suggestions' ? 'suggestions' : 'registrations'
   const [selectedSuggestion, setSelectedSuggestion] = useState<SuggestionRecord | null>(null)
   const [response, setResponse] = useState('')
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
   const [amountDraft, setAmountDraft] = useState('')
+  const [search, setSearch] = useState('')
+  const [requestFilter, setRequestFilter] = useState('all')
 
   const requestsQuery = useQuery({ queryKey: ['admin-registration-requests'], queryFn: () => getAdminRegistrationRequests() })
   const suggestionsQuery = useQuery({ queryKey: ['admin-suggestions'], queryFn: () => getAdminSuggestions() })
@@ -153,6 +159,7 @@ export function RequestManagement() {
     if (a.status !== 'pending' && b.status === 'pending') return 1
     return b.created_at.localeCompare(a.created_at)
   })
+  const visibleRequests = requests.filter(request => (requestFilter === 'all' || request.status === requestFilter) && [request.competitor_name, request.horse_name, request.event?.name].join(' ').toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')))
   const suggestions = suggestionsQuery.data ?? []
   const managementError = requestsQuery.error ?? suggestionsQuery.error
 
@@ -165,15 +172,16 @@ export function RequestManagement() {
         </Alert>
       )}
 
-      <Tabs defaultValue="registrations" className="space-y-4">
+      <Tabs value={activeSection} onValueChange={hash => void navigate({ to: '/admin/requests', hash, hashScrollIntoView: false })} className="space-y-4">
         <TabsList className="grid h-auto w-full max-w-lg grid-cols-2">
           <TabsTrigger value="registrations">Inscrições ({requests.filter((item) => item.status === 'pending').length})</TabsTrigger>
           <TabsTrigger value="suggestions">Sugestões ({suggestions.filter((item) => item.status === 'new').length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="registrations">
+        <TabsContent value="registrations" className="space-y-4">
+          <div className="flex flex-wrap items-end gap-3"><div className="min-w-0 flex-1"><Label htmlFor="request-search">Buscar inscrição</Label><Input id="request-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Competidor, cavalo ou evento" /></div><div className="flex flex-wrap gap-1" aria-label="Filtrar inscrições">{[['all','Todas'],['pending','Aguardando análise'],['approved','Aprovadas'],['rejected','Rejeitadas'],['cancelled','Canceladas']].map(([value,label]) => <Button key={value} size="sm" variant={requestFilter === value ? 'default' : 'outline'} aria-pressed={requestFilter === value} onClick={() => setRequestFilter(value)}>{label}</Button>)}</div></div>
           <div className="overflow-hidden rounded-lg border bg-card">
-            <Table>
+            <Table className="request-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Solicitante</TableHead>
@@ -190,17 +198,17 @@ export function RequestManagement() {
               <TableBody>
                 {requestsQuery.isLoading ? (
                   <TableRow><TableCell colSpan={9} className="text-muted-foreground">Carregando solicitações...</TableCell></TableRow>
-                ) : requests.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-muted-foreground">Nenhuma solicitação de inscrição.</TableCell></TableRow>
-                ) : requests.map((request) => {
+                ) : visibleRequests.length === 0 ? (
+                  <TableRow><TableCell colSpan={9} className="text-muted-foreground">Nenhuma inscrição encontrada para estes filtros.</TableCell></TableRow>
+                ) : visibleRequests.map((request) => {
                   const payment = PAYMENT_LABEL[request.payment_status ?? 'pending']
                   return (
                   <TableRow key={request.id}>
-                    <TableCell>
+                    <TableCell data-label="Solicitante">
                       <p className="font-semibold">{request.user?.name ?? request.user?.email ?? '--'}</p>
                       <p className="text-xs text-muted-foreground">{new Date(request.created_at).toLocaleDateString('pt-BR')}</p>
                     </TableCell>
-                    <TableCell>{request.event?.name ?? '--'}</TableCell>
+                    <TableCell data-label="Evento">{request.event?.name ?? '--'}</TableCell>
                     <TableCell>
                       <p className="font-semibold">{request.competitor_name}</p>
                       <p className="text-xs text-muted-foreground">{request.horse_name} · {request.horse_registration || 'sem registro'}</p>
@@ -211,7 +219,7 @@ export function RequestManagement() {
                         ? ` · Níveis ${request.requested_levels.join(', ')}`
                         : request.category?.level ? ` · ${request.category.level}` : ''}
                     </TableCell>
-                    <TableCell>{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
+                    <TableCell data-label="Etapas">{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -223,8 +231,8 @@ export function RequestManagement() {
                         <Pencil className="h-3 w-3" />
                       </Button>
                     </TableCell>
-                    <TableCell><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
-                    <TableCell>
+                    <TableCell data-label="Inscrição"><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
+                    <TableCell data-label="Conjunto">
                       <div className="space-y-1">
                         <Badge variant="outline" className={payment.className}>{payment.label}</Badge>
                         {request.payment_receipt_url && (
@@ -255,7 +263,7 @@ export function RequestManagement() {
                           </>
                         )}
                         {request.status === 'approved' && (request.payment_status === 'confirmed' || request.payment_status === 'waived') && (
-                          <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-800">
+                          <Badge variant="outline" className="border-emerald-800/60 bg-emerald-950/30 text-emerald-300">
                             <ReceiptText className="mr-1 h-3 w-3" /> Liberada
                           </Badge>
                         )}

@@ -55,7 +55,7 @@ function AdminFinancePage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin']}>
-      <AdminLayout title="Financeiro e DRE">
+      <AdminLayout title="Financeiro" description="Controle entradas, saídas e resultado. Selecione o evento antes de lançar valores.">
         <div className="space-y-5">
           {financeError && (
             <Alert variant="destructive">
@@ -64,17 +64,17 @@ function AdminFinancePage() {
             </Alert>
           )}
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Card className="border-emerald-200 bg-emerald-50/60">
+          <details className="disclosure"><summary>Consolidado de todos os eventos</summary><p className="px-5 pt-4 text-sm text-muted-foreground">Esta visão reúne todos os eventos, independentemente da seleção abaixo.</p>{transactionsQuery.isPending ? <p className="p-5" role="status">Carregando totais...</p> : !financeError && <section className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-emerald-800/60 bg-emerald-950/30">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between"><p className="text-sm font-semibold text-emerald-800">Receitas totais</p><BanknoteArrowUp className="h-5 w-5 text-emerald-700" /></div>
-                <p className="mt-2 text-2xl font-extrabold text-emerald-800">{formatCurrency(summary.income)}</p>
+                <div className="flex items-center justify-between"><p className="text-sm font-semibold text-emerald-300">Receitas totais</p><BanknoteArrowUp className="h-5 w-5 text-emerald-300" /></div>
+                <p className="mt-2 text-2xl font-extrabold text-emerald-300">{formatCurrency(summary.income)}</p>
               </CardContent>
             </Card>
             <Card className="border-red-900/60 bg-red-950/25">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between"><p className="text-sm font-semibold text-red-800">Despesas totais</p><BanknoteArrowDown className="h-5 w-5 text-red-700" /></div>
-                <p className="mt-2 text-2xl font-extrabold text-red-800">{formatCurrency(summary.expense)}</p>
+                <div className="flex items-center justify-between"><p className="text-sm font-semibold text-red-300">Despesas totais</p><BanknoteArrowDown className="h-5 w-5 text-red-300" /></div>
+                <p className="mt-2 text-2xl font-extrabold text-red-300">{formatCurrency(summary.expense)}</p>
               </CardContent>
             </Card>
             <Card className="border-primary/25 bg-primary/5">
@@ -90,12 +90,12 @@ function AdminFinancePage() {
                 <p className="mt-1 text-xs text-muted-foreground">Inscrições pagas: {formatCurrency(summary.automaticRegistrations)}</p>
               </CardContent>
             </Card>
-          </section>
+          </section>}</details>
 
           <Card>
             <CardContent className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.4fr)] md:items-center">
               <div>
-                <h2 className="text-xl font-extrabold text-primary">Lançamentos por evento</h2>
+                <h2 className="text-xl font-extrabold text-primary">Selecionar evento</h2>
                 <p className="text-sm text-muted-foreground">Escolha uma etapa para registrar saidas, patrocinios e conferir o DRE do evento.</p>
               </div>
               <Select value={selectedEventId} onValueChange={setSelectedEventId}>
@@ -109,10 +109,10 @@ function AdminFinancePage() {
 
           {eventsQuery.isLoading ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando eventos...</CardContent></Card>
-          ) : !selectedEventId ? (
+          ) : eventsQuery.error ? <p role="alert" className="text-destructive">{eventsQuery.error.message}</p> : !selectedEventId ? (
             <Card><CardContent className="p-6 text-sm text-muted-foreground">Crie um evento antes de usar o financeiro.</CardContent></Card>
           ) : (
-            <FinancialManager eventId={selectedEventId} />
+            <FinancialManager key={selectedEventId} eventId={selectedEventId} />
           )}
         </div>
       </AdminLayout>

@@ -127,9 +127,9 @@ function statusLabel(status: FinancialStatus) {
 }
 
 function statusClass(status: FinancialStatus) {
-  if (status === 'settled') return 'border-emerald-300 bg-emerald-50 text-emerald-800'
-  if (status === 'cancelled') return 'border-slate-300 bg-slate-100 text-slate-600'
-  return 'border-amber-300 bg-amber-50 text-amber-800'
+  if (status === 'settled') return 'border-emerald-800/60 bg-emerald-950/30 text-emerald-300'
+  if (status === 'cancelled') return 'border-slate-800/60 bg-slate-950/30 text-slate-300'
+  return 'border-amber-800/60 bg-amber-950/30 text-amber-300'
 }
 
 function requestLabel(request: RegistrationRequestRecord) {
@@ -298,7 +298,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-headline text-2xl font-bold">Financeiro e DRE</h2>
+          <h2 className="font-headline text-2xl font-bold">Movimentações do evento</h2>
           <p className="text-sm text-muted-foreground">Controle entradas, saídas, contas pendentes e o caixa real do evento.</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -314,25 +314,25 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
         </Alert>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-emerald-200 bg-emerald-50/60"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-emerald-800">Entradas recebidas</p><BanknoteArrowUp className="h-5 w-5 text-emerald-700" /></div><p className="mt-2 text-2xl font-extrabold text-emerald-800">{formatCurrency(summary.cashIncome)}</p></CardContent></Card>
+      {transactionsQuery.isPending ? <p role="status">Carregando valores...</p> : !transactionsQuery.error && <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="border-emerald-800/60 bg-emerald-950/30"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-emerald-300">Entradas recebidas</p><BanknoteArrowUp className="h-5 w-5 text-emerald-300" /></div><p className="mt-2 text-2xl font-extrabold text-emerald-300">{formatCurrency(summary.cashIncome)}</p></CardContent></Card>
         <Card className="border-red-900/60 bg-red-950/25"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-red-300">Saídas pagas</p><BanknoteArrowDown className="h-5 w-5 text-red-400" /></div><p className="mt-2 text-2xl font-extrabold text-red-300">{formatCurrency(summary.cashExpense)}</p></CardContent></Card>
-        <Card className="border-blue-200 bg-blue-50/60"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-blue-800">Saldo em caixa</p><WalletCards className="h-5 w-5 text-blue-700" /></div><p className="mt-2 text-2xl font-extrabold text-blue-800">{formatCurrency(summary.cashBalance)}</p></CardContent></Card>
-        <Card className={summary.result >= 0 ? 'border-primary/25 bg-primary/5' : 'border-red-200 bg-red-50'}><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold">Resultado DRE</p><ReceiptText className="h-5 w-5" /></div><p className={`mt-2 text-2xl font-extrabold ${summary.result >= 0 ? 'text-primary' : 'text-red-700'}`}>{formatCurrency(summary.result)}</p></CardContent></Card>
-      </div>
+        <Card className="border-blue-800/60 bg-blue-950/30"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-blue-300">Saldo em caixa</p><WalletCards className="h-5 w-5 text-blue-300" /></div><p className="mt-2 text-2xl font-extrabold text-blue-300">{formatCurrency(summary.cashBalance)}</p></CardContent></Card>
+        <Card className={summary.result >= 0 ? 'border-primary/25 bg-primary/5' : 'border-red-800/60 bg-red-950/30'}><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm font-semibold">Resultado DRE</p><ReceiptText className="h-5 w-5" /></div><p className={`mt-2 text-2xl font-extrabold ${summary.result >= 0 ? 'text-primary' : 'text-red-300'}`}>{formatCurrency(summary.result)}</p></CardContent></Card>
+      </div>}
 
-      <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+      <details className="disclosure"><summary>DRE por categoria e contas pendentes</summary><div className="p-4">      <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
         <Card>
           <CardHeader><CardTitle>DRE por categoria</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/45 p-3 text-center text-sm">
-              <div><p className="text-muted-foreground">Receitas</p><p className="font-bold text-emerald-700">{formatCurrency(summary.income)}</p></div>
-              <div><p className="text-muted-foreground">Despesas</p><p className="font-bold text-red-700">{formatCurrency(summary.expense)}</p></div>
+              <div><p className="text-muted-foreground">Receitas</p><p className="font-bold text-emerald-300">{formatCurrency(summary.income)}</p></div>
+              <div><p className="text-muted-foreground">Despesas</p><p className="font-bold text-red-300">{formatCurrency(summary.expense)}</p></div>
               <div><p className="text-muted-foreground">Resultado</p><p className="font-bold">{formatCurrency(summary.result)}</p></div>
             </div>
             {dreGroups.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum valor para demonstrar.</p> : dreGroups.map((group) => (
               <div key={`${group.direction}-${group.category}`} className="space-y-1.5">
-                <div className="flex items-center justify-between gap-3 text-sm"><span>{categoryLabel(group.category)}</span><strong className={group.direction === 'income' ? 'text-emerald-700' : 'text-red-700'}>{formatCurrency(group.total)}</strong></div>
+                <div className="flex items-center justify-between gap-3 text-sm"><span>{categoryLabel(group.category)}</span><strong className={group.direction === 'income' ? 'text-emerald-300' : 'text-red-300'}>{formatCurrency(group.total)}</strong></div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${group.direction === 'income' ? 'bg-emerald-500' : 'bg-red-500'}`} style={{ width: `${Math.max((group.total / maxDreValue) * 100, 3)}%` }} /></div>
               </div>
             ))}
@@ -342,13 +342,14 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Clock3 className="h-5 w-5" />Valores pendentes</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4"><p className="text-sm text-emerald-800">A receber</p><p className="text-xl font-extrabold text-emerald-800">{formatCurrency(summary.pendingIncome)}</p></div>
+            <div className="rounded-lg border border-emerald-800/60 bg-emerald-950/30 p-4"><p className="text-sm text-emerald-300">A receber</p><p className="text-xl font-extrabold text-emerald-300">{formatCurrency(summary.pendingIncome)}</p></div>
             <div className="rounded-lg border border-red-900/60 bg-red-950/25 p-4"><p className="text-sm text-red-300">A pagar</p><p className="text-xl font-extrabold text-red-300">{formatCurrency(summary.pendingExpense)}</p></div>
             <p className="text-xs text-muted-foreground">O saldo em caixa considera apenas lançamentos marcados como realizados.</p>
           </CardContent>
         </Card>
       </div>
 
+</div></details>
       <Card>
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-6">
           <div className="relative sm:col-span-2"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Descrição, pessoa ou empresa" /></div>
@@ -367,11 +368,11 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
             {filteredRows.length === 0 ? <TableRow><TableCell colSpan={7} className="text-muted-foreground">Nenhum lançamento encontrado.</TableCell></TableRow> : filteredRows.map((row) => (
               <TableRow key={row.id} className={row.status === 'cancelled' ? 'opacity-55' : ''}>
                 <TableCell>{formatDate(row.competence_date)}</TableCell>
-                <TableCell><Badge variant="outline" className={row.direction === 'income' ? 'border-emerald-300 text-emerald-800' : 'border-red-300 text-red-800'}>{row.direction === 'income' ? 'Entrada' : 'Saída'}</Badge></TableCell>
+                <TableCell><Badge variant="outline" className={row.direction === 'income' ? 'border-emerald-800/60 text-emerald-300' : 'border-red-800/60 text-red-300'}>{row.direction === 'income' ? 'Entrada' : 'Saída'}</Badge></TableCell>
                 <TableCell><p className="font-semibold">{row.description}</p><p className="text-xs text-muted-foreground">{row.counterparty || '--'}</p></TableCell>
                 <TableCell>{categoryLabel(row.category)}</TableCell>
                 <TableCell><Badge variant="outline" className={statusClass(row.status)}>{statusLabel(row.status)}</Badge></TableCell>
-                <TableCell className={`text-right font-bold ${row.direction === 'income' ? 'text-emerald-700' : 'text-red-700'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</TableCell>
+                <TableCell className={`text-right font-bold ${row.direction === 'income' ? 'text-emerald-300' : 'text-red-300'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</TableCell>
                 <TableCell><div className="flex justify-end gap-1"><Button size="icon" variant="outline" onClick={() => openEdit(row)} aria-label="Editar"><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => deleteMutation.mutate(row.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button></div></TableCell>
               </TableRow>
             ))}
@@ -381,7 +382,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
 
       <div className="grid gap-3 md:hidden">
         {filteredRows.length === 0 ? <Card><CardContent className="p-5 text-sm text-muted-foreground">Nenhum lançamento encontrado.</CardContent></Card> : filteredRows.map((row) => (
-          <Card key={row.id} className={row.status === 'cancelled' ? 'opacity-55' : ''}><CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{row.description}</p><p className="text-xs text-muted-foreground">{categoryLabel(row.category)} · {formatDate(row.competence_date)}</p></div><p className={`font-extrabold ${row.direction === 'income' ? 'text-emerald-700' : 'text-red-700'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</p></div><div className="flex items-center justify-between"><Badge variant="outline" className={statusClass(row.status)}>{statusLabel(row.status)}</Badge><div className="flex gap-1"><Button size="icon" variant="outline" onClick={() => openEdit(row)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => deleteMutation.mutate(row.id)}><Trash2 className="h-4 w-4" /></Button></div></div></CardContent></Card>
+          <Card key={row.id} className={row.status === 'cancelled' ? 'opacity-55' : ''}><CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{row.description}</p><p className="text-xs text-muted-foreground">{categoryLabel(row.category)} · {formatDate(row.competence_date)}</p></div><p className={`font-extrabold ${row.direction === 'income' ? 'text-emerald-300' : 'text-red-300'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</p></div><div className="flex items-center justify-between"><Badge variant="outline" className={statusClass(row.status)}>{statusLabel(row.status)}</Badge><div className="flex gap-1"><Button size="icon" variant="outline" onClick={() => openEdit(row)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => deleteMutation.mutate(row.id)}><Trash2 className="h-4 w-4" /></Button></div></div></CardContent></Card>
         ))}
       </div>
 

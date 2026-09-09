@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as MinhaAreaRouteImport } from './routes/minha-area'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -20,6 +22,7 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as AdminRequestsRouteImport } from './routes/admin.requests'
 import { Route as AdminLiveRouteImport } from './routes/admin.live'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
+import { Route as AdminEventosRouteImport } from './routes/admin.eventos'
 import { Route as AdminContentRouteImport } from './routes/admin.content'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
 import { Route as AdminEventsEventIdRouteImport } from './routes/admin.events.$eventId'
@@ -35,6 +38,11 @@ const RankingRoute = RankingRouteImport.update({
   path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NoticiasRoute = NoticiasRouteImport.update({
+  id: '/noticias',
+  path: '/noticias',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MinhaAreaRoute = MinhaAreaRouteImport.update({
   id: '/minha-area',
   path: '/minha-area',
@@ -43,6 +51,11 @@ const MinhaAreaRoute = MinhaAreaRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -80,6 +93,11 @@ const AdminFinanceRoute = AdminFinanceRouteImport.update({
   path: '/finance',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEventosRoute = AdminEventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminContentRoute = AdminContentRouteImport.update({
   id: '/content',
   path: '/content',
@@ -105,12 +123,15 @@ const AdminEventsEventIdScoresRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/eventos': typeof EventosRoute
   '/login': typeof LoginRoute
   '/minha-area': typeof MinhaAreaRoute
+  '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/eventos': typeof AdminEventosRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/requests': typeof AdminRequestsRoute
@@ -121,12 +142,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/eventos': typeof EventosRoute
   '/login': typeof LoginRoute
   '/minha-area': typeof MinhaAreaRoute
+  '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/eventos': typeof AdminEventosRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/requests': typeof AdminRequestsRoute
@@ -139,12 +163,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/eventos': typeof EventosRoute
   '/login': typeof LoginRoute
   '/minha-area': typeof MinhaAreaRoute
+  '/noticias': typeof NoticiasRoute
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/content': typeof AdminContentRoute
+  '/admin/eventos': typeof AdminEventosRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/requests': typeof AdminRequestsRoute
@@ -158,12 +185,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/eventos'
     | '/login'
     | '/minha-area'
+    | '/noticias'
     | '/ranking'
     | '/reset-password'
     | '/admin/access'
     | '/admin/content'
+    | '/admin/eventos'
     | '/admin/finance'
     | '/admin/live'
     | '/admin/requests'
@@ -174,12 +204,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/eventos'
     | '/login'
     | '/minha-area'
+    | '/noticias'
     | '/ranking'
     | '/reset-password'
     | '/admin/access'
     | '/admin/content'
+    | '/admin/eventos'
     | '/admin/finance'
     | '/admin/live'
     | '/admin/requests'
@@ -191,12 +224,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/eventos'
     | '/login'
     | '/minha-area'
+    | '/noticias'
     | '/ranking'
     | '/reset-password'
     | '/admin/access'
     | '/admin/content'
+    | '/admin/eventos'
     | '/admin/finance'
     | '/admin/live'
     | '/admin/requests'
@@ -209,8 +245,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  EventosRoute: typeof EventosRoute
   LoginRoute: typeof LoginRoute
   MinhaAreaRoute: typeof MinhaAreaRoute
+  NoticiasRoute: typeof NoticiasRoute
   RankingRoute: typeof RankingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
@@ -232,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RankingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/noticias': {
+      id: '/noticias'
+      path: '/noticias'
+      fullPath: '/noticias'
+      preLoaderRoute: typeof NoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/minha-area': {
       id: '/minha-area'
       path: '/minha-area'
@@ -244,6 +289,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -295,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/eventos': {
+      id: '/admin/eventos'
+      path: '/eventos'
+      fullPath: '/admin/eventos'
+      preLoaderRoute: typeof AdminEventosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/content': {
       id: '/admin/content'
       path: '/content'
@@ -340,6 +399,7 @@ const AdminEventsEventIdRouteWithChildren =
 interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
   AdminContentRoute: typeof AdminContentRoute
+  AdminEventosRoute: typeof AdminEventosRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
   AdminLiveRoute: typeof AdminLiveRoute
   AdminRequestsRoute: typeof AdminRequestsRoute
@@ -350,6 +410,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
   AdminContentRoute: AdminContentRoute,
+  AdminEventosRoute: AdminEventosRoute,
   AdminFinanceRoute: AdminFinanceRoute,
   AdminLiveRoute: AdminLiveRoute,
   AdminRequestsRoute: AdminRequestsRoute,
@@ -362,8 +423,10 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  EventosRoute: EventosRoute,
   LoginRoute: LoginRoute,
   MinhaAreaRoute: MinhaAreaRoute,
+  NoticiasRoute: NoticiasRoute,
   RankingRoute: RankingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   EventsEventIdRoute: EventsEventIdRoute,

@@ -348,20 +348,22 @@ export function RankingTable({ eventId }: RankingTableProps) {
       .sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
   }, [mode, stageRows, championshipRows])
 
+  const rankingError = categoriesQuery.error ?? (isCumulative ? (mode === 'stage' ? stageRankingCumulativeSourceQuery.error : championshipCumulativeSourceQuery.error) : (mode === 'stage' ? stageRankingExactQuery.error : championshipExactQuery.error))
+  if (rankingError) return <div className="empty-state" role="alert"><p className="text-destructive">Não foi possível atualizar o ranking.</p><p className="mt-2 text-sm">{rankingError.message}</p></div>
+
   return (
     <div className="space-y-4">
       <section className="surface-band space-y-4 rounded-xl p-4 sm:p-5">
-        <div><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-secondary">Filtrar classificação</p><p className="mt-1 text-sm text-muted-foreground">Refine somente o que deseja acompanhar.</p></div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <div>
-          <Label>Modo</Label>
+          <Label>Classificação</Label>
           <Select value={mode} onValueChange={(value) => setMode(value as RankingMode)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="stage">Etapa</SelectItem>
-              <SelectItem value="championship">Resultado Campeonato</SelectItem>
+              <SelectItem value="championship">Campeonato</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -389,6 +391,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
             onValueChange={(value) => {
               const nextCategoryName = value === 'all' ? undefined : value
               setCategoryName(nextCategoryName)
+              setLevel(undefined)
               if (nextCategoryName && !isLeveledCategoryName(nextCategoryName)) {
                 setLevel(null)
                 setLevelViewMode('exact')
@@ -405,29 +408,6 @@ export function RankingTable({ eventId }: RankingTableProps) {
                   {categoryOption}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Tela de nível</Label>
-            <Select
-              value={levelViewMode}
-              disabled={Boolean(categoryName && !selectedCategoryIsLeveled)}
-              onValueChange={(value) => {
-              const modeValue = value as LevelViewMode
-              setLevelViewMode(modeValue)
-              if (modeValue === 'cumulative' && (!level || level === null)) {
-                setLevel('N1')
-              }
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="exact">Nível exato</SelectItem>
-              <SelectItem value="cumulative">4 telas cumulativas</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -482,6 +462,30 @@ export function RankingTable({ eventId }: RankingTableProps) {
           )}
         </div>
         </div>
+        <details className="text-sm"><summary className="cursor-pointer text-muted-foreground">Opções de classificação por nível</summary><div className="mt-3 max-w-sm">        <div>
+          <Label>Critério de nível</Label>
+            <Select
+              value={levelViewMode}
+              disabled={Boolean(categoryName && !selectedCategoryIsLeveled)}
+              onValueChange={(value) => {
+              const modeValue = value as LevelViewMode
+              setLevelViewMode(modeValue)
+              if (modeValue === 'cumulative' && (!level || level === null)) {
+                setLevel('N1')
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="exact">Nível exato</SelectItem>
+              <SelectItem value="cumulative">Faixas cumulativas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+</div></details>
       </section>
 
       {cumulativeNeedsCategory && (
@@ -490,22 +494,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
         </div>
       )}
 
-      <details className="group surface-band rounded-xl">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 text-sm font-bold"><span>Simular distribuição da premiação</span><span className="text-xs font-semibold text-secondary group-open:hidden">Abrir</span><span className="hidden text-xs font-semibold text-secondary group-open:inline">Fechar</span></summary>
-        <div className="grid grid-cols-1 gap-3 border-t p-4 md:grid-cols-4">
-          <div><Label>Bolsa de premiação (R$)</Label><Input type="number" value={prizePool} onChange={(e) => setPrizePool(e.target.value)} /></div>
-          <div><Label>% 1º lugar</Label><Input type="number" value={prizePct1} onChange={(e) => setPrizePct1(e.target.value)} /></div>
-          <div><Label>% 2º lugar</Label><Input type="number" value={prizePct2} onChange={(e) => setPrizePct2(e.target.value)} /></div>
-          <div><Label>% 3º lugar</Label><Input type="number" value={prizePct3} onChange={(e) => setPrizePct3(e.target.value)} /></div>
-          <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3 md:col-span-4">
-            <div className="rounded-md border bg-muted/20 p-2">1º: R$ {prize1.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-            <div className="rounded-md border bg-muted/20 p-2">2º: R$ {prize2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-            <div className="rounded-md border bg-muted/20 p-2">3º: R$ {prize3.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-          </div>
-        </div>
-      </details>
-
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Posições calculadas por categoria e nível.</p>
         <Button
           variant="outline"
           className="gap-2"
@@ -524,33 +513,6 @@ export function RankingTable({ eventId }: RankingTableProps) {
           Exportar Ranking Excel
         </Button>
       </div>
-
-      {!isLoading && podiumGroups.length > 0 && (
-        <div className="surface-band space-y-3 rounded-xl p-4 sm:p-5">
-          <div><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-secondary">Destaques</p><h3 className="mt-1 text-xl font-semibold">Pódio por categoria</h3></div>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-            {podiumGroups.map((group) => (
-              <div key={group.title} className="rounded-md border bg-muted/20 p-3">
-                <p className="mb-2 text-sm font-bold">{group.title}</p>
-                <div className="space-y-2">
-                  {group.rows.map((row) => (
-                    <div key={`${group.title}-${row.position}-${row.competitor_name}-${row.horse_name}`} className="flex items-center justify-between rounded-md border bg-background p-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">
-                          {row.position}º {row.competitor_name}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">{row.horse_name}</p>
-                      </div>
-                      <div className="text-sm font-bold text-secondary">{row.total_score}</div>
-                    </div>
-                  ))}
-                  {group.rows.length === 0 && <p className="text-xs text-muted-foreground">Sem pódio para esta categoria.</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="grid gap-3 lg:hidden">
         {isLoading ? <div className="surface-band rounded-xl p-5 text-sm text-muted-foreground">Carregando ranking...</div> : mode === 'stage' ? stageRows.map((row) => (
@@ -572,26 +534,24 @@ export function RankingTable({ eventId }: RankingTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-24">Posicao</TableHead>
+              <TableHead className="w-24">Posição</TableHead>
               <TableHead>Conjunto</TableHead>
               <TableHead>Categoria</TableHead>
-              <TableHead>Exibicao</TableHead>
-              <TableHead>Etapas: notas + pontos</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{mode === 'stage' ? 'Nota da etapa' : 'Notas e pontos por etapa'}</TableHead>
+              <TableHead>Total de pontos</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-muted-foreground">
+                <TableCell colSpan={5} className="text-muted-foreground">
                   Carregando ranking...
                 </TableCell>
               </TableRow>
             ) : mode === 'stage' ? (
               stageRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground">
+                  <TableCell colSpan={5} className="text-muted-foreground">
                     Nenhum resultado encontrado para os filtros.
                   </TableCell>
                 </TableRow>
@@ -600,7 +560,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
                   <TableRow
                     key={`${row.event_id}-${row.category_id}-${row.level ?? 'SEM_NIVEL'}-${row.competitor_id}-${row.horse_id}-${row.stage}`}
                   >
-                    <TableCell className="text-2xl font-extrabold text-primary">{row.position}o</TableCell>
+                    <TableCell className="text-2xl font-extrabold text-primary">{row.position}º</TableCell>
                     <TableCell>
                       <p className="font-bold text-foreground">{row.competitor_name}</p>
                       <p className="text-sm text-muted-foreground">{row.horse_name}</p>
@@ -609,24 +569,20 @@ export function RankingTable({ eventId }: RankingTableProps) {
                       <p className="font-semibold text-foreground">{row.category_name}</p>
                       <div className="mt-1"><LevelBadge level={row.level} /></div>
                     </TableCell>
-                    <TableCell><Badge variant="outline">{row.stage}a etapa</Badge></TableCell>
+
                     <TableCell>
-                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                        <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 1</span><strong>{row.stage === 1 ? row.stage_points ?? 0 : '--'}</strong></div>
-                        <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 2</span><strong>{row.stage === 2 ? row.stage_points ?? 0 : '--'}</strong></div>
-                        <div className="rounded-md border bg-muted/30 p-2"><span className="block text-muted-foreground">Et. 3</span><strong>{row.stage === 3 ? row.stage_points ?? 0 : '--'}</strong></div>
-                      </div>
+                      <strong className="text-lg tabular-nums">{formatRankingNumber(row.total_score)}</strong>
                     </TableCell>
                     <TableCell className="text-lg font-extrabold text-foreground">
-                      {row.total_score} <span className="text-xs font-semibold text-muted-foreground">({row.stage_points ?? 0} pts)</span>
+                      {row.stage_points ?? 0}
                     </TableCell>
-                    <TableCell>Valido</TableCell>
+
                   </TableRow>
                 ))
               )
             ) : championshipRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-muted-foreground">
+                <TableCell colSpan={5} className="text-muted-foreground">
                   Nenhum resultado encontrado para os filtros.
                 </TableCell>
               </TableRow>
@@ -635,7 +591,7 @@ export function RankingTable({ eventId }: RankingTableProps) {
                 <TableRow
                   key={`${row.event_id}-${row.category_id}-${row.level ?? 'SEM_NIVEL'}-${row.competitor_id}-${row.horse_id}`}
                 >
-                  <TableCell className="text-2xl font-extrabold text-primary">{row.position}o</TableCell>
+                  <TableCell className="text-2xl font-extrabold text-primary">{row.position}º</TableCell>
                   <TableCell>
                     <p className="font-bold text-foreground">{row.competitor_name}</p>
                     <p className="text-sm text-muted-foreground">{row.horse_name}</p>
@@ -644,9 +600,9 @@ export function RankingTable({ eventId }: RankingTableProps) {
                     <p className="font-semibold text-foreground">{row.category_name}</p>
                     <div className="mt-1"><LevelBadge level={row.level} /></div>
                   </TableCell>
-                  <TableCell><Badge variant="secondary">Campeonato</Badge></TableCell>
+
                   <TableCell>
-                    <div className="grid min-w-[330px] grid-cols-3 gap-2 text-center text-xs">
+                    <div className="grid min-w-[270px] grid-cols-3 gap-2 text-center text-xs">
                       <div className="rounded-md border bg-muted/30 p-2">
                         <span className="block text-muted-foreground">Et. 1</span>
                         <strong className="block text-sm">Nota {formatRankingNumber(row.stage_1_note)}</strong>
@@ -665,14 +621,55 @@ export function RankingTable({ eventId }: RankingTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="text-lg font-extrabold text-foreground">{row.total_score}</TableCell>
-                  <TableCell>Valido</TableCell>
+
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+      {!isLoading && podiumGroups.length === 1 && (
+        <details className="disclosure"><summary>Ver pódio desta categoria</summary><div className="space-y-3 p-4 sm:p-5">
+          <div><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-secondary">Destaques</p><h3 className="mt-1 text-xl font-semibold">Pódio por categoria</h3></div>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {podiumGroups.map((group) => (
+              <div key={group.title} className="rounded-md border bg-muted/20 p-3">
+                <p className="mb-2 text-sm font-bold">{group.title}</p>
+                <div className="space-y-2">
+                  {group.rows.map((row) => (
+                    <div key={`${group.title}-${row.position}-${row.competitor_name}-${row.horse_name}`} className="flex items-center justify-between rounded-md border bg-background p-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">
+                          {row.position}º {row.competitor_name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">{row.horse_name}</p>
+                      </div>
+                      <div className="text-sm font-bold text-secondary">{row.total_score} {mode === 'championship' ? 'pts' : 'de nota'}</div>
+                    </div>
+                  ))}
+                  {group.rows.length === 0 && <p className="text-xs text-muted-foreground">Sem pódio para esta categoria.</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div></details>
+      )}
+
+      <details className="group surface-band rounded-xl">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 text-sm font-bold"><span>Simular distribuição da premiação</span><span className="text-xs font-semibold text-secondary group-open:hidden">Abrir</span><span className="hidden text-xs font-semibold text-secondary group-open:inline">Fechar</span></summary>
+        <div className="grid grid-cols-1 gap-3 border-t p-4 md:grid-cols-4">
+          <div><Label>Bolsa de premiação (R$)</Label><Input type="number" value={prizePool} onChange={(e) => setPrizePool(e.target.value)} /></div>
+          <div><Label>% 1º lugar</Label><Input type="number" value={prizePct1} onChange={(e) => setPrizePct1(e.target.value)} /></div>
+          <div><Label>% 2º lugar</Label><Input type="number" value={prizePct2} onChange={(e) => setPrizePct2(e.target.value)} /></div>
+          <div><Label>% 3º lugar</Label><Input type="number" value={prizePct3} onChange={(e) => setPrizePct3(e.target.value)} /></div>
+          <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3 md:col-span-4">
+            <div className="rounded-md border bg-muted/20 p-2">1º: R$ {prize1.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="rounded-md border bg-muted/20 p-2">2º: R$ {prize2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="rounded-md border bg-muted/20 p-2">3º: R$ {prize3.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+          </div>
+        </div>
+      </details>
+
     </div>
   )
 }
-

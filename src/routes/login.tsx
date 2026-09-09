@@ -96,8 +96,8 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto grid w-full max-w-[1180px] overflow-hidden px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,.9fr)] lg:py-14">
-        <section className="relative hidden min-h-[680px] overflow-hidden bg-primary text-white lg:block">
+      <main id="main-content" className="mx-auto grid w-full max-w-[1180px] overflow-hidden px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,.9fr)] lg:py-14">
+        <section className="relative hidden min-h-[580px] overflow-hidden bg-primary text-white lg:block">
           <img src={heroReiningPath} alt="Competidor em prova de rédeas" className="absolute inset-0 h-full w-full object-cover object-[67%_center]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/25" />
           <div className="absolute inset-x-0 bottom-0 p-10">
@@ -111,7 +111,7 @@ function LoginPage() {
           </div>
         </section>
 
-        <Card className="flex min-h-[620px] w-full flex-col justify-center rounded-none border-border/80 shadow-2xl shadow-primary/10 lg:min-h-[680px]">
+        <Card className="flex min-h-[560px] w-full flex-col justify-center rounded-none border-border/80 shadow-2xl shadow-primary/10 lg:min-h-[580px]">
           <CardHeader className="px-6 pb-2 sm:px-10">
             <div className="mb-5 grid h-11 w-11 place-items-center rounded-full bg-secondary/15 text-secondary"><ShieldCheck className="h-5 w-5" /></div>
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-secondary">Bem-vindo</p>

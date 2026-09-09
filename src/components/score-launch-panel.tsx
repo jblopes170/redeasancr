@@ -124,11 +124,11 @@ const defaultSelectedLevels: Record<Level, boolean> = {
 }
 
 const PAYMENT_BADGE: Record<PaymentStatus, { label: string; className: string }> = {
-  pending: { label: 'Pgto pendente', className: 'border-amber-300 bg-amber-50 text-amber-800' },
-  submitted: { label: 'Comprovante', className: 'border-blue-300 bg-blue-50 text-blue-800' },
-  confirmed: { label: 'Pago', className: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-  rejected: { label: 'Pgto rejeitado', className: 'border-red-300 bg-red-50 text-red-800' },
-  waived: { label: 'Isento', className: 'border-slate-300 bg-slate-50 text-slate-700' },
+  pending: { label: 'Pgto pendente', className: 'border-amber-800/60 bg-amber-950/30 text-amber-300' },
+  submitted: { label: 'Comprovante', className: 'border-blue-800/60 bg-blue-950/30 text-blue-300' },
+  confirmed: { label: 'Pago', className: 'border-emerald-800/60 bg-emerald-950/30 text-emerald-300' },
+  rejected: { label: 'Pgto rejeitado', className: 'border-red-800/60 bg-red-950/30 text-red-300' },
+  waived: { label: 'Isento', className: 'border-slate-800/60 bg-slate-950/30 text-slate-300' },
 }
 
 function normalizeSearch(value: string): string {
@@ -835,27 +835,7 @@ export function ScoreLaunchPanel({
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-lg border bg-card">
-        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div>
-            <p className="eyebrow"><Save className="h-4 w-4" />Operação da prova</p>
-            <h2 className="mt-3 font-serif text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Lançamento de notas</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Filtre a passada, digite a nota e pressione Enter para salvar. O ranking é recalculado automaticamente.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-md border bg-muted/35 px-4 py-3">
-              <span className="block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">Etapa</span>
-              <strong className="mt-1 block text-xl text-foreground">{filterStage}ª</strong>
-            </div>
-            <div className="rounded-md border bg-muted/35 px-4 py-3">
-              <span className="block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">Passadas</span>
-              <strong className="mt-1 block text-xl text-foreground">{rows.length}</strong>
-            </div>
-          </div>
-        </div>
-      </section>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"><p>Digite a nota e pressione <kbd className="rounded border px-1.5 py-0.5 text-foreground">Enter</kbd> para salvar.</p><p>{rows.length} passadas · {filteredScoresCount} notas lançadas</p></div>
 
       {!canJudgeWrite && isJudge && (
         <Alert variant="destructive">
@@ -897,7 +877,7 @@ export function ScoreLaunchPanel({
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-3 rounded-lg border bg-card p-4 shadow-sm md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 rounded-lg border bg-card p-4 shadow-sm md:grid-cols-4">
         <div>
           <Label>Etapa</Label>
           <Select value={String(filterStage)} onValueChange={(value) => setFilterStage(Number(value) as Stage)}>
@@ -1353,7 +1333,7 @@ export function ScoreLaunchPanel({
       )}
 
       {showLiveRanking && (
-        <section className="overflow-hidden rounded-xl border border-secondary/20 bg-card shadow-[0_20px_70px_rgba(0,0,0,.22)]">
+        <details className="disclosure"><summary>Acompanhar classificação ao vivo</summary><section className="overflow-hidden rounded-xl border border-secondary/20 bg-card shadow-[0_20px_70px_rgba(0,0,0,.22)]">
           <div className="border-b border-white/10 bg-[#17100e] px-4 py-5 text-white sm:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-3">
@@ -1414,7 +1394,7 @@ export function ScoreLaunchPanel({
               <p className="mt-1 font-bold text-foreground">{selectedCategory ? categoryOptionLabel(selectedCategory.name) : 'Todas as categorias'}</p>
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Exibicao</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Exibição</p>
               <p className="mt-1 font-bold text-foreground">{rankingMode === 'stage' ? `${filterStage}a etapa` : 'Resultado do campeonato'}</p>
             </div>
           </div>
@@ -1471,7 +1451,7 @@ export function ScoreLaunchPanel({
 
             <div className="rounded-2xl border bg-card">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-                <h4 className="font-bold text-foreground">Classificacao completa</h4>
+                <h4 className="font-bold text-foreground">Classificação completa</h4>
                 {overviewLoading && <span className="text-sm text-muted-foreground">Atualizando...</span>}
               </div>
               <div className="divide-y">
@@ -1500,12 +1480,12 @@ export function ScoreLaunchPanel({
               </div>
             </div>
           </div>
-        </section>
+        </section></details>
       )}
       <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-secondary/35 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/40 px-4 py-3">
           <div>
-            <h3 className="font-serif text-xl font-bold">Lançamento rápido de notas</h3>
+            <h3 className="font-serif text-xl font-bold">Passadas e notas</h3>
             <p className="text-xs text-muted-foreground">{rows.length} inscrição(ões) encontrada(s). Pressione Enter no campo Nota para salvar.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -1513,14 +1493,14 @@ export function ScoreLaunchPanel({
             {selectedCategory && <Badge variant="secondary">{categoryOptionLabel(selectedCategory.name)}</Badge>}
           </div>
         </div>
-        <Table>
+        <Table className="score-entry-table">
           <TableHeader>
             <TableRow>
               <TableHead>Ordem</TableHead>
               <TableHead>Etapa</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Conjunto</TableHead>
-              <TableHead>Niveis</TableHead>
+              <TableHead>Níveis</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Nota</TableHead>
               <TableHead>Pen.</TableHead>
@@ -1529,10 +1509,10 @@ export function ScoreLaunchPanel({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 ? (
+            {entriesQuery.isPending ? <TableRow><TableCell colSpan={10}>Carregando inscrições aprovadas...</TableCell></TableRow> : entriesQuery.error ? <TableRow><TableCell colSpan={10} role="alert" className="text-destructive">Não foi possível carregar as inscrições. {entriesQuery.error.message}</TableCell></TableRow> : rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-muted-foreground">
-                  Nenhuma inscricao encontrada para os filtros.
+                  Nenhuma inscrição encontrada. Confira a etapa e os filtros, ou aprove as solicitações na central de inscrições.
                 </TableCell>
               </TableRow>
             ) : (
@@ -1551,10 +1531,10 @@ export function ScoreLaunchPanel({
 
                 return (
                   <TableRow key={row.key}>
-                    <TableCell className="w-16 text-center font-bold text-primary">{entry.draw_order ?? '--'}</TableCell>
-                    <TableCell className="w-20">{entry.stage}a</TableCell>
-                    <TableCell className="w-40 font-semibold">{entry.category?.name ?? '--'}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Ordem" className="w-16 text-center font-bold text-primary">{entry.draw_order ?? '--'}</TableCell>
+                    <TableCell data-label="Etapa" className="w-20">{entry.stage}a</TableCell>
+                    <TableCell data-label="Categoria" className="w-40 font-semibold">{entry.category?.name ?? '--'}</TableCell>
+                    <TableCell className="score-conjunto" data-label="Conjunto">
                       <div className="min-w-0">
                         <p className="font-bold text-foreground">{entry.competitor?.name ?? '--'}</p>
                         <p className="text-sm text-muted-foreground">
@@ -1565,51 +1545,54 @@ export function ScoreLaunchPanel({
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="w-36">
+                    <TableCell data-label="Níveis" className="w-36">
                       <div className="flex flex-wrap gap-1">
                         {row.levels.map((level) => <LevelBadge key={level ?? 'sem-nivel'} level={level} />)}
                       </div>
                     </TableCell>
-                    <TableCell className="w-28">
+                    <TableCell data-label="Status" className="w-28">
                       <div className="space-y-1">
                         <StatusBadge type="entry" status={cancelled ? 'cancelled' : entry.status} />
                         <Badge variant="outline" className={paymentBadge.className}>{paymentBadge.label}</Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="w-28">
+                    <TableCell className="w-28" data-label="Nota">
                       <Input
                         type="text"
                         inputMode="decimal"
+                        aria-label={`Nota de ${entry.competitor?.name ?? 'competidor'} com ${entry.horse?.name ?? 'cavalo'}`}
                         value={draft.score}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { score: e.target.value })}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' && canJudgeWrite && !saveScoreMutation.isPending) {
+                          if (e.key === 'Enter' && canJudgeWrite && !saveScoreMutation.isPending && !cancelled && !paymentBlocked) {
                             saveScoreMutation.mutate({ rowKey: row.key, entryIds, payload: draft })
                           }
                         }}
-                        disabled={!canJudgeWrite}
+                        disabled={!canJudgeWrite || cancelled || paymentBlocked || saveScoreMutation.isPending}
                         className="h-12 min-w-24 border-primary/50 bg-background text-center text-xl font-extrabold tabular-nums focus-visible:ring-primary"
                       />
                     </TableCell>
-                    <TableCell className="w-24">
+                    <TableCell className="w-24" data-label="Penalidade">
                       <Input
                         type="text"
                         inputMode="decimal"
+                        aria-label="Penalidade"
                         value={draft.penalties}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { penalties: e.target.value })}
-                        disabled={!canJudgeWrite}
+                        disabled={!canJudgeWrite || cancelled || paymentBlocked || saveScoreMutation.isPending}
                         className="h-12 min-w-20 bg-background text-center text-base font-bold tabular-nums"
                       />
                     </TableCell>
-                    <TableCell className="w-44">
+                    <TableCell className="w-44 score-notes" data-label="Observações">
                       <Input
+                        aria-label="Observações da nota"
                         value={draft.notes}
                         onChange={(e) => writeDraft(row.key, entry.stage, row.entries, { notes: e.target.value })}
-                        disabled={!canJudgeWrite}
+                        disabled={!canJudgeWrite || cancelled || paymentBlocked || saveScoreMutation.isPending}
                         placeholder="Opcional"
                       />
                     </TableCell>
-                    <TableCell className="w-40">
+                    <TableCell className="w-40 score-actions">
                       <div className="flex justify-end gap-2">
                         <Button
                           size="sm"

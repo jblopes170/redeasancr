@@ -1,208 +1,24 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ClipboardCheck, Gauge, KeyRound, Megaphone, Newspaper, Trophy, WalletCards } from 'lucide-react'
-
+import { useQuery } from '@tanstack/react-query'
+import { ArrowRight, Radio, ClipboardCheck, MessageSquare } from 'lucide-react'
 import { AdminLayout } from '@/components/admin-layout'
-import { EventCard } from '@/components/event-card'
-import { EventFormDialog } from '@/components/event-form-dialog'
-import { ProtectedRoute } from '@/components/protected-route'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
+import { AdminEventList } from '@/components/admin-event-list'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/providers/auth-provider'
-import {
-  getAdminEvents,
-  getAdminNews,
-  getAdminRegistrationRequests,
-  getAdminSuggestions,
-} from '@/services/api'
-
-export const Route = createFileRoute('/admin/')({
-  component: AdminIndexPage,
-})
-
+import { getAdminEvents, getAdminNews, getAdminRegistrationRequests, getAdminSuggestions } from '@/services/api'
+export const Route = createFileRoute('/admin/')({ component: AdminIndexPage })
 function AdminIndexPage() {
-  const queryClient = useQueryClient()
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
-
-  const eventsQuery = useQuery({ queryKey: ['admin-events'], queryFn: getAdminEvents })
-  const requestsQuery = useQuery({
-    queryKey: ['admin-registration-requests'],
-    queryFn: () => getAdminRegistrationRequests(),
-    enabled: isAdmin,
-  })
-  const suggestionsQuery = useQuery({
-    queryKey: ['admin-suggestions'],
-    queryFn: () => getAdminSuggestions(),
-    enabled: isAdmin,
-  })
-  const newsQuery = useQuery({ queryKey: ['admin-news'], queryFn: getAdminNews, enabled: isAdmin })
-
-  const events = eventsQuery.data ?? []
-  const pendingRequests = (requestsQuery.data ?? []).filter((item) => item.status === 'pending').length
-  const newSuggestions = (suggestionsQuery.data ?? []).filter((item) => item.status === 'new').length
-  const publishedNews = (newsQuery.data ?? []).filter((item) => item.status === 'published').length
-  const portalError = requestsQuery.error ?? suggestionsQuery.error ?? newsQuery.error
-
-  return (
-    <ProtectedRoute allowedRoles={['admin', 'judge']}>
-      <AdminLayout title="Painel Administrativo">
-        <div className="space-y-6">
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Eventos</p><p className="mt-2 text-3xl font-extrabold">{events.length}</p><p className="text-sm text-muted-foreground">cadastrados no sistema</p></CardContent></Card>
-            <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Inscrições</p><p className="mt-2 text-3xl font-extrabold text-secondary">{pendingRequests}</p><p className="text-sm text-muted-foreground">aguardando análise</p></CardContent></Card>
-            <Card><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Atendimento</p><p className="mt-2 text-3xl font-extrabold">{newSuggestions}</p><p className="text-sm text-muted-foreground">novas sugestões</p></CardContent></Card>
-            <Card className="bg-primary text-primary-foreground"><CardContent className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/60">Conteúdo</p><p className="mt-2 text-3xl font-extrabold text-[#e1ad51]">{publishedNews}</p><p className="text-sm text-primary-foreground/65">publicações ativas</p></CardContent></Card>
-          </section>
-
-          <section>
-            <div className="mb-3">
-              <h2 className="text-xl font-extrabold">Fluxo de trabalho</h2>
-              <p className="text-sm text-muted-foreground">Acesse cada tarefa sem passar por telas repetidas.</p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <Card className="border-t-2 border-t-primary">
-                <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                  <div>
-                    <Gauge className="h-7 w-7 text-primary" />
-                    <h3 className="mt-3 text-lg font-bold">1. Eventos</h3>
-                    <p className="text-sm text-muted-foreground">Crie etapas e abra o painel operacional da prova.</p>
-                  </div>
-                  {isAdmin ? (
-                    <EventFormDialog
-                      triggerLabel="Criar novo evento"
-                      onSaved={() => void queryClient.invalidateQueries({ queryKey: ['admin-events'] })}
-                    />
-                  ) : (
-                    <Button asChild><a href="#admin-events">Escolher evento</a></Button>
-                  )}
-                </CardContent>
-              </Card>
-
-              {isAdmin && (
-                <Card>
-                  <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div><ClipboardCheck className="h-7 w-7 text-primary" /><h3 className="mt-3 text-lg font-bold">2. Inscrições</h3></div>
-                      <div className="flex flex-wrap justify-end gap-1">
-                        {pendingRequests > 0 && <Badge>{pendingRequests} pendentes</Badge>}
-                        {newSuggestions > 0 && <Badge variant="secondary">{newSuggestions} sugestões</Badge>}
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Aprove solicitações ou use o cadastro manual dentro do evento.</p>
-                    <Button variant="outline" asChild><Link to="/admin/requests">Abrir atendimento</Link></Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card className="border-t-2 border-t-secondary">
-                <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                  <div>
-                    <Megaphone className="h-7 w-7 text-primary" />
-                    <h3 className="mt-3 text-lg font-bold">{isAdmin ? '3.' : '2.'} Prova e notas</h3>
-                    <p className="text-sm text-muted-foreground">Escolha o evento abaixo para inscrever, ordenar entradas e lançar notas.</p>
-                  </div>
-                  {events.length > 0 ? (
-                    <div className="grid gap-2">
-                      {events.slice(0, 3).map((event) => (
-                        <Button key={event.id} size="sm" className="justify-start" asChild>
-                          <Link to="/admin/events/$eventId/scores" params={{ eventId: event.id }}>
-                            Lançar notas ao vivo · {event.name}
-                          </Link>
-                        </Button>
-                      ))}
-                      {events.length > 3 && <Button size="sm" variant="outline" asChild><a href="#admin-events">Ver todos os eventos</a></Button>}
-                    </div>
-                  ) : (
-                    <Button asChild><a href="#admin-events">Escolher evento para lançar notas</a></Button>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                  <div>
-                    <Trophy className="h-7 w-7 text-primary" />
-                    <h3 className="mt-3 text-lg font-bold">{isAdmin ? '4.' : '3.'} Resultados</h3>
-                    <p className="text-sm text-muted-foreground">Confira exatamente o ranking que o público acompanha.</p>
-                  </div>
-                  <Button variant="outline" asChild><Link to="/ranking">Ver ranking público</Link></Button>
-                </CardContent>
-              </Card>
-
-              {isAdmin && (
-                <Card>
-                  <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div><Newspaper className="h-7 w-7 text-primary" /><h3 className="mt-3 text-lg font-bold">Publicações</h3></div>
-                      {publishedNews > 0 && <Badge variant="outline">{publishedNews} publicadas</Badge>}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Publique notícias gerais e atualizações de cada evento.</p>
-                    <Button variant="outline" asChild><Link to="/admin/content">Gerenciar notícias</Link></Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {isAdmin && (
-                <Card>
-                  <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                    <div><WalletCards className="h-7 w-7 text-primary" /><h3 className="mt-3 text-lg font-bold">Financeiro e DRE</h3></div>
-                    <p className="text-sm text-muted-foreground">Controle inscricoes pagas, patrocinios, despesas e resultado do campeonato.</p>
-                    <Button variant="outline" asChild><Link to="/admin/finance">Abrir financeiro</Link></Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {isAdmin && (
-                <Card>
-                  <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
-                    <div><KeyRound className="h-7 w-7 text-primary" /><h3 className="mt-3 text-lg font-bold">Acessos</h3></div>
-                    <p className="text-sm text-muted-foreground">Defina administradores, juízes e usuários ativos.</p>
-                    <Button variant="outline" asChild><Link to="/admin/access">Gerenciar acessos</Link></Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </section>
-
-          {isAdmin && portalError && (
-            <Alert variant="destructive">
-              <AlertTitle>Portal ainda não configurado no Supabase</AlertTitle>
-              <AlertDescription>{portalError instanceof Error ? portalError.message : 'Execute a migration do portal.'}</AlertDescription>
-            </Alert>
-          )}
-
-          <section id="admin-events" className="scroll-mt-44 space-y-3">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h2 className="text-2xl font-extrabold text-primary">Eventos e operação da prova</h2>
-                <p className="text-sm text-muted-foreground">Entre no evento para cadastrar inscrições e lançar as notas.</p>
-              </div>
-              {isAdmin && (
-                <EventFormDialog
-                  triggerLabel="Novo evento"
-                  onSaved={() => void queryClient.invalidateQueries({ queryKey: ['admin-events'] })}
-                />
-              )}
-            </div>
-
-            {eventsQuery.isLoading ? (
-              <Card><CardContent className="p-6 text-sm text-muted-foreground">Carregando eventos...</CardContent></Card>
-            ) : eventsQuery.error ? (
-              <Alert variant="destructive"><AlertTitle>Erro ao carregar eventos</AlertTitle><AlertDescription>{eventsQuery.error.message}</AlertDescription></Alert>
-            ) : events.length === 0 ? (
-              <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhum evento cadastrado.</CardContent></Card>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {events.map((event) => <EventCard key={event.id} event={event} admin />)}
-              </div>
-            )}
-          </section>
-        </div>
-      </AdminLayout>
-    </ProtectedRoute>
-  )
+  const events = useQuery({ queryKey: ['admin-events'], queryFn: getAdminEvents })
+  const requests = useQuery({ queryKey: ['admin-registration-requests'], queryFn: () => getAdminRegistrationRequests(), enabled: isAdmin })
+  const suggestions = useQuery({ queryKey: ['admin-suggestions'], queryFn: () => getAdminSuggestions(), enabled: isAdmin })
+  const news = useQuery({ queryKey: ['admin-news'], queryFn: getAdminNews, enabled: isAdmin })
+  const pending = requests.data?.filter(item => item.status === 'pending').length
+  const unread = suggestions.data?.filter(item => item.status === 'new').length
+  return <AdminLayout title="Visão geral" description="Pendências e próximos passos da organização." actions={<Button asChild><Link to="/admin/live"><Radio className="h-4 w-4" />Lançar notas ao vivo</Link></Button>}>
+    {isAdmin && <section aria-label="Pendências" className="grid gap-4 sm:grid-cols-2"><Link to="/admin/requests" className="flex items-center gap-4 rounded-xl border bg-card p-5 transition hover:border-primary/50"><ClipboardCheck className="h-6 w-6 text-primary" /><div className="flex-1"><h2 className="text-base font-semibold">Analisar inscrições</h2><p className="mt-1 text-sm text-muted-foreground">{requests.isPending ? 'Carregando pendências...' : requests.error ? 'Não foi possível consultar as pendências' : `${pending} aguardando aprovação`}</p></div><ArrowRight className="h-4 w-4" /></Link><Link to="/admin/requests" hash="suggestions" className="flex items-center gap-4 rounded-xl border bg-card p-5 transition hover:border-primary/50"><MessageSquare className="h-6 w-6 text-primary" /><div className="flex-1"><h2 className="text-base font-semibold">Atender solicitações</h2><p className="mt-1 text-sm text-muted-foreground">{suggestions.isPending ? 'Carregando mensagens...' : suggestions.error ? 'Não foi possível consultar as mensagens' : `${unread} novas mensagens`}</p></div><ArrowRight className="h-4 w-4" /></Link></section>}
+    <section className="space-y-4"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Operação dos eventos</h2><Button variant="ghost" asChild><Link to="/admin/eventos">Todos os eventos<ArrowRight className="h-4 w-4" /></Link></Button></div>{events.isPending ? <p role="status">Carregando eventos...</p> : events.error ? <p role="alert" className="text-destructive">{events.error.message}</p> : <AdminEventList events={(events.data ?? []).filter(event => event.status !== 'finished').slice(0, 3)} />}</section>
+    {isAdmin && <section className="space-y-4"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">Últimas publicações</h2><Link to="/admin/content" className="text-sm text-primary">Gerenciar publicações</Link></div><div className="divide-y rounded-xl border bg-card">{news.isPending ? <p className="p-5 text-sm">Carregando publicações...</p> : news.error ? <p className="p-5 text-sm text-destructive">Não foi possível carregar as publicações.</p> : news.data?.length ? news.data.slice(0, 3).map(post => <div key={post.id} className="flex flex-wrap items-center justify-between gap-3 p-5"><p className="text-sm font-medium">{post.title}</p><span className="text-sm text-muted-foreground">{post.status === 'published' ? 'Publicada' : 'Rascunho'}</span></div>) : <p className="p-5 text-sm text-muted-foreground">Nenhuma publicação cadastrada.</p>}</div></section>}
+  </AdminLayout>
 }
