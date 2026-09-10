@@ -26,7 +26,7 @@ export function AppHeader({ scope = 'public', navigationSlot }: { scope?: Naviga
   const showTopNavigation = scope !== 'admin'
 
   return (
-    <header className="app-header">
+    <header className={`app-header ${scope === 'public' ? 'app-header-public' : ''}`}>
       <a href="#main-content" className="skip-link" onClick={event => { event.preventDefault(); const main = document.getElementById('main-content'); main?.setAttribute('tabindex', '-1'); main?.focus(); main?.scrollIntoView({ block: 'start' }) }}>Ir para o conteúdo</a>
       <div className="app-header-inner">
         <Link to={scope === 'admin' ? '/admin' : '/'} className="brand-link" aria-label="NTMR, início"><img src={ntmrLogoPath} alt="" className="h-11 w-11 object-contain" /><span><strong className="block font-serif text-2xl leading-none">NTMR</strong><span className="mt-1 block text-xs text-muted-foreground">{scope === 'admin' ? 'Organização' : scope === 'member' ? 'Área do competidor' : 'Rédeas'}</span></span></Link>

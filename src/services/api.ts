@@ -31,6 +31,16 @@ import type {
 function mapSupabaseError(message: string): string {
   const normalized = message.toLowerCase()
 
+  if (
+    normalized.includes('storage.objects')
+    || normalized.includes('payment-receipts')
+    || normalized.includes('news-media')
+    || normalized.includes('suggestion-attachments')
+    || normalized.includes('bucket not found')
+  ) {
+    return 'O armazenamento de anexos ainda nao foi configurado. Execute a migration 202609100001_media_attachments.sql no Supabase.'
+  }
+
   if (normalized.includes('row-level security policy')) {
     return 'Permissão negada. Verifique se seu perfil está como Administrador e ativo em Gerenciamento de Acessos.'
   }
@@ -63,8 +73,8 @@ function mapSupabaseError(message: string): string {
     return 'Configuracao do portal pendente. No Supabase SQL Editor, execute supabase/manual/fix-portal-pendente.sql e depois supabase/manual/setup-pagamentos-dre-automatico.sql.'
   }
 
-  if (normalized.includes('payment-receipts') || normalized.includes('storage')) {
-    return 'O armazenamento de comprovantes ainda nao foi configurado. Execute a migration 202607160001_registration_amount_and_receipts.sql no Supabase.'
+  if (normalized.includes('payment-receipts') || normalized.includes('news-media') || normalized.includes('suggestion-attachments') || normalized.includes('storage')) {
+    return 'O armazenamento de anexos ainda nao foi configurado. Execute a migration 202609100001_media_attachments.sql no Supabase.'
   }
 
   if (normalized.includes('financial_transactions')) {
@@ -81,6 +91,109 @@ async function unwrap<T>(promise: PromiseLike<{ data: T | null; error: { message
   }
 
   return data as T
+}
+
+export const PAYMENT_RECEIPT_ACCEPT = 'image/png,image/jpeg,image/webp,application/pdf'
+export const NEWS_IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp'
+export const EVIDENCE_ATTACHMENT_ACCEPT = 'image/png,image/jpeg,image/webp,application/pdf'
+
+const PAYMENT_RECEIPT_MIME_TYPES = PAYMENT_RECEIPT_ACCEPT.split(',')
+const NEWS_IMAGE_MIME_TYPES = NEWS_IMAGE_ACCEPT.split(',')
+const EVIDENCE_ATTACHMENT_MIME_TYPES = EVIDENCE_ATTACHMENT_ACCEPT.split(',')
+
+function getSafeFileExtension(file: File) {
+  const extensionFromName = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '')
+  if (extensionFromName) return extensionFromName
+
+  const extensionByMime: Record<string, string> = {
+    'application/pdf': 'pdf',
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  return extensionByMime[file.type] ?? 'bin'
+}
+
+function acceptedFileLabel(allowedTypes: string[]) {
+  const labels = [
+    allowedTypes.includes('image/png') ? 'PNG' : '',
+    allowedTypes.includes('image/jpeg') ? 'JPG' : '',
+    allowedTypes.includes('image/webp') ? 'WEBP' : '',
+    allowedTypes.includes('application/pdf') ? 'PDF' : '',
+  ].filter(Boolean)
+
+  return labels.join(', ')
+}
+
+function getAllowedUploadExtensions(allowedTypes: string[]) {
+  const extensionsByMime: Record<string, string[]> = {
+    'application/pdf': ['pdf'],
+    'image/jpeg': ['jpg', 'jpeg'],
+    'image/png': ['png'],
+    'image/webp': ['webp'],
+  }
+
+  return new Set(allowedTypes.flatMap((type) => extensionsByMime[type] ?? []))
+}
+
+function getUploadContentType(file: File, allowedTypes: string[]) {
+  if (allowedTypes.includes(file.type)) return file.type
+
+  const extension = getSafeFileExtension(file)
+  const mimeByExtension: Record<string, string> = {
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    pdf: 'application/pdf',
+    png: 'image/png',
+    webp: 'image/webp',
+  }
+
+  return mimeByExtension[extension] ?? file.type
+}
+
+function assertUploadFile(file: File, allowedTypes: string[], maxSizeMb: number, label: string) {
+  const extension = getSafeFileExtension(file)
+  const allowedExtensions = getAllowedUploadExtensions(allowedTypes)
+
+  if (!allowedTypes.includes(file.type) && !allowedExtensions.has(extension)) {
+    throw new Error(`${label} precisa ser ${acceptedFileLabel(allowedTypes)}.`)
+  }
+
+  if (file.size > maxSizeMb * 1024 * 1024) {
+    throw new Error(`${label} deve ter no máximo ${maxSizeMb} MB.`)
+  }
+}
+
+async function uploadPublicAttachment(
+  bucket: string,
+  folder: string,
+  file: File,
+  allowedTypes: string[],
+  maxSizeMb: number,
+  label: string,
+) {
+  assertUploadFile(file, allowedTypes, maxSizeMb, label)
+
+  const { data: authData } = await supabase.auth.getUser()
+  const userId = authData.user?.id
+  if (!userId) throw new Error('Faça login para enviar o arquivo.')
+
+  const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '-')
+  const token = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`
+  const extension = getSafeFileExtension(file)
+  const contentType = getUploadContentType(file, allowedTypes)
+  const path = `${userId}/${safeFolder}/${Date.now()}-${token}.${extension}`
+  const { error } = await supabase.storage.from(bucket).upload(path, file, {
+    contentType,
+    upsert: false,
+  })
+
+  if (error) throw new Error(mapSupabaseError(error.message))
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
+}
+
+export function isPdfAttachmentUrl(url?: string | null) {
+  return Boolean(url && /\.pdf(?:\?|$)/i.test(url))
 }
 
 export async function getPublicEvents() {
@@ -630,6 +743,7 @@ export interface NewsPostInput {
   title: string
   summary?: string
   content: string
+  image_url?: string | null
   post_type: NewsPostType
   status: NewsPostStatus
   featured: boolean
@@ -641,6 +755,7 @@ export async function saveNewsPost(payload: NewsPostInput) {
     title: payload.title.trim(),
     summary: payload.summary?.trim() || null,
     content: payload.content.trim(),
+    image_url: payload.image_url?.trim() || null,
     post_type: payload.post_type,
     status: payload.status,
     featured: payload.featured,
@@ -720,19 +835,15 @@ export async function approveRegistrationRequest(id: string) {
 }
 
 export async function uploadPaymentReceipt(requestId: string, file: File) {
-  const { data: authData } = await supabase.auth.getUser()
-  const userId = authData.user?.id
-  if (!userId) throw new Error('Faça login para enviar o comprovante.')
+  return uploadPublicAttachment('payment-receipts', requestId, file, PAYMENT_RECEIPT_MIME_TYPES, 10, 'O comprovante')
+}
 
-  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-  const path = `${userId}/${requestId}-${Date.now()}.${extension}`
-  const { error } = await supabase.storage.from('payment-receipts').upload(path, file, {
-    contentType: file.type || 'image/jpeg',
-    upsert: false,
-  })
+export async function uploadNewsImage(file: File) {
+  return uploadPublicAttachment('news-media', 'posts', file, NEWS_IMAGE_MIME_TYPES, 8, 'A imagem da notícia')
+}
 
-  if (error) throw new Error(mapSupabaseError(error.message))
-  return supabase.storage.from('payment-receipts').getPublicUrl(path).data.publicUrl
+export async function uploadSuggestionAttachment(file: File) {
+  return uploadPublicAttachment('suggestion-attachments', 'evidencias', file, EVIDENCE_ATTACHMENT_MIME_TYPES, 10, 'O anexo')
 }
 
 export async function submitRegistrationPaymentReceipt(id: string, receiptUrl: string) {
@@ -804,6 +915,9 @@ export interface SuggestionInput {
   event_id?: string
   subject: string
   message: string
+  attachment_url?: string | null
+  attachment_name?: string | null
+  attachment_type?: string | null
 }
 
 export async function createSuggestion(payload: SuggestionInput) {
@@ -814,6 +928,9 @@ export async function createSuggestion(payload: SuggestionInput) {
         event_id: payload.event_id || null,
         subject: payload.subject.trim(),
         message: payload.message.trim(),
+        attachment_url: payload.attachment_url?.trim() || null,
+        attachment_name: payload.attachment_name?.trim() || null,
+        attachment_type: payload.attachment_type?.trim() || null,
       })
       .select('*')
       .single(),

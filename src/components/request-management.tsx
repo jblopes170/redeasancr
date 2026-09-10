@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { Check, CheckCircle2, MessageSquareReply, Pencil, ReceiptText, Trash2, X } from 'lucide-react'
+import { Check, CheckCircle2, FileText, ImagePlus, MessageSquareReply, MoreHorizontal, Pencil, ReceiptText, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -21,12 +22,13 @@ import {
   deleteSuggestion,
   getAdminRegistrationRequests,
   getAdminSuggestions,
+  isPdfAttachmentUrl,
   rejectRegistrationPayment,
   respondSuggestion,
   updateRegistrationRequestAmount,
   updateRegistrationRequestStatus,
 } from '@/services/api'
-import type { PaymentStatus, RegistrationRequestStatus, SuggestionRecord } from '@/types/domain'
+import type { PaymentStatus, RegistrationRequestRecord, RegistrationRequestStatus, SuggestionRecord } from '@/types/domain'
 
 const REQUEST_LABEL: Record<RegistrationRequestStatus, string> = {
   pending: 'Pendente',
@@ -55,6 +57,7 @@ export function RequestManagement() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<SuggestionRecord | null>(null)
   const [response, setResponse] = useState('')
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
+  const [selectedReceipt, setSelectedReceipt] = useState<{ title: string; url: string } | null>(null)
   const [amountDraft, setAmountDraft] = useState('')
   const [search, setSearch] = useState('')
   const [requestFilter, setRequestFilter] = useState('all')
@@ -162,6 +165,94 @@ export function RequestManagement() {
   const visibleRequests = requests.filter(request => (requestFilter === 'all' || request.status === requestFilter) && [request.competitor_name, request.horse_name, request.event?.name].join(' ').toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')))
   const suggestions = suggestionsQuery.data ?? []
   const managementError = requestsQuery.error ?? suggestionsQuery.error
+  const renderRequestActions = (request: RegistrationRequestRecord) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="outline" aria-label={`Ações da inscrição de ${request.competitor_name}`}>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {request.status === 'pending' && (
+          <>
+            <DropdownMenuItem onClick={() => approveMutation.mutate(request.id)} disabled={approveMutation.isPending}>
+              <Check className="mr-2 h-4 w-4" />
+              Aprovar inscrição
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => rejectMutation.mutate(request.id)} disabled={rejectMutation.isPending}>
+              <X className="mr-2 h-4 w-4" />
+              Rejeitar inscrição
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        {request.payment_receipt_url && (
+          <DropdownMenuItem onClick={() => setSelectedReceipt({ title: `${request.competitor_name} / ${request.horse_name}`, url: request.payment_receipt_url! })}>
+            <ReceiptText className="mr-2 h-4 w-4" />
+            Ver comprovante
+          </DropdownMenuItem>
+        )}
+        {request.status === 'approved' && request.payment_status !== 'confirmed' && request.payment_status !== 'waived' && (
+          <>
+            <DropdownMenuItem onClick={() => confirmPaymentMutation.mutate(request.id)} disabled={confirmPaymentMutation.isPending}>
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Confirmar pagamento
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => rejectPaymentMutation.mutate(request.id)} disabled={rejectPaymentMutation.isPending}>
+              <X className="mr-2 h-4 w-4" />
+              Rejeitar pagamento
+            </DropdownMenuItem>
+          </>
+        )}
+        <DropdownMenuItem onClick={() => { setSelectedRequestId(request.id); setAmountDraft(String(request.amount_due ?? 0)) }}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Editar valor
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={() => deleteRequestMutation.mutate(request.id)}
+          disabled={deleteRequestMutation.isPending}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Excluir inscrição
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+
+  const renderSuggestionActions = (suggestion: SuggestionRecord) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="outline" aria-label={`Ações da sugestão ${suggestion.subject}`}>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onClick={() => { setSelectedSuggestion(suggestion); setResponse(suggestion.response ?? '') }}>
+          <MessageSquareReply className="mr-2 h-4 w-4" />
+          Responder
+        </DropdownMenuItem>
+        {suggestion.attachment_url && (
+          <DropdownMenuItem asChild>
+            <a href={suggestion.attachment_url} target="_blank" rel="noreferrer">
+              {isPdfAttachmentUrl(suggestion.attachment_url) ? <FileText className="mr-2 h-4 w-4" /> : <ImagePlus className="mr-2 h-4 w-4" />}
+              Ver anexo
+            </a>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={() => deleteSuggestionMutation.mutate(suggestion.id)}
+          disabled={deleteSuggestionMutation.isPending}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 
   return (
     <div className="space-y-4">
@@ -180,7 +271,7 @@ export function RequestManagement() {
 
         <TabsContent value="registrations" className="space-y-4">
           <div className="flex flex-wrap items-end gap-3"><div className="min-w-0 flex-1"><Label htmlFor="request-search">Buscar inscrição</Label><Input id="request-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Competidor, cavalo ou evento" /></div><div className="flex flex-wrap gap-1" aria-label="Filtrar inscrições">{[['all','Todas'],['pending','Aguardando análise'],['approved','Aprovadas'],['rejected','Rejeitadas'],['cancelled','Canceladas']].map(([value,label]) => <Button key={value} size="sm" variant={requestFilter === value ? 'default' : 'outline'} aria-pressed={requestFilter === value} onClick={() => setRequestFilter(value)}>{label}</Button>)}</div></div>
-          <div className="overflow-hidden rounded-lg border bg-card">
+          <div className="overflow-x-auto rounded-lg border bg-card">
             <Table className="request-table">
               <TableHeader>
                 <TableRow>
@@ -209,18 +300,18 @@ export function RequestManagement() {
                       <p className="text-xs text-muted-foreground">{new Date(request.created_at).toLocaleDateString('pt-BR')}</p>
                     </TableCell>
                     <TableCell data-label="Evento">{request.event?.name ?? '--'}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Competidor / Animal">
                       <p className="font-semibold">{request.competitor_name}</p>
                       <p className="text-xs text-muted-foreground">{request.horse_name} · {request.horse_registration || 'sem registro'}</p>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Categoria">
                       {request.category ? categoryOptionLabel(request.category.name) : '--'}
                       {request.requested_levels?.length
                         ? ` · Níveis ${request.requested_levels.join(', ')}`
                         : request.category?.level ? ` · ${request.category.level}` : ''}
                     </TableCell>
                     <TableCell data-label="Etapas">{request.stages.map((stage) => `${stage}ª`).join(', ')}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Valor">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -232,47 +323,22 @@ export function RequestManagement() {
                       </Button>
                     </TableCell>
                     <TableCell data-label="Inscrição"><Badge variant={request.status === 'approved' ? 'default' : request.status === 'pending' ? 'secondary' : 'outline'}>{REQUEST_LABEL[request.status]}</Badge></TableCell>
-                    <TableCell data-label="Conjunto">
+                    <TableCell data-label="Pagamento">
                       <div className="space-y-1">
                         <Badge variant="outline" className={payment.className}>{payment.label}</Badge>
                         {request.payment_receipt_url && (
-                          <p className="max-w-[180px] break-all text-xs text-muted-foreground">{request.payment_receipt_url}</p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-auto p-0 text-xs text-primary hover:bg-transparent hover:underline"
+                            onClick={() => setSelectedReceipt({ title: `${request.competitor_name} / ${request.horse_name}`, url: request.payment_receipt_url! })}
+                          >
+                            Ver comprovante
+                          </Button>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        {request.status === 'pending' && (
-                          <>
-                          <Button size="sm" className="gap-2" onClick={() => approveMutation.mutate(request.id)} disabled={approveMutation.isPending}>
-                            <Check className="h-4 w-4" /> Aprovar
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-2" onClick={() => rejectMutation.mutate(request.id)} disabled={rejectMutation.isPending}>
-                            <X className="h-4 w-4" /> Rejeitar
-                          </Button>
-                          </>
-                        )}
-                        {request.status === 'approved' && request.payment_status !== 'confirmed' && request.payment_status !== 'waived' && (
-                          <>
-                            <Button size="sm" className="gap-2" onClick={() => confirmPaymentMutation.mutate(request.id)} disabled={confirmPaymentMutation.isPending}>
-                              <CheckCircle2 className="h-4 w-4" /> Confirmar pgto
-                            </Button>
-                            <Button size="sm" variant="outline" className="gap-2" onClick={() => rejectPaymentMutation.mutate(request.id)} disabled={rejectPaymentMutation.isPending}>
-                              <X className="h-4 w-4" /> Rejeitar pgto
-                            </Button>
-                          </>
-                        )}
-                        {request.status === 'approved' && (request.payment_status === 'confirmed' || request.payment_status === 'waived') && (
-                          <Badge variant="outline" className="border-emerald-800/60 bg-emerald-950/30 text-emerald-300">
-                            <ReceiptText className="mr-1 h-3 w-3" /> Liberada
-                          </Badge>
-                        )}
-                        <Button size="sm" variant="outline" className="gap-1" onClick={() => { setSelectedRequestId(request.id); setAmountDraft(String(request.amount_due ?? 0)) }}>
-                          <Pencil className="h-3 w-3" /> Valor
-                        </Button>
-                        <Button size="icon" variant="destructive" aria-label="Excluir solicitação" onClick={() => deleteRequestMutation.mutate(request.id)} disabled={deleteRequestMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    </TableCell>
+                    <TableCell className="text-right">{renderRequestActions(request)}</TableCell>
                   </TableRow>
                   )
                 })}
@@ -282,7 +348,7 @@ export function RequestManagement() {
         </TabsContent>
 
         <TabsContent value="suggestions">
-          <div className="overflow-hidden rounded-lg border bg-card">
+          <div className="overflow-x-auto rounded-lg border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -304,16 +370,22 @@ export function RequestManagement() {
                     <TableCell>{suggestion.user?.name ?? suggestion.user?.email ?? '--'}</TableCell>
                     <TableCell className="font-semibold">{suggestion.subject}</TableCell>
                     <TableCell>{suggestion.event?.name ?? 'Geral'}</TableCell>
-                    <TableCell className="max-w-sm whitespace-normal">{suggestion.message}</TableCell>
-                    <TableCell><Badge variant={suggestion.status === 'answered' ? 'default' : 'secondary'}>{suggestion.status === 'answered' ? 'Respondida' : 'Nova'}</Badge></TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" className="gap-2" onClick={() => { setSelectedSuggestion(suggestion); setResponse(suggestion.response ?? '') }}>
-                          <MessageSquareReply className="h-4 w-4" /> Responder
-                        </Button>
-                        <Button size="icon" variant="destructive" aria-label="Excluir sugestão" onClick={() => deleteSuggestionMutation.mutate(suggestion.id)} disabled={deleteSuggestionMutation.isPending}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
+                    <TableCell className="max-w-sm whitespace-normal">
+                      <p>{suggestion.message}</p>
+                      {suggestion.attachment_url && (
+                        <a
+                          href={suggestion.attachment_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                        >
+                          {isPdfAttachmentUrl(suggestion.attachment_url) ? <FileText className="h-3.5 w-3.5" /> : <ImagePlus className="h-3.5 w-3.5" />}
+                          {suggestion.attachment_name ?? 'Ver anexo'}
+                        </a>
+                      )}
                     </TableCell>
+                    <TableCell><Badge variant={suggestion.status === 'answered' ? 'default' : 'secondary'}>{suggestion.status === 'answered' ? 'Respondida' : 'Nova'}</Badge></TableCell>
+                    <TableCell className="text-right">{renderSuggestionActions(suggestion)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -327,6 +399,17 @@ export function RequestManagement() {
           <DialogHeader><DialogTitle>Responder sugestão</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="rounded-md bg-muted/45 p-3 text-sm">{selectedSuggestion?.message}</div>
+            {selectedSuggestion?.attachment_url && (
+              <a
+                href={selectedSuggestion.attachment_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-md border bg-muted/35 px-3 py-2 text-sm font-semibold text-primary hover:bg-muted"
+              >
+                {isPdfAttachmentUrl(selectedSuggestion.attachment_url) ? <FileText className="h-4 w-4" /> : <ImagePlus className="h-4 w-4" />}
+                {selectedSuggestion.attachment_name ?? 'Ver anexo enviado'}
+              </a>
+            )}
             <div className="grid gap-1.5">
               <Label htmlFor="suggestion-response">Resposta</Label>
               <Textarea id="suggestion-response" rows={5} value={response} onChange={(event) => setResponse(event.target.value)} />
@@ -336,6 +419,33 @@ export function RequestManagement() {
             <Button variant="outline" onClick={() => setSelectedSuggestion(null)}>Cancelar</Button>
             <Button onClick={() => responseMutation.mutate()} disabled={responseMutation.isPending}>Enviar resposta</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(selectedReceipt)} onOpenChange={(open) => { if (!open) setSelectedReceipt(null) }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader><DialogTitle>Comprovante de pagamento</DialogTitle></DialogHeader>
+          {selectedReceipt && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{selectedReceipt.title}</p>
+              {isPdfAttachmentUrl(selectedReceipt.url) ? (
+                <div className="space-y-3">
+                  <a
+                    href={selectedReceipt.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Abrir PDF em nova aba
+                  </a>
+                  <iframe title="Comprovante em PDF" src={selectedReceipt.url} className="h-[62vh] w-full rounded-lg border bg-white" />
+                </div>
+              ) : (
+                <img src={selectedReceipt.url} alt="Comprovante de pagamento" className="max-h-[70vh] w-full rounded-lg object-contain" />
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -1,4 +1,4 @@
-import { CalendarDays, Eraser, Medal, Pencil, Plus, RefreshCw, Save, Search, Trash2, Trophy } from 'lucide-react'
+import { CalendarDays, Eraser, Medal, MoreHorizontal, Pencil, Plus, RefreshCw, Save, Search, Trash2, Trophy } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -32,6 +32,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -1604,30 +1605,37 @@ export function ScoreLaunchPanel({
                           Salvar
                         </Button>
                         {canManageEntries && (
-                          <>
-                            {draft.scoreId && (
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                title="Excluir somente a nota"
-                                onClick={() => deleteScoreMutation.mutate({ rowKey: row.key, entryIds })}
-                                disabled={deleteScoreMutation.isPending}
-                              >
-                                <Eraser className="h-4 w-4" />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="icon" aria-label={`Ações da passada de ${entry.competitor?.name ?? 'competidor'}`}>
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                            )}
-                            <Button size="icon" variant="outline" onClick={() => openEditEntry(entry)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="destructive"
-                              onClick={() => deleteEntryMutation.mutate(entryIds)}
-                              disabled={deleteEntryMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              {draft.scoreId && (
+                                <DropdownMenuItem
+                                  disabled={deleteScoreMutation.isPending}
+                                  onClick={() => deleteScoreMutation.mutate({ rowKey: row.key, entryIds })}
+                                >
+                                  <Eraser className="mr-2 h-4 w-4" />
+                                  Excluir somente a nota
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => openEditEntry(entry)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar inscrição
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                disabled={deleteEntryMutation.isPending}
+                                onClick={() => deleteEntryMutation.mutate(entryIds)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir inscrição
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
                     </TableCell>
@@ -1641,7 +1649,6 @@ export function ScoreLaunchPanel({
     </div>
   )
 }
-
 
 
 

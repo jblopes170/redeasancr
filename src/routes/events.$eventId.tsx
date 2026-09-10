@@ -63,7 +63,8 @@ function EventPublicPage() {
                 <h2 className="font-serif text-2xl font-semibold">Atualizações do evento</h2>
                 <div className="grid gap-3 md:grid-cols-2">
                   {(newsQuery.data ?? []).map((post) => (
-                    <Card key={post.id} className={post.featured ? 'border-primary/35' : ''}>
+                    <Card key={post.id} className={`overflow-hidden border-zinc-800/60 bg-zinc-950/65 text-zinc-50 ${post.featured ? 'border-primary/35' : ''}`}>
+                      {post.image_url && <img src={post.image_url} alt="" className="h-44 w-full object-cover opacity-90" />}
                       <CardContent className="p-5">
                         <div className="flex items-center justify-between gap-2">
                           <Badge variant={post.featured ? 'default' : 'outline'}>Comunicado</Badge>
@@ -71,7 +72,7 @@ function EventPublicPage() {
                             {new Date(post.published_at ?? post.created_at).toLocaleDateString('pt-BR')}
                           </span>
                         </div>
-                        <h3 className="mt-3 text-xl font-bold text-primary">{post.title}</h3>
+                        <h3 className="mt-3 text-xl font-bold text-zinc-50">{post.title}</h3>
                         <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{post.summary || post.content}</p>
                       </CardContent>
                     </Card>

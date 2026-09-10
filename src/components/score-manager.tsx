@@ -1,4 +1,4 @@
-import { Download, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -9,6 +9,7 @@ import { downloadExcel } from '@/lib/spreadsheet'
 import { deleteScore, getCategories, getEntries, getScores, saveScore } from '@/services/api'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -415,7 +416,7 @@ export function ScoreManager({ eventId, eventStatus, currentUserId, isAdmin, isJ
         </Dialog>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -455,19 +456,28 @@ export function ScoreManager({ eventId, eventStatus, currentUserId, isAdmin, isJ
                   <TableCell>{score.judge?.name ?? score.judge?.email ?? '--'}</TableCell>
                   <TableCell>{score.entry?.status ?? '--'}</TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon" onClick={() => openEdit(score)} disabled={!canEditScore(score)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(score.id)}
-                        disabled={!isAdmin}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" aria-label={`Ações da nota de ${score.entry?.competitor?.name ?? 'competidor'}`}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem disabled={!canEditScore(score)} onClick={() => openEdit(score)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          disabled={!isAdmin || deleteMutation.isPending}
+                          onClick={() => deleteMutation.mutate(score.id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))

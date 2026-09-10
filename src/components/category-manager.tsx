@@ -1,4 +1,4 @@
-import { Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -7,6 +7,7 @@ import { LevelBadge } from '@/components/level-badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -336,7 +337,7 @@ interface CategoryTableSectionProps {
 
 function CategoryTableSection({ title, rows, canEdit, onEdit, onDelete }: CategoryTableSectionProps) {
   return (
-    <div className="rounded-lg border bg-card p-3">
+    <div className="overflow-x-auto rounded-lg border bg-card p-3">
       <div className="mb-2 flex items-center justify-between">
         <h4 className="text-base font-semibold">{title}</h4>
         <Badge variant="outline">{rows.length} categoria(s)</Badge>
@@ -371,15 +372,24 @@ function CategoryTableSection({ title, rows, canEdit, onEdit, onDelete }: Catego
                 <TableCell className="font-semibold text-primary">{formatCurrency(category.entry_fee ?? 0)}</TableCell>
                 {canEdit && (
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => onEdit(category)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar valor
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => onDelete(category.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" aria-label={`Ações da categoria ${category.name}`}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(category)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar valor
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(category.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 )}
               </TableRow>

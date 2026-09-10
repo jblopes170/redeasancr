@@ -5,6 +5,7 @@ import {
   BanknoteArrowUp,
   Clock3,
   Download,
+  MoreHorizontal,
   Pencil,
   Plus,
   ReceiptText,
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -293,6 +295,30 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
   }
 
   const maxDreValue = Math.max(...dreGroups.map((item) => item.total), 1)
+  const renderTransactionActions = (row: FinancialTransactionRecord) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="outline" aria-label={`Ações do lançamento ${row.description}`}>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => openEdit(row)}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Editar
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={() => deleteMutation.mutate(row.id)}
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 
   return (
     <div className="space-y-4">
@@ -361,7 +387,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
         </CardContent>
       </Card>
 
-      <div className="hidden rounded-xl border bg-card md:block">
+      <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
         <Table>
           <TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Tipo</TableHead><TableHead>Descrição</TableHead><TableHead>Categoria</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Valor</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
           <TableBody>
@@ -373,7 +399,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
                 <TableCell>{categoryLabel(row.category)}</TableCell>
                 <TableCell><Badge variant="outline" className={statusClass(row.status)}>{statusLabel(row.status)}</Badge></TableCell>
                 <TableCell className={`text-right font-bold ${row.direction === 'income' ? 'text-emerald-300' : 'text-red-300'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</TableCell>
-                <TableCell><div className="flex justify-end gap-1"><Button size="icon" variant="outline" onClick={() => openEdit(row)} aria-label="Editar"><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => deleteMutation.mutate(row.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button></div></TableCell>
+                <TableCell className="text-right">{renderTransactionActions(row)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -382,7 +408,7 @@ export function FinancialManager({ eventId }: FinancialManagerProps) {
 
       <div className="grid gap-3 md:hidden">
         {filteredRows.length === 0 ? <Card><CardContent className="p-5 text-sm text-muted-foreground">Nenhum lançamento encontrado.</CardContent></Card> : filteredRows.map((row) => (
-          <Card key={row.id} className={row.status === 'cancelled' ? 'opacity-55' : ''}><CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{row.description}</p><p className="text-xs text-muted-foreground">{categoryLabel(row.category)} · {formatDate(row.competence_date)}</p></div><p className={`font-extrabold ${row.direction === 'income' ? 'text-emerald-300' : 'text-red-300'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</p></div><div className="flex items-center justify-between"><Badge variant="outline" className={statusClass(row.status)}>{statusLabel(row.status)}</Badge><div className="flex gap-1"><Button size="icon" variant="outline" onClick={() => openEdit(row)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => deleteMutation.mutate(row.id)}><Trash2 className="h-4 w-4" /></Button></div></div></CardContent></Card>
+          <Card key={row.id} className={row.status === 'cancelled' ? 'opacity-55' : ''}><CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{row.description}</p><p className="text-xs text-muted-foreground">{categoryLabel(row.category)} · {formatDate(row.competence_date)}</p></div><p className={`font-extrabold ${row.direction === 'income' ? 'text-emerald-300' : 'text-red-300'}`}>{row.direction === 'income' ? '+' : '-'} {formatCurrency(Number(row.amount))}</p></div><div className="flex items-center justify-between"><Badge variant="outline" className={statusClass(row.status)}>{statusLabel(row.status)}</Badge>{renderTransactionActions(row)}</div></CardContent></Card>
         ))}
       </div>
 

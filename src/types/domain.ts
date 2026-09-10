@@ -128,6 +128,7 @@ export interface NewsPostRecord {
   title: string
   summary: string | null
   content: string
+  image_url: string | null
   post_type: NewsPostType
   status: NewsPostStatus
   featured: boolean
@@ -177,6 +178,9 @@ export interface SuggestionRecord {
   event_id: string | null
   subject: string
   message: string
+  attachment_url: string | null
+  attachment_name: string | null
+  attachment_type: string | null
   status: SuggestionStatus
   response: string | null
   answered_by: string | null
