@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { type ReactNode, useState } from 'react'
-import { ChevronRight, Menu } from 'lucide-react'
+import { ChevronRight, Menu, Sparkles } from 'lucide-react'
 import { AppHeader } from '@/components/app-header'
 import { PageHeading } from '@/components/page-heading'
 import { Button } from '@/components/ui/button'
@@ -76,7 +76,7 @@ export function AdminLayout({ title, children, eventId, description, actions }: 
     <div className="admin-shell-grid">
       <aside className="admin-sidebar">
         <div className="admin-sidebar-sticky">
-          <div className="admin-sidebar-kicker">Painel executivo</div>
+          <div className="admin-sidebar-kicker"><Sparkles className="h-3.5 w-3.5" />Painel executivo</div>
           <AdminNavigation />
         </div>
       </aside>
