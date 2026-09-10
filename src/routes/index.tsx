@@ -6,7 +6,6 @@ import {
   CalendarDays,
   CheckCircle2,
   Newspaper,
-  ShieldCheck,
   Trophy,
 } from 'lucide-react'
 
@@ -123,22 +122,6 @@ function HomePage() {
           </div>
         </section>
 
-        <section id="como-funciona" className="scroll-mt-36">
-          <div className="mb-8 max-w-2xl"><p className="eyebrow"><ShieldCheck className="h-4 w-4" />Jornada simples</p><h2 className="font-headline-md">Da inscrição ao pódio</h2></div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              ['01', 'Escolha a etapa', 'Veja o evento e faça sua inscrição.'],
-              ['02', 'Acompanhe a prova', 'Notas e passadas ficam disponíveis ao vivo.'],
-              ['03', 'Consulte o resultado', 'Filtre o ranking por categoria, nível e etapa.'],
-            ].map(([number, title, description]) => (
-              <div key={number} className="group surface-band border-t-2 border-t-secondary p-7 transition hover:-translate-y-1 hover:border-secondary/50">
-                <span className="font-serif text-5xl font-semibold text-secondary/70">{number}</span>
-                <h3 className="mt-8 text-xl font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       <SiteFooter />
