@@ -4,14 +4,16 @@
 
 - Site publico: Inicio, Eventos, Ranking, Noticias; conta concentrada em um menu.
 - Competidor: Meu resumo, Nova inscricao, Inscricoes e pagamentos, Resultados, Suporte.
-- Organizacao: Visao geral, Eventos, Inscricoes, Notas ao vivo, Ranking, Financeiro.
-- Mais: Publicacoes e Acessos e permissoes (apenas administrador).
+- Organizacao: sidebar fixa no desktop com Visao geral, Eventos, Inscricoes, Notas ao vivo, Ranking e Financeiro.
+- Celular administrativo: gaveta lateral abre os modulos; perfil, financeiro, acessos e site publico ficam no menu de conta.
+- Gestao: Publicacoes e Acessos e permissoes (apenas administrador).
 - Evento: Resumo, Categorias, Competidores e cavalos, Inscricoes, Financeiro, Planilhas, Configuracoes.
 - Notas ao vivo: escolher evento -> etapa -> nota do conjunto -> Salvar ou Enter.
 
 ## Comportamentos
 
-- Navegacao horizontal no desktop e menu identificado no celular; pagina ativa destacada.
+- Navegacao publica continua horizontal; administracao usa sidebar responsiva com pagina ativa destacada.
+- Header administrativo limpo: marca, atalho de Notas ao vivo, menu unico da conta e botao da gaveta no celular.
 - Links de abas usam URL, inclusive os atalhos antigos de inscricoes.
 - A pagina de notas nao monta o painel de resumo do evento.
 - Ranking detalhado, podio e simulador ficam recolhidos para priorizar os resultados e campos de trabalho.
