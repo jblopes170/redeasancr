@@ -84,6 +84,22 @@ function mapSupabaseError(message: string): string {
   return message
 }
 
+function mapStorageUploadError(message: string) {
+  const normalized = message.toLowerCase()
+
+  if (
+    normalized.includes('row-level security policy')
+    || normalized.includes('permission denied')
+    || normalized.includes('unauthorized')
+    || normalized.includes('bucket not found')
+    || normalized.includes('storage')
+  ) {
+    return 'Nao foi possivel enviar o anexo. Confirme que a migration 202609100002_fix_payment_receipts_storage_policy.sql foi executada no Supabase.'
+  }
+
+  return mapSupabaseError(message)
+}
+
 async function unwrap<T>(promise: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
   const { data, error } = await promise
   if (error) {
@@ -188,7 +204,7 @@ async function uploadPublicAttachment(
     upsert: false,
   })
 
-  if (error) throw new Error(mapSupabaseError(error.message))
+  if (error) throw new Error(mapStorageUploadError(error.message))
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
 }
 
